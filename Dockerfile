@@ -8,9 +8,9 @@ ARG APPS_URI=https://github.com/lantern-works/lantern-apps
 RUN apt-get update && apt-get install -y apt-utils \
 	&& apt-get install -y nano
 
-RUN mkdir -p /opt/server/apps
+RUN mkdir -p /lantern/server/apps
 
-WORKDIR /opt/server/
+WORKDIR /lantern/server/
 COPY package.json .
 RUN npm install
 RUN mkdir -p ./db

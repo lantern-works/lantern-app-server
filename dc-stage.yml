@@ -13,5 +13,5 @@ services:
       environment:
           - CLOUD=false
           - DB=db/stage
-          - SSL_PRIVATE_KEY=/opt/server/certs/privkey.pem
-          - SSL_CERTIFICATE=/opt/server/certs/fullchain.pem
+          - SSL_PRIVATE_KEY=/lantern/server/certs/privkey.pem
+          - SSL_CERTIFICATE=/lantern/server/certs/fullchain.pem

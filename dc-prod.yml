@@ -8,8 +8,8 @@ link:
     environment:
         - CLOUD=true
         - DB=db/prod
-        - SSL_PRIVATE_KEY=/opt/server/certs/privkey.pem
-        - SSL_CERTIFICATE=/opt/server/certs/fullchain.pem
+        - SSL_PRIVATE_KEY=/lantern/server/certs/privkey.pem
+        - SSL_CERTIFICATE=/lantern/server/certs/fullchain.pem
     labels:
         - triton.cns.services=lnt
         - com.joyent.package=g4-highcpu-512M

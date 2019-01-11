@@ -9,13 +9,13 @@ services:
           - 443:443
           - 8765:8765
       volumes:
-          - ./apps:/opt/server/apps
-          - ./web/public/platform:/opt/server/web/public/platform
+          - ./apps:/lantern/server/apps
+          - ./web/public/platform:/lantern/server/web/public/platform
       environment:
           - CLOUD=false
           - DB=db/dev
-          - SSL_PRIVATE_KEY=/opt/server/certs/dev.lantern.link-key.pem
-          - SSL_CERTIFICATE=/opt/server/certs/dev.lantern.link.pem
+          - SSL_PRIVATE_KEY=/lantern/server/certs/dev.lantern.link-key.pem
+          - SSL_CERTIFICATE=/lantern/server/certs/dev.lantern.link.pem
 
 volumes:
   apps:
