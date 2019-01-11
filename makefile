@@ -12,13 +12,16 @@ build: $(PLATFORM) $(CERTS)
 install:
 	npm install
 	
+node_modules:
+	make install
+
 start: $(PLATFORM) $(CERTS)
 	HOOK_REMOVE="./test-hook" HOOK_ADD="./test-hook" HOOK_UPDATE="./test-hook" npm start	
 
 run:
 	docker-compose -f dc-dev.yml up
 
-stage: $(PLATFORM) 
+stage: $(PLATFORM)
 	docker-compose -f dc-stage.yml build
 	docker-compose -f dc-stage.yml up -d
 
@@ -35,7 +38,7 @@ clean:
 certs/dev.lantern.link.pem:
 	cd certs && mkcert dev.lantern.link
 
-$(word 1, $(PLATFORM)):
+$(word 1, $(PLATFORM)): node_modules
 	browserify platform/vendor/core.js \
 		platform/vendor/storage.js \
 		platform/helpers/array.js \
@@ -49,7 +52,7 @@ $(word 1, $(PLATFORM)):
 		platform/modules/data/feed.js \
 		-o $@
 
-$(word 2, $(PLATFORM)):
+$(word 2, $(PLATFORM)): node_modules
 	browserify platform/config/leaflet.js \
 		platform/vendor/map.js \
 		platform/modules/mapping/location.js \
@@ -57,7 +60,7 @@ $(word 2, $(PLATFORM)):
 		platform/modules/mapping/atlas.js  \
 		-o $@
 
-$(word 3, $(PLATFORM)):
+$(word 3, $(PLATFORM)): node_modules
 	browserify platform/modules/display/director.js \
 		platform/vendor/display.js \
 		platform/modules/display/app.js \
