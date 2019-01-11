@@ -16,29 +16,34 @@ class Atlas extends LV.EventEmitter {
             center_max: 10
         };
 
-        this.tile_host = window.location.href.split('/').slice(0, 3);
+        let uri_parts = window.location.href.split('/').slice(0, 3);
+        this.setTileHost(uri_parts);
 
-        if (this.tile_host[2] == "lantern.link") {
-            this.tile_host[2] = "{s}.tile.lantern.link";
-        }
-
-        this.tile_host = this.tile_host.join('/');
-
-        this.tile_uri = [this.tile_host +"/c/", LC.maptiler.id, "/styles/", 
-                LC.maptiler.map, "/{z}/{x}/{y}.png?key=", LC.maptiler.key
-            ].join("");
+        fetch("/api/info").then(data => data.json()).then(data => {
+            if (data.online) {
+                uri_parts[2] = "{s}.tile.lantern.link";
+                this.setTileHost(uri_parts);
+            }
+        });
 
         this.tile_db = new LV.PouchDB(LC.leaflet_tiles.dbName, {auto_compaction: true});
         this.user_db = new LV.PouchDB("lx-user", {auto_compaction: true});
         this._map_clicked = 0; // used to distinguish between click and double-click
         this.render();
-
         
         // find current map cache size...
         // this.tile_db.info().then((result) => {
         //     console.log(`${this.log_prefix} cached tiles: ${result.doc_count}`);
         // });
 
+    }
+
+
+    setTileHost (val) {
+        this.tile_host = val.join("/");
+        this.tile_uri = [this.tile_host +"/c/", LC.maptiler.id, "/styles/", 
+                LC.maptiler.map, "/{z}/{x}/{y}.png?key=", LC.maptiler.key
+            ].join("");
     }
 
     render() {

@@ -16,6 +16,17 @@ module.exports = (serv) => {
     let apps_dir = path.join(__dirname, "..", "..", "apps");
 
     /**
+    * Delivers basic server information
+    */
+    serv.get("/api/info", (req,res) => {
+        util.checkInternet().then(status => {
+            return res.status(200).json({
+                "online": status
+            });
+        });
+    });
+
+    /**
     *  Retrieves available applications from this server
     */
     serv.get("/api/apps", (req,res) => {
