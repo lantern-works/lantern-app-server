@@ -30,6 +30,14 @@ LX.Organization = class Organization extends LV.EventEmitter {
     }
 
     //-------------------------------------------------------------------------
+
+    /**
+    * Ensures that organization exists in database before we work with it
+    */
+    ensure() {
+        return this.register();
+    }
+
     /**
     * Publish a new data package to the network
     */

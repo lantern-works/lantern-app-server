@@ -60,6 +60,23 @@ LX.Package =  class Package extends LV.EventEmitter {
 
    
     //-------------------------------------------------------------------------
+    /**
+    * Ensures that package exists in database before we work with it
+    */
+    ensure() {
+        return new Promise((resolve, reject) => {
+            this.node.once((v,k) => {
+                if (v) {
+                    resolve(this);
+                }
+                else {
+                    this.publish(this.version).then(resolve);
+                }
+            });
+
+        });
+    }
+
 	/**
     * Publish a new data package to the network
     */

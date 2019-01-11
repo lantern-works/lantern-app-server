@@ -103,26 +103,28 @@ LX.Feed = class Feed extends LV.EventEmitter {
             return;
         }
 
-    	console.log(`${this.log_prefix} watching changes: ${id}`)
+        // optimistically assume package exists
+        this.packages[id] = true;
 
 
-        if (!this.packages.hasOwnProperty(id)) {
-
-            this.packages[id] = true;
-            let package_node = this.db.get("pkg").get(name);
-            package_node.get("data")
-                .get(version).map()
-                .on((v,k) => {
-                    // known issue with GunDB prevents new items from triggering this event
-                    // @todo replace work-around that polls for refreshData once fix is available
-                    // https://github.com/amark/gun/issues/663
-                    this.onDataChange(v,k,id);
-                });
-   
-        }
-        else {
-            this.packages[id] = true;
-        }
+        let package_node = this.db.get("pkg").get(name);
+        package_node.get("data")
+            .get(version).once((v,k) => {
+                if (v) {
+                    // verified that version exists
+                    console.log(`${this.log_prefix} watching changes: ${id}`)
+                }
+                else {
+                    // disable our package subscription if we find out it is missing
+                    this.packages[id] = false;
+                    console.warn(`${this.log_prefix} missing package version to watch: ${id}`)
+                }
+            })
+            .map()
+            .on((v,k) => {
+                // start watching for changes
+                this.onDataChange(v,k,id);
+            });
 
     }
 
