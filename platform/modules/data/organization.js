@@ -51,18 +51,17 @@ LX.Organization = class Organization extends LV.EventEmitter {
                 }
                 else {
                     // this node may contain fields for "members" and "packages", too
-                    this.node.put({
+                    this.node.put(null).put({
                         "name": this.name,
                         "members": {},
                         "packages": {}
-                    })
-                    .once((v,k) => {
-                        if (!v) {
-                            return reject("org_failed_register");
-                        }
-                        console.info(`${this.log_prefix} newly registered`,v);
+                    }, (ack) => {
+                        if (ack.err) {
+                            return reject("org_register_failed");
+                        }  
+                        console.info(`${this.log_prefix} newly registered`, this.name);
                         this.emit("register");
-                        resolve(v);
+                        resolve(this.name);
                     });
                 }
             });

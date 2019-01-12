@@ -21,6 +21,7 @@ LX.Package =  class Package extends LV.EventEmitter {
 		this._data = {
 			"name": name,
 			"public": true, // only supporting public packages, for now
+            "data": {},
 			"version": "0.0.1" // default version number
 		}
 
@@ -66,14 +67,13 @@ LX.Package =  class Package extends LV.EventEmitter {
     ensure() {
         return new Promise((resolve, reject) => {
             this.node.once((v,k) => {
-                if (v) {
+                if (v && v.hasOwnProperty("data") && v.hasOwnProperty("version")) {
                     resolve(this);
                 }
                 else {
                     console.log(`${this.log_prefix} creating package setup: ${this.id}`, this._data);
-
                     this.node.put(this._data).once(() => {
-                        this.publish(this.version).then(resolve);
+                        resolve();
                     });
                 }
             });
@@ -85,48 +85,50 @@ LX.Package =  class Package extends LV.EventEmitter {
     * Publish a new data package to the network
     */
     publish(version, data) {
+        
+        // publishing defaults
+        version = version || this._data.version;
+        data = data || {};
+
         return new Promise((resolve, reject) => {
-
-            const completePublish = (ack) => {
-
-                if (ack.err) {
-                    return reject(ack.err);
-                }
-
-                let working_node = this.node.get("data").get(version || this._data.version);
-                
-                working_node.once((v,k) => {
-
-                    // do not over-write pre-existing version
-                    if (v) {
-                        console.log(`${this.log_prefix} already published: ${this.id}`);
-                        resolve(v);
+            const completePublish = () => {
+                console.log(`${this.log_prefix} will publish: ${this.id}`);
+                // we know organization exists, so first link that
+                this.node.get("data").get(version).put(null).put(data, (ack) => {
+                    if (ack.err) { 
+                        return reject("packaged_publish_data_failed");
                     }
-                    else {
-                        console.log(`${this.log_prefix} will publish: ${this.id}`);
-
-                        // we know organization exists, so first link that
-                        working_node.put(data || {})
-                            .once((v,k) => {
-
-                                this.node.get("version").put(version || this._data.version);
-
-                                console.log(`${this.log_prefix} new published version: ${this.id}`);
-                                this.emit("publish");
-                                resolve();
-                            });
-                    }
+                    this.node.get("version").put(version, (ack) => {
+                        if (ack.err) {
+                            return reject("package_publish_version_failed");
+                        }
+                        console.log(`${this.log_prefix} new published version: ${this.id}`);
+                        resolve();
+                        this.emit("publish");
+                    });
                 });
-
             }          
 
-
-            this.node.get("organization")
+            this.ensure().then(() => {
+                this.node.get("organization")
                 .put(this.organization.node)
                 .once(() => {
                     this.organization.node.get("packages").get(this.name).put(this.node);
                 })
-                .once(completePublish)
+                .once(() => {
+                    this.node.get("data").get(version).once((v,k) => {
+                        // do not over-write pre-existing version
+                        if (v) {
+                            console.log(`${this.log_prefix} already published: ${this.id}`);
+                            resolve(v);
+                        }
+                        else {
+                            completePublish();
+                        }
+                    });
+                })
+            });
+
         });
 	}
 

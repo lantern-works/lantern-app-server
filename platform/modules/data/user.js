@@ -91,7 +91,7 @@ LX.User = class User extends LV.EventEmitter {
             this.node.auth(username, password, (ack) => {
                 if (ack.err) {
                     console.warn(`${this.log_prefix} bad auth`, ack.err);
-                    reject(ack.err);
+                    reject("user_auth_failed");
                 }
                 else {
                     this.username = username;
@@ -124,7 +124,7 @@ LX.User = class User extends LV.EventEmitter {
             this.node.create(username, password, (ack) => {
                 if (ack.err) {
                     console.log(`${this.log_prefix} unable to save`, ack.err);
-                    return reject(ack.err);
+                    return reject("user_register_failed");
                 }
 
 
@@ -198,8 +198,10 @@ LX.User = class User extends LV.EventEmitter {
                             // does not erase other key/value pairs here
                             this.node.get("packages")
                                 .get(pkg.name)
-                                .put(pkg.version)
-                                .once( (v,k) => {
+                                .put(pkg.version, (ack) => {
+                                    if (ack.err) {
+                                        return reject("user_install_package_failed");
+                                    }
                                     // id is name@version combined
                                     console.log(`${this.log_prefix} install done: ${pkg.id}`);
                                     this.emit("install", pkg.id);                            
