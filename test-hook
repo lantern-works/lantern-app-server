@@ -1,0 +1,11 @@
+#!/usr/bin/env python
+import sys
+
+if (len(sys.argv) > 1):
+    sys.argv.pop(0)
+    for item in sys.argv:
+        val =  str(item)
+        if val:
+            sys.stdout.write(val)
+else:
+    sys.stdout.write("no message to queue for outbox...")

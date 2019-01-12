@@ -6,14 +6,14 @@ CERTS := certs/dev.lantern.link.pem
 
 .PHONY: build certs clean install start run stage deploy pack $(PLATFORM)
 
+build: $(PLATFORM) $(CERTS)
+	docker-compose -f dc-dev.yml build
+
 install:
 	npm install
 	
 start: $(PLATFORM) $(CERTS)
-	npm start	
-
-build: $(PLATFORM) $(CERTS)
-	docker-compose -f dc-dev.yml build
+	HOOK_REMOVE="./test-hook" HOOK_ADD="./test-hook" HOOK_UPDATE="./test-hook" npm start	
 
 run:
 	docker-compose -f dc-dev.yml up
