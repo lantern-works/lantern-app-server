@@ -100,15 +100,15 @@ self.isRemoteClient = (req) => {
 */
 self.watchMemory = () => {
       setInterval(() =>{
-        log.debug("---");
+        self.Logger.debug("---");
         let arr = [1, 2, 3, 4, 5, 6, 9, 7, 8, 9, 10];
         arr.reverse();
         let used = process.memoryUsage();
         for (const key in used) {
-          log.debug(key + " "  + Math.round(used[key] / 1024 / 1024 * 100) / 100 + " MB");
+          self.Logger.debug(key + " "  + Math.round(used[key] / 1024 / 1024 * 100) / 100 + " MB");
         }
-        log.debug("---");
-    }, 45000);
+        self.Logger.debug("---");
+    }, 60*1000*2);
 }
   
 

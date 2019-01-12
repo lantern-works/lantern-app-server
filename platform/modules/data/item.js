@@ -9,6 +9,7 @@ LX.Item = class Item extends LV.EventEmitter {
 
         // create data space for data we allow to be exported to shared database
         this._data = {};
+        this._new = {};
 
         // always include these defaults
         let global_defaults = {
@@ -21,6 +22,7 @@ LX.Item = class Item extends LV.EventEmitter {
 
         for (var idx in defaults) {
             this._data[idx] = defaults[idx][1] || null;
+            this._new[idx] = false;
         }
 
         this._key_table = {};
@@ -72,7 +74,10 @@ LX.Item = class Item extends LV.EventEmitter {
     */
     set owner(val) {
         if (!val) return;
-        this._data.owner = val;
+        if (val != this._data.owner) {
+            this._data.owner = val;
+            this._new.owner = true;
+        }
     }
 
 
@@ -107,6 +112,7 @@ LX.Item = class Item extends LV.EventEmitter {
             return;
         }
         this._data.editors.push(val);
+        this._new.editors = true;
         this.emit("editor", val);
     }
 
@@ -156,6 +162,7 @@ LX.Item = class Item extends LV.EventEmitter {
             return;
         }
 
+        this._new.tags = true;
         this._data.tags.push(tag);
         this.emit("tag", tag);
         return this.tags;
@@ -300,6 +307,7 @@ LX.Item = class Item extends LV.EventEmitter {
                 return reject("name_required");
             }
 
+            let data = {};
 
             // save to our shared database...
             const completeSave = (version) => {
@@ -321,6 +329,13 @@ LX.Item = class Item extends LV.EventEmitter {
                     if (v) {
                         // update existing node
                         node.put(data, (ack) => {
+
+
+                            // clear new state once saved
+                            Object.keys(this._new).forEach((item) => {
+                                this._new[item] = false;
+                            });
+                            
                             this.emit("save");
 
                             Object.keys(data).forEach((key) => {
@@ -343,6 +358,11 @@ LX.Item = class Item extends LV.EventEmitter {
                                     .get("items")
                                     .set(this.id)
                                     .once((v,k) => {
+
+                                        // clear new state once saved
+                                        Object.keys(this._new).forEach((item) => {
+                                            this._new[item] = false;
+                                        });
 
                                         console.log(`${this.log_prefix} saved`, data);
                                         this.mode = "shared"; // shared mode
@@ -367,13 +387,17 @@ LX.Item = class Item extends LV.EventEmitter {
 
 
             // are we trying to change just a partial?
-            let data = {};
+           
             if (fields) {
-
                 let obj = {};
                 if (fields.constructor === Array) {
                     fields.forEach((field) => {
-                        obj[field] = this._data[field]
+
+                        // make sure we have an update for this field before saving
+                        // prevents extraneous data sent over network
+                        if (this._new[field]) {
+                            obj[field] = this._data[field];
+                        }
                     });
                 }
                 else if (typeof(fields) == "string") {
@@ -436,6 +460,7 @@ LX.Item = class Item extends LV.EventEmitter {
                         this.mode = "dropped";
                         this.emit("drop");
 
+                        // @todo explore why this may not properly unset and remove from list
                         LT.db.get("pkg")
                             .get(package_name)
                             .get("items")

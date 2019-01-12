@@ -56,6 +56,7 @@ LX.MarkerItem = class MarkerItem extends LX.Item {
                     return;
                 }
 
+                this._new.geohash = true;
                 this._data.geohash = val;
                 //console.log(`${this.log_prefix} location = ${this.geohash}`);
 

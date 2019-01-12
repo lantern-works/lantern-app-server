@@ -26,6 +26,7 @@ const https = require("https");
 const GraphDB = require("gun")
 const util = require("./util");
 const app = require("./server")
+const watch = require("./watcher");
 const log = util.Logger;
 
 
@@ -72,10 +73,11 @@ let std_server = http_server.listen(util.getHttpPort(), () => {
 		db_path = path.resolve(__dirname, "../" + process.env.DB);
 	}
 
-	GraphDB({
+	let db = GraphDB({
 		file: db_path, 
 		web: secure_server || std_server
 	});
+
 
 	log.info(`database path = ${db_path}`);
 	
@@ -87,4 +89,6 @@ let std_server = http_server.listen(util.getHttpPort(), () => {
 		log.warn("falling back to http for local development...");
 		log.info(`standard port = ${util.getHttpPort()}`);
 	}
+
+	watch(db);
 });
