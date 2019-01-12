@@ -78,6 +78,16 @@ LX.User = class User extends LV.EventEmitter {
     */
     authenticate(username, password) {
         return new Promise((resolve, reject) => {
+
+            const completeAuth = () => {
+                SEA.pair().then((pair) => {
+                    this.pair = pair;
+                    console.log(`${this.log_prefix} good auth`);
+                    this.emit("auth", this.pair);
+                    resolve(this.pair);
+                });
+            }
+
             this.node.auth(username, password, (ack) => {
                 if (ack.err) {
                     console.warn(`${this.log_prefix} bad auth`, ack.err);
@@ -85,11 +95,16 @@ LX.User = class User extends LV.EventEmitter {
                 }
                 else {
                     this.username = username;
-                    console.log(`${this.log_prefix} good auth`);
-                    SEA.pair().then((pair) => {
-                        this.pair = pair;
-                        this.emit("auth", this.pair);
-                        resolve(this.pair);
+                    let packages_node = this.node.get("packages");
+                    packages_node.once((v,k) => {
+                        if (!v) {
+                            packages_node.put({}).once(() => {
+                                completeAuth();
+                            });
+                        }
+                        else {
+                            completeAuth();
+                        }
                     });
                 }
             });
@@ -112,7 +127,6 @@ LX.User = class User extends LV.EventEmitter {
                     return reject(ack.err);
                 }
 
-                this.node.get("packages").put({});
 
                 console.log(`${this.log_prefix} saved to browser`);
 
@@ -130,6 +144,7 @@ LX.User = class User extends LV.EventEmitter {
                     });
 
 
+                this.node.get("packages").put({});
                 this.emit("registered");
                 resolve();
             });

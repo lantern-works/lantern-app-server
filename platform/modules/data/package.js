@@ -22,10 +22,11 @@ LX.Package =  class Package extends LV.EventEmitter {
 			"name": name,
 			"public": true, // only supporting public packages, for now
 			"version": "0.0.1", // default version number
-			//"organization": org.node // reference link to owning organization
+            "items": {}
 		}
 
-        this.node = this.db.get("pkg").get(name);
+        this.node = this.db.get("pkg").get(name);   
+
 
 	}
 
@@ -70,7 +71,11 @@ LX.Package =  class Package extends LV.EventEmitter {
                     resolve(this);
                 }
                 else {
-                    this.publish(this.version).then(resolve);
+                    console.log(`${this.log_prefix} creating package setup: ${this.id}`, this._data);
+
+                    this.node.put(this._data).once(() => {
+                        this.publish(this.version).then(resolve);
+                    });
                 }
             });
 
@@ -83,7 +88,11 @@ LX.Package =  class Package extends LV.EventEmitter {
     publish(version, data) {
         return new Promise((resolve, reject) => {
 
-            const completePublish = () => {
+            const completePublish = (ack) => {
+
+                if (ack.err) {
+                    return reject(ack.err);
+                }
 
                 let working_node = this.node.get("data").get(version || this._data.version);
                 
@@ -110,7 +119,8 @@ LX.Package =  class Package extends LV.EventEmitter {
                     }
                 });
 
-            }
+            }          
+
 
             this.node.get("organization")
                 .put(this.organization.node)

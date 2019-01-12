@@ -7,9 +7,16 @@ const logger = require("./util").Logger;
 module.exports = (db) => {
 
     let node = db.get("__LX__").get("pkg");
+    let packages = {};
     let items = {};
 
     const watchPackage = (v,package_name) => {
+        if (packages[package_name]) {
+            logger.warn("already watching: " + package_name);
+            return;
+        }
+
+        packages[package_name] = true;
         if (v.hasOwnProperty("version")) {
             let package_id = package_name + "@" + v.version;
             logger.debug(`watch package: ${package_id}`);
