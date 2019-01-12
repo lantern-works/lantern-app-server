@@ -21,8 +21,7 @@ LX.Package =  class Package extends LV.EventEmitter {
 		this._data = {
 			"name": name,
 			"public": true, // only supporting public packages, for now
-			"version": "0.0.1", // default version number
-            "items": {}
+			"version": "0.0.1" // default version number
 		}
 
         this.node = this.db.get("pkg").get(name);   

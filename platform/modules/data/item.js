@@ -294,7 +294,6 @@ LX.Item = class Item extends LV.EventEmitter {
     */
     save(package_name, fields, version) {
 
-
         return new Promise((resolve, reject) => {
 
             if (!LT.db) {
@@ -353,22 +352,15 @@ LX.Item = class Item extends LV.EventEmitter {
                             }
                             else {
                                 // now register the node for our package
-                                LT.db.get("pkg")
-                                    .get(package_name)
-                                    .get("items")
-                                    .set(this.id)
-                                    .once((v,k) => {
+                                // clear new state once saved
+                                Object.keys(this._new).forEach((item) => {
+                                    this._new[item] = false;
+                                });
 
-                                        // clear new state once saved
-                                        Object.keys(this._new).forEach((item) => {
-                                            this._new[item] = false;
-                                        });
-
-                                        console.log(`${this.log_prefix} saved`, data);
-                                        this.mode = "shared"; // shared mode
-                                        this.emit("save");
-                                        return resolve();
-                                    });
+                                console.log(`${this.log_prefix} saved`, data);
+                                this.mode = "shared"; // shared mode
+                                this.emit("save");
+                                return resolve();
                             }
                         });
                     }
@@ -459,16 +451,7 @@ LX.Item = class Item extends LV.EventEmitter {
                         console.log(`${this.log_prefix} Dropped`);
                         this.mode = "dropped";
                         this.emit("drop");
-
-                        // @todo explore why this may not properly unset and remove from list
-                        LT.db.get("pkg")
-                            .get(package_name)
-                            .get("items")
-                            .unset(this.id)
-                            .once((v,k) => {
-                                this.emit("drop");
-                                return resolve();
-                            });
+                        return resolve();
                     });
             }
 
