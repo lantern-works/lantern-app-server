@@ -133,7 +133,12 @@ LX.Item = class Item extends LV.EventEmitter {
     * Gets a list of all tags, often used to alter per-app display or logic
     */
     get tags() {
-        return this._data.tags || [];
+        if (this._data.tags && typeof(this._data.tags) == "object") {
+            return this._data.tags;
+        }
+        else {
+            return [];
+        }
     }
 
     /**
@@ -213,7 +218,10 @@ LX.Item = class Item extends LV.EventEmitter {
             if (this._key_table.hasOwnProperty(idx)) {
                 let k = this._key_table[idx];
                 if (v && v.constructor === Array) {
-                    new_obj[k] = "Å"+v.join(",");
+                    if (v.length) {
+                        new_obj[k] = "%"+v.join(",");
+                    }
+                    // do not store empty arrays at all
                 }
                 else if (v) {
                     new_obj[k] = v;
@@ -239,9 +247,15 @@ LX.Item = class Item extends LV.EventEmitter {
             if (this._key_table_reverse.hasOwnProperty(idx)) {
                 let k = this._key_table_reverse[idx];
                 if (v[0] == "Å") {
-                    // this is an array. expand it...
-                    v = v.replace("Å", "").split(",");
+                    // @todo this is deprecated. remove later...
+                    v = v.replace("Å", "%");
                 }
+
+                if (v[0] == "%") {
+                    // this is an array. expand it...
+                    v = v.replace("%", "").split(",");
+                }
+
                 new_obj[k] = v;
             }
         }

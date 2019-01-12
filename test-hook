@@ -4,7 +4,7 @@ import sys
 if (len(sys.argv) > 1):
     sys.argv.pop(0)
     for item in sys.argv:
-        val =  str(item)
+        val =  str(item).encode("ascii")
         if val:
             sys.stdout.write(val)
 else:
