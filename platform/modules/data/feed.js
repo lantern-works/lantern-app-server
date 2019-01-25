@@ -137,7 +137,7 @@ module.exports = class LXFeed extends EventEmitter {
         let node = this.db.get('pkg').get(name).get('data')
 
         node.once((v, k) => {
-            if (v.hasOwnProperty(version)) {
+            if (v && v.hasOwnProperty(version)) {
                 // verified that version exists
                 console.log(`${this.logPrefix} watching changes: ${id}`)
                 node

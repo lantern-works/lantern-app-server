@@ -15,7 +15,7 @@ module.exports = class LXDatabase extends EventEmitter {
         this.uri = uri
         this.namespace = '__LX__'
         this.stor = Gun(this.uri) // database instance
-        this.root_node = this.stor.get(this.namespace) // root node
+        this.node = this.stor.get(this.namespace) // root node
     }
 
     // -------------------------------------------------------------------------
@@ -23,56 +23,55 @@ module.exports = class LXDatabase extends EventEmitter {
         return `[database]`.padEnd(20, ' ')
     }
 
-    // -------------------------------------------------------------------------
-    /**
-    * Ensure expected nodes are available to work with
-    */
-    setup (force) {
-        return new Promise((resolve, reject) => {
-
-            // don't encourage full-overwrite
-            let init = (force ? null : {})
-
-            this.root_node.once((v, k) => {
-                if (v) {
-                    console.log(`${this.logPrefix} database ready`)
-                } else {
-                    console.log(`${this.logPrefix} database ready but empty`)
-                }
-
-                // @todo add messages to data structure
-                let expected = ['org', 'pkg', 'itm']
-                expected.forEach((key) => {
-                    if (!v || !v.hasOwnProperty(key) || v[key] === null) {
-                        console.log(`${this.logPrefix} adding top-level node: ${key}`)
-                        this.root_node.get(key).put(null).put({}, (ack) => {
-                            if (ack.err) {
-                                reject('failed_create_node_' + key)
-                            } else {
-                                console.log(`${this.logPrefix} created top-level node: ${key}`)
-                            }
-                        })
-                    }
-                })
-                this.emit('ready')
-                resolve()
-            })
-        })
-    }
-
+   
     // -------------------------------------------------------------------------
     /**
     * Get node from within root namespace
     */
     get () {
-        return this.root_node.get.apply(this.root_node, arguments)
+        return this.node.get.apply(this.node, arguments)
     }
 
     /**
     * Sets value from within root namespace
     */
     put () {
-        return this.root_node.put.apply(this.root_node, arguments)
+        return this.node.put.apply(this.node, arguments)
+    }
+
+
+    // -------------------------------------------------------------------------
+    /**
+    * Ensure expected nodes are available to work with
+    */
+    setup () {
+        return new Promise((resolve, reject) => {
+
+            // demonstrates write ability and creates database files if non-existing
+            // database cannot be setup with simply {} structures
+            this.node.get("rnd").put(Math.random(), (ack) => {
+                let top_levels = ["org", "pkg", "itm"]
+                let count = 0
+                const check = () => {                    
+                    count++
+                    if (count === top_levels.length) {
+                        console.log(`${this.logPrefix} database ready`)
+                        resolve()
+                        this.emit('ready')
+                    }
+                }
+                top_levels.forEach(key => {
+                    this.node.get(key).put({}, (ack) => {
+                        if (ack.err) {
+                            return reject("database_init_ack_failed")
+                        }
+                        check()
+                    })
+                })
+
+            })
+
+        })
     }
 
     // -------------------------------------------------------------------------
@@ -83,7 +82,7 @@ module.exports = class LXDatabase extends EventEmitter {
     print (path, pointer, node) {
         // recursive attempt to narrow down to target node
         if (!pointer) pointer = path
-        if (!node) node = this.root_node
+        if (!node) node = this.node
         let split = pointer.split('/')
         node.get(split[0]).once((v, k) => {
             if (split.length > 1) {
@@ -163,7 +162,7 @@ module.exports = class LXDatabase extends EventEmitter {
     */
     jsonify (node, tree, pointer) {
         let self = this
-        node = node || self.root_node
+        node = node || self.node
         tree = tree || {}
         pointer = pointer || tree
 
