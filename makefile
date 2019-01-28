@@ -4,6 +4,7 @@ TAG?=latest
 CERTDIR := ./web/certs/
 DEVHOST := dev.lantern.link
 CERTS := $(CERTDIR)$(DEVHOST).pem
+VENDOR_CSS := web/public/styles/vendor.css
 
 .PHONY: build certs clean install start run stage deploy
 
@@ -22,16 +23,18 @@ start: $(CERTS)
 	HOOK_BACKUP="./hooks/backup" \
 	npm start	
 
-pack:
-	browserify platform/web.js --standalone LX --outfile web/public/scripts/platform.js
-	uglifyjs web/public/scripts/platform.js -o web/public/scripts/platform.min.js 
+$(VENDOR_CSS):
 	cat \
      'node_modules/bulma/css/bulma.min.css' \
      'node_modules/leaflet/dist/leaflet.css' \
      'node_modules/leaflet.locatecontrol/dist/L.Control.Locate.min.css' \
      'node_modules/@fortawesome/fontawesome-free/css/all.min.css' \
      'node_modules/typeface-montserrat/index.css' \
-	>> web/public/styles/vendor.css
+	>> $(VENDOR_CSS)
+
+pack: $(VENDOR_CSS)
+	npm run pack
+
 run:
 	docker-compose -f env/dc-dev.yml up
 
