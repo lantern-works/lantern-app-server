@@ -16,19 +16,8 @@ module.exports = (serv) => {
     */
     msgApply.add = (data, db) => {
         return new Promise((resolve, reject) => {
-            let node = getNode(data, db)
-            node.once((v, k) => {
-                if (v) {
-                    // item already exists, do not try adding again...
-                    return resolve(false)
-                }
-                node.put({}, (ack) => {
-                    if (ack.err) {
-                        return reject(new Error('inbox_add_failed'))
-                    }
-                    resolve(true)
-                })
-            })
+            console.log("acknowledge add but don't do anything with empty data...")
+            resolve(true)
         })
     }
 
@@ -37,23 +26,13 @@ module.exports = (serv) => {
     */
     msgApply.update = (data, db) => {
         return new Promise((resolve, reject) => {
-            let node = getNode(data, db)
-
-            node.once((v, k) => {
-                if (v === undefined) {
-                    reject(new Error('inbox_update_failed_missing_item'))
-                } else {
-                    node
-                        .get(data.field_key)
-                        .put(data.field_value, (ack) => {
-                            if (ack.err) {
-                                return reject(new Error('inbox_update_failed'))
-                            }
-                            resolve(true)
-                        })
-                }
+            let obj = {}
+            obj[data.field_key] = data.field_value
+            getNode(data, db)
+                .put(obj).once((v,k) => {
+                    resolve(true)
+                })
             })
-        })
     }
 
     /**

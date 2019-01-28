@@ -39,17 +39,31 @@ module.exports = (app) => {
     */
     const runChangeHook = (key, msg) => {
         if (changeHooks.hasOwnProperty(key)) {
+
             let msgKey = util.getSimpleMessage(msg)
-            if (app.locals.inbox.hasOwnProperty(msgKey)) {
+
+            // loop through all inbox items but ignore sequence number at front
+            // @todo make this scale a bit better
+            let messageList = Object.keys(app.locals.inbox)
+            let isInInbox = false
+            messageList.forEach((compareMsg) => {
+                let compareMsgKey = util.getSimpleMessage(compareMsg)
+                if (compareMsgKey === msgKey) {
+                    isInInbox = true
+                }
+            })
+
+            if (isInInbox) {
                 // prevent echo of incoming message
-                log.debug(`${util.logPrefix('watcher')} ${msg} <<`)
-            } else if (typeof (changeHooks[key]) === 'string') {
+                return log.debug(`${util.logPrefix('watcher')} ${msg} <<`)
+            }
+
+            if (typeof (changeHooks[key]) === 'string') {
                 let ps = execFile(changeHooks[key], [msg])
                 ps.stdout.on('data', (data) => {
                     log.debug(`${util.logPrefix('watcher')} ${msg} >> `)
                     // log.debug(`${key} hook output: ${data}`)
                 })
-
                 ps.stderr.on('data', (err) => {
                     log.warn(`${util.logPrefix('watcher')} ${msg} !! `)
                     log.warn(`${key} hook could not run: ${err}`)
@@ -64,6 +78,7 @@ module.exports = (app) => {
     * Watch for and announce changes to given item
     */
     const watchItem = (itemData, itemID) => {
+
         // detected drop
         if (itemData === null) {
             // this can be triggered when an item is first created due to the way we use put(null)
@@ -97,11 +112,13 @@ module.exports = (app) => {
     }
 
     // listen for updates
-    node.once(() => {
+     node.once((v,k) => {
         // don't output initial data load
         setTimeout(() => {
             log.debug(`${util.logPrefix('watcher')} waiting for changes...`)
             loaded = true
         }, 300)
-    }).map().on(watchItem)
+        node.map().on(watchItem)
+    })
+
 }
