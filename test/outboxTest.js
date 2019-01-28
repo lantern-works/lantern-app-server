@@ -33,16 +33,6 @@ describe('outbox', () => {
             })
     })
 
-    it('should queue a well-formed add message', (done) => {
-        putMessage({ 'message': `1+test` })
-            .then(response => response.json())
-            .then((json) => {
-                // could be true or false depending if we added this already
-                should.exist(json.ok)
-                done()
-            })
-    })
-
     it('should queue a well-formed update message', (done) => {
         putMessage({ 'message': `2^test.me=yes` })
             .then(response => response.json())
@@ -86,7 +76,7 @@ describe('outbox', () => {
             .then((json) => {
                 console.log('got item from outbox queue:', json)
                 should.exist(json.message)
-                json.rows.should.be.aboveOrEqual(2)
+                json.rows.should.be.aboveOrEqual(1)
                 done()
             })
     })

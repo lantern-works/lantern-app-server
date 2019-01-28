@@ -12,16 +12,6 @@ module.exports = (serv) => {
     const msgApply = {}
 
     /**
-    * Add a node to the database
-    */
-    msgApply.add = (data, db) => {
-        return new Promise((resolve, reject) => {
-            console.log("acknowledge add but don't do anything with empty data...")
-            resolve(true)
-        })
-    }
-
-    /**
     * Update existing database field
     */
     msgApply.update = (data, db) => {

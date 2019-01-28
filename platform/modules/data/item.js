@@ -214,14 +214,19 @@ module.exports = class LXItem extends EventEmitter {
         let newObj = {}
         for (var idx in obj) {
             let v = obj[idx]
-            if (this._key_table.hasOwnProperty(idx)) {
+
+            if (v === undefined || v === null) {
+                // nothing worth sending over the wire
+            }   
+            else if (this._key_table.hasOwnProperty(idx)) {
                 let k = this._key_table[idx]
                 if (v && v.constructor === Array) {
                     if (v.length) {
                         newObj[k] = '%' + v.join(',')
                     }
                     // do not store empty arrays at all
-                } else if (v !== undefined) {
+                } 
+                else {
                     newObj[k] = v
                 }
             }

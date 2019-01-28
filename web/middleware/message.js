@@ -4,7 +4,6 @@ module.exports = (req, res, next) => {
     */
     // @todo  allow match for multi-message separated by ;
     const msgRegex = {
-        add: /([0-9]+)\+([a-zA-Z0-9]+)/,
         update: /([0-9]+)\^([a-zA-Z0-9]+)\.([a-z]*)\=([\w\.]+)/,
         drop: /([0-9]+)-([a-zA-Z0-9]+)/
     }

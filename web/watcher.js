@@ -11,7 +11,6 @@ module.exports = (app) => {
     let node = app.locals.db.get('__LX__').get('itm')
     let items = {}
     let changeHooks = {
-        'add': null,
         'update': null,
         'drop': null
     }
@@ -89,15 +88,10 @@ module.exports = (app) => {
             }
             return
         }
-
-        // detected add
+        
+        // prevent duplicate runs
         if (items[itemID]) return
-
         items[itemID] = true
-        if (loaded) {
-            let msg = `${getSeq()}+${itemID}`
-            runChangeHook('add', msg)
-        }
 
         // watch for field changes
         node.get(itemID)

@@ -33,43 +33,27 @@ describe('inbox', () => {
             })
     })
 
-    it('should discard an update message for missing item', (done) => {
-        putMessage({ 'message': `1^missingitem.greeting=world` })
+
+    it('should accept a key for unknown and then known item', (done) => {
+        putMessage({ 'message': `1^test.me=yes` })
             .then(response => response.json())
             .then((json) => {
-                json.err.should.equal('inbox_update_failed_missing_item')
-                json.ok.should.equal(false)
-                done()
+                json.ok.should.equal(true)
+            })
+            .then(() => {
+                putMessage({ 'message': `2^test.me=again` })
+                .then(response => response.json())
+                .then((json) => {
+                    json.ok.should.equal(true)
+                    done()
+                })
             })
     })
 
-    it('should add and update an item', (done) => {
-        putMessage({ 'message': `1+test` })
-            .then(response => response.json())
-            .then((json) => {
-                // could be true or false depending if we added this already
-                should.exist(json.ok)
-                putMessage({ 'message': `2^test.me=yes` })
-                    .then(response => response.json())
-                    .then((json) => {
-                        json.ok.should.equal(true)
-                        done()
-                    })
-            })
-    })
-
-    it('should reject a key for unknown item', (done) => {
-        putMessage({ 'message': `3^should.not=exist` })
-            .then(response => response.json())
-            .then((json) => {
-                json.ok.should.equal(false)
-                done()
-            })
-    })
 
     after((done) => {
         // clean up the existing node we created
-        putMessage({ 'message': `4-test` })
+        putMessage({ 'message': `3-test` })
             .then(response => response.json())
             .then((json) => {
                 json.ok.should.equal(true)
