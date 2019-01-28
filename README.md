@@ -40,6 +40,7 @@ After starting your server as a developer:
 npm install
 npm run lint
 npm run test
+npm run pack
 ```
 
 ### Requirements
