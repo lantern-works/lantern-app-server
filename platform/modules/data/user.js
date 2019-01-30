@@ -1,13 +1,13 @@
 const EventEmitter = require('event-emitter-es6')
 const shortid = require('shortid')
 const SEA = require('sea')
-const LXFeed = require('./feed')
+const Feed = require('./feed')
 
-module.exports = class LXUser extends EventEmitter {
+module.exports = class User extends EventEmitter {
     constructor (db, clientStorage) {
         super()
 
-        if (!db || db.constructor.name !== 'LXDatabase') {
+        if (!db || db.constructor.name !== 'Database') {
             return console.error('User requires database to construct')
         }
         if (!clientStorage) {
@@ -17,7 +17,7 @@ module.exports = class LXUser extends EventEmitter {
         this.db = db
         this.node = this.db.stor.user()
         this.pair = null
-        this.feed = new LXFeed(this)
+        this.feed = new Feed(this)
         this.clientStorage = clientStorage // typically browser localStorage
 
         this.once('auth', () => {

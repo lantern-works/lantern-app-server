@@ -1,6 +1,6 @@
 const EventEmitter = require('event-emitter-es6')
 
-module.exports = class LXOrganization extends EventEmitter {
+module.exports = class Organization extends EventEmitter {
     constructor (id, name, db) {
         super()
         if (!id) {
@@ -11,7 +11,7 @@ module.exports = class LXOrganization extends EventEmitter {
             return console.error(`[Organiation] please name your organization`)
         }
 
-        if (!db || db.constructor.name !== 'LXDatabase') {
+        if (!db || db.constructor.name !== 'Database') {
             return console.error('[Organization] requires database to construct')
         }
 

@@ -1,21 +1,19 @@
 const EventEmitter = require('event-emitter-es6')
-const LXView = require('./view')
-const LXAtlas = require('../mapping/atlas')
-const LXDatabase = require('../data/database')
-const LXUser = require('../data/user')
-const LXApp = require('../display/app')
+const View = require('./view')
+const User = require('../data/user')
+const App = require('./app')
 const fetch = window.fetch
+require('../../helpers/array')
 
-module.exports = class LXDirector extends EventEmitter {
-    constructor () {
+module.exports = class Director extends EventEmitter {
+    constructor (db) {
         super()
         this.ready = false
         this.apps = {}
-        this.view = new LXView()
-        this.atlas = new LXAtlas(window.localStorage)
-        // define database and user to work with decentralized network
-        this.db = new LXDatabase(window.location.origin + '/gun')
-        this.user = new LXUser(this.db, window.localStorage)
+        this.view = new View()
+        this.db = db
+        this.user = new User(this.db, window.localStorage)
+        this._atlas = null
     }
 
     withUser (fn) {
@@ -26,6 +24,14 @@ module.exports = class LXDirector extends EventEmitter {
                 fn(this.user)
             }.bind(this))
         }
+    }
+
+    set atlas (val) {
+        this._atlas = val
+    }
+
+    get atlas () {
+        return this._atlas
     }
 
     loadApps () {
@@ -88,7 +94,7 @@ module.exports = class LXDirector extends EventEmitter {
 
         if (!this.apps.hasOwnProperty(item.name)) {
             this.withUser((user) => {
-                let obj = this.apps[item.name] = new LXApp(item)
+                let obj = this.apps[item.name] = new App(item)
 
                 obj.on('load', (page) => {
                     // console.log("[Direct] App loads page: ", page.componentID );

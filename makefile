@@ -48,8 +48,9 @@ deploy:
 	triton-compose -f env/dc-prod.yml up -d
 
 clean:
-	rm web/public/scripts/platform.js
-	rm web/public/scripts/platform.min.js
+	rm web/public/scripts/data.*
+	rm web/public/scripts/apps.*
+	rm web/public/scripts/maps.*
 	rm web/public/styles/vendor.css
 
 $(CERTS):

@@ -1,6 +1,6 @@
 const EventEmitter = require('event-emitter-es6')
 const Gun = require('gun')
-
+require('../../helpers/string')
 const rel_ = Gun.val.rel._ // '#'
 const node_ = Gun.node._ // '_'
 
@@ -9,7 +9,7 @@ Gun.chain.unset = function (node) {
     return this
 }
 
-module.exports = class LXDatabase extends EventEmitter {
+module.exports = class Database extends EventEmitter {
     constructor (uri) {
         super()
         this.uri = uri

@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
@@ -37,21 +37,30 @@
     
 
     <!-- platform setup -->
-    <script src="/scripts/platform.js"></script>
+    <script src="/scripts/data.js"></script>
+    <script src="/scripts/apps.js"></script>
+    <script src="/scripts/maps.js"></script>
     <script>
-        window.LT = new LX.Director();
-        LT.loadStylesheet("/styles/vendor.css");
-        LT.loadStylesheet("/styles/global.css");
-        LT.loadApps().then( info => {
-            console.log("[platform]", JSON.stringify(info));
+        let db = new LD.Database(window.location.origin + '/gun')
+        let director = new LA.Director(db);
+        director.loadStylesheet('/styles/vendor.css')
+        director.loadStylesheet('/styles/global.css')
+        director.atlas = new LM.Atlas(window.localStorage)
+        director.loadApps().then( info => {
+            console.log('[platform]', JSON.stringify(info))
             // let our database load before loading tiles
             // for maximum speed
-            LT.db.once("ready", function() {
-                LT.user.authOrRegister();
-                LT.atlas.render(info.cloud == "1");
-                LT.loadScript("/scripts/raphael.min.js");
-            });
-            LT.db.setup();
+            
+            db.once('ready', function() {
+                director.user.authOrRegister()
+                director.atlas.render(info.cloud == '1')
+                director.loadScript('/scripts/raphael.min.js')
+            })
+
+            db.setup()
+
+            // export these for simple acccess by developers
+            window.LT = director
         });
     </script>
 </body>

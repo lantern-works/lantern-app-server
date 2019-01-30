@@ -2,7 +2,7 @@ const EventEmitter = require('event-emitter-es6')
 require('wheelnav')
 const WheelNav = window.wheelnav
 
-module.exports = class LXPieMenu extends EventEmitter {
+module.exports = class Menu extends EventEmitter {
     constructor () {
         super()
         this._locked = false
@@ -10,6 +10,9 @@ module.exports = class LXPieMenu extends EventEmitter {
         this.wheel = null
         this.element = document.getElementById('pie-menu')
         this.mask_element = document.getElementById('pie-menu-mask')
+        if (!this.element || !this.mask_element) {
+            return console.error('[PieMenu] Missing required pie menu element in HTML')
+        }
         this.mask_element.onclick = () => {
             this.close()
             this.unlock()
@@ -21,7 +24,7 @@ module.exports = class LXPieMenu extends EventEmitter {
     */
     open (items, pos) {
         if (!items || !items.length) {
-            return console.log('[PieMenu] Refusing to show menu with zero items')
+            return console.warn('[PieMenu] Refusing to show menu with zero items')
         }
 
         if (this._locked) {

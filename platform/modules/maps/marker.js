@@ -1,7 +1,7 @@
 const Geohash = require('latlon-geohash')
-const LXItem = require('../data/item')
+const Item = require('../data/item')
 
-module.exports = class LXMarkerItem extends LXItem {
+module.exports = class MarkerItem extends Item {
     constructor (db) {
     // now set defaults for key compression
         super(db, {
@@ -69,8 +69,7 @@ module.exports = class LXMarkerItem extends LXItem {
     get score () {
         if (this._data.score && isFinite(this._data.score)) {
             return Math.round(parseFloat(this._data.score) * 100) / 100
-        }
-        else {
+        } else {
             return 0.00
         }
     }
@@ -122,7 +121,7 @@ module.exports = class LXMarkerItem extends LXItem {
             for (var idy in item) {
                 let tag = item[idy].tag
                 if (this.tags.indexOf(tag) != -1) {
-                    if (idx == 'main') {
+                    if (idx === 'main') {
                         cat = item[idy].label
                     } else {
                         title = item[idy].label

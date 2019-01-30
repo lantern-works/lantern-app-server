@@ -1,6 +1,6 @@
 const EventEmitter = require('event-emitter-es6')
 
-module.exports = class LXFeed extends EventEmitter {
+module.exports = class Feed extends EventEmitter {
     constructor (user) {
         super()
         this.user = user

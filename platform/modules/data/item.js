@@ -1,11 +1,11 @@
 const EventEmitter = require('event-emitter-es6')
 
-module.exports = class LXItem extends EventEmitter {
+module.exports = class Item extends EventEmitter {
     constructor (db, defaults) {
         super()
         this.id = null
 
-        if (!db || db.constructor.name !== 'LXDatabase') {
+        if (!db || db.constructor.name !== 'Database') {
             throw new Error('Requires database to be defined')
         }
 
@@ -217,16 +217,14 @@ module.exports = class LXItem extends EventEmitter {
 
             if (v === undefined || v === null) {
                 // nothing worth sending over the wire
-            }   
-            else if (this._key_table.hasOwnProperty(idx)) {
+            } else if (this._key_table.hasOwnProperty(idx)) {
                 let k = this._key_table[idx]
                 if (v && v.constructor === Array) {
                     if (v.length) {
                         newObj[k] = '%' + v.join(',')
                     }
                     // do not store empty arrays at all
-                } 
-                else {
+                } else {
                     newObj[k] = v
                 }
             }
@@ -248,7 +246,7 @@ module.exports = class LXItem extends EventEmitter {
             if (this._key_table_reverse.hasOwnProperty(idx)) {
                 let k = this._key_table_reverse[idx]
 
-                if (typeof(v) === 'string') {
+                if (typeof (v) === 'string') {
                     if (v[0] === 'Å') {
                         // @todo this is deprecated. remove later...
                         v = v.replace('Å', '%')

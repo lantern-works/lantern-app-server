@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link href="/styles/vendor.css" rel="stylesheet" />
+    <link href="/styles/global.css" rel="stylesheet"  />
+</head>
+<body>
+    <div class="app-frame">
+        <div id="test" class="notification"></div>
+        <button id="button" class="button">Double</button>
+        <button id="reset" class="button">Reset</button>
+    </div>
+    <!-- platform setup -->
+    <script src="/scripts/data.js"></script>
+    <script>
+        let el = document.getElementById('test')
+        let btn = document.getElementById('button')
+        let reset = document.getElementById('reset')
+        let db = new LD.Database(window.location.origin + '/gun')
+        let start = 2
+
+        db.once('ready', function() {
+             db.get('tnt').get('number').once((v,k) => {
+                console.log(v,k)
+                el.innerHTML = v = v || start
+            })
+
+            btn.onclick = () => {
+                let num = Number(el.innerHTML)
+                num *= start
+                console.log(`PUT ${num}`)
+                db.get('tnt').put({'number': num}, (ack) => {
+                    if (ack.error) {
+                        console.error(ack)
+                    }
+                    else {
+                        console.log(ack)
+                        el.innerHTML = num
+                    }
+                })
+            }
+
+            reset.onclick = () => {
+                db.get('tnt').put(null)
+                el.innerHTML = start
+            }
+        })
+
+        db.setup();
+    </script>
+</body>
+</html>

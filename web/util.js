@@ -100,7 +100,7 @@ self.getSimpleMessage = (msg) => {
 /**
 * Minify styles
 */
-self.compressStylesheets = () => {
+self.compressAllStylesheets = () => {
     return new Promise((resolve, reject) => {
         let files = [
             'node_modules/bulma/css/bulma.min.css',
@@ -120,12 +120,15 @@ self.compressStylesheets = () => {
 /**
 * Pack scripts
 */
+self.packAllJavascript = () => {
+   return Promise.all([self.packJavascript('data', 'LD'),    self.packJavascript('apps', 'LA'),     self.packJavascript('maps', 'LM')])
+}
 
-self.packJavascript = () => {
+self.packJavascript = (name, scope) => {
     return new Promise((resolve, reject) => {
-        let platformScript = path.resolve(__dirname, './public/scripts/platform.js')
-        let b = browserify(['platform/web.js'], {
-            'standalone': 'LX'
+        let platformScript = path.resolve(__dirname, `./public/scripts/${name}.js`)
+        let b = browserify([`platform/${name}.js`], {
+            'standalone': scope
         })
         let writeStream = fs.createWriteStream(platformScript)
         b.bundle()
@@ -142,15 +145,19 @@ self.packJavascript = () => {
 /**
 * Minify scripts
 */
-self.compressJavascript = () => {
+self.compressAllJavascript = () => {
+    return Promise.all([self.compressJavascript('maps'), self.compressJavascript('apps'), self.compressJavascript('data')])
+}
+
+self.compressJavascript = (name) => {
     return new Promise((resolve, reject) => {
         // handle minification directly here rather than build scripts
-        let platformMin = path.resolve(__dirname, './public/scripts/platform.min.js')
+        let platformMin = path.resolve(__dirname, `./public/scripts/${name}.min.js`)
 
         // offer compressed versions of scripts
         minify({
             compressor: uglifyJS,
-            input: path.resolve(__dirname, './public/scripts/platform.js'),
+            input: path.resolve(__dirname, `./public/scripts/${name}.js`),
             output: platformMin,
             callback: resolve
         })

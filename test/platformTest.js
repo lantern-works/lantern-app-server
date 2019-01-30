@@ -4,7 +4,7 @@ const should = require('should')
 const fetch = require('node-fetch')
 const conf = require('./testConf')
 
-describe('platform', function() {
+describe('platform', function () {
     // @todo make this go .. faster...
     this.timeout(6000)
     it('should compress and minify platform code', (done) => {
@@ -14,10 +14,10 @@ describe('platform', function() {
                 'Content-Type': 'application/json'
             }
         })
-        .then(response => response.json())
-        .then((json) => {
-            json.ok.should.equal(true)
-            done()
-        })
+            .then(response => response.json())
+            .then((json) => {
+                json.ok.should.equal(true)
+                done()
+            })
     })
 })

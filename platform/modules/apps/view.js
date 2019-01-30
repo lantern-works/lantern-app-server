@@ -1,9 +1,9 @@
 const EventEmitter = require('event-emitter-es6')
 const Vue = require('vue')
 const VueLongPress = require('vue-long-press-directive')
-const LXPieMenu = require('./menu')
+const Menu = require('./menu')
 
-module.exports = class LXView extends EventEmitter {
+module.exports = class View extends EventEmitter {
     constructor () {
         super()
         // setup vue object
@@ -17,6 +17,6 @@ module.exports = class LXView extends EventEmitter {
         })
         Vue.use(VueLongPress, { duration: 750 })
         this.data = this.vue.$data
-        this.menu = new LXPieMenu()
+        this.menu = new Menu()
     }
 }

@@ -1,7 +1,7 @@
 const EventEmitter = require('event-emitter-es6')
 const Vue = require('vue')
 
-module.exports = class LXApp extends EventEmitter {
+module.exports = class App extends EventEmitter {
     constructor (obj) {
         super()
         this.name = obj.name
@@ -78,34 +78,31 @@ module.exports = class LXApp extends EventEmitter {
     load () {
         let accepted = ['data', 'computed', 'methods', 'open', 'callback', 'mounted']
         let imageRegex = /(<img[\S\s]*?src=")([\S\s]*?)("[\S\s]*?>)/ig
-
         let logic = {}
-
-        this.children.forEach((child) => {
-            if (child.extension === '.css' && child.body) {
-                this.addCSS(child.body)
-            } else if (child.extension === '.js' && child.body) {
-                try {
+        try {
+            this.children.forEach((child) => {
+                if (child.extension === '.css' && child.body) {
+                    this.addCSS(child.body)
+                } else if (child.extension === '.js' && child.body) {
                     let js = eval(child.body)
                     accepted.forEach((key) => {
                         if (js.hasOwnProperty(key)) {
                             logic[key] = js[key]
                         }
                     })
-                } catch (e) {
-                    console.log(`${this.logPrefix} Failed to load javascript`)
-                    console.log(e)
                 }
-            }
-        })
-
-        this.children.forEach((child) => {
-            if (child.extension === '.html' && child.body) {
-                let html = child.body.replace(imageRegex, '$1' + `/-/${this.name}/` + '$2$3')
-                let pageID = child.name.split('.')[0]
-                this.createPageComponent(pageID, html, logic)
-            }
-        })
+            })
+            this.children.forEach((child) => {
+                if (child.extension === '.html' && child.body) {
+                    let html = child.body.replace(imageRegex, '$1' + `/-/${this.name}/` + '$2$3')
+                    let pageID = child.name.split('.')[0]
+                    this.createPageComponent(pageID, html, logic)
+                }
+            })
+        } catch (e) {
+            console.log(`${this.logPrefix} Failed to load application`)
+            console.log(e)
+        }
     }
 
     /**

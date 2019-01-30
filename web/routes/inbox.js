@@ -19,10 +19,10 @@ module.exports = (serv) => {
             let obj = {}
             obj[data.field_key] = data.field_value
             getNode(data, db)
-                .put(obj).once((v,k) => {
+                .put(obj).once((v, k) => {
                     resolve(true)
                 })
-            })
+        })
     }
 
     /**

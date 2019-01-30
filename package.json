@@ -48,8 +48,8 @@
         "lint": "standardx",
         "fix": "standardx --fix",
         "test": "mocha ./test",
-        "browserify": "browserify platform/web.js --standalone LX --outfile web/public/scripts/platform.js",
-        "uglify": "uglifyjs web/public/scripts/platform.js -o web/public/scripts/platform.min.js",
+        "browserify": "browserify platform/data.js --standalone LD --outfile web/public/scripts/data.js; browserify platform/apps.js --standalone LA --outfile web/public/scripts/apps.js; browserify platform/maps.js --standalone LM --outfile web/public/scripts/maps.js",
+        "uglify": "uglifyjs web/public/scripts/data.js -o web/public/scripts/data.min.js; uglifyjs web/public/scripts/apps.js -o web/public/scripts/apps.min.js;uglifyjs web/public/scripts/maps.js -o web/public/scripts/maps.min.js",
         "pack": "npm run browserify && npm run uglify",
         "postinstall": "npm run pack",
         "start": "node ./web/index.js"

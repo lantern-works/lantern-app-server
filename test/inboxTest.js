@@ -33,7 +33,6 @@ describe('inbox', () => {
             })
     })
 
-
     it('should accept a key for unknown and then known item', (done) => {
         putMessage({ 'message': `1^test.me=yes` })
             .then(response => response.json())
@@ -42,14 +41,13 @@ describe('inbox', () => {
             })
             .then(() => {
                 putMessage({ 'message': `2^test.me=again` })
-                .then(response => response.json())
-                .then((json) => {
-                    json.ok.should.equal(true)
-                    done()
-                })
+                    .then(response => response.json())
+                    .then((json) => {
+                        json.ok.should.equal(true)
+                        done()
+                    })
             })
     })
-
 
     after((done) => {
         // clean up the existing node we created

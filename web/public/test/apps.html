@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link href="/styles/vendor.css" rel="stylesheet" />
+    <link href="/styles/global.css" rel="stylesheet"  />
+</head>
+<body>
+    <div id="app-container">
+        <div id="username" class="notification"></div>
+        <div id="packages" class="notification"></div>
+    </div>
+    <script src="/scripts/data.js"></script>
+    <script src="/scripts/apps.js"></script>
+    <script>
+        let db = new LD.Database(window.location.origin + '/gun')
+        let director = new LA.Director(db) 
+
+        director.user.authOrRegister().then((data) => {
+            document.getElementById('username').innerHTML = director.user.username
+            director.user.listPackages().then(packages => {
+                packages.forEach((package) => {
+                    let pkg = new LD.Package(package, db)
+                    pkg.getItems().then(items => {
+                        document.getElementById('packages').innerHTML += `<h1>${package}</h1>`
+                        document.getElementById('packages').innerHTML += `<div>${items.length} Items</div>`
+                    })
+                })
+            })
+        })
+    </script>
+</body>
+</html>

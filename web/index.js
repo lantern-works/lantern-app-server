@@ -120,9 +120,9 @@ backup(dbPath)
         // local machines will typically have scripts already generated
         // and we may want to avoid long load times
         if (process.env.CLOUD) {
-           util.packJavascript()
-                .then(util.compressStylesheets)
-                .then(util.compressJavascript)
+            util.packAllJavascript()
+                .then(util.compressAllStylesheets)
+                .then(util.compressAllJavascript)
                 .then(() => {
                     // the above methods are useful to make sure any code updates since last start
                     // are fully considered when user makes a request via the browser

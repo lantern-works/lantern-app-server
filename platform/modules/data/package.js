@@ -1,6 +1,6 @@
 const EventEmitter = require('event-emitter-es6')
 
-module.exports = class LXPackage extends EventEmitter {
+module.exports = class Package extends EventEmitter {
     constructor (name, db) {
         super()
 
@@ -9,7 +9,7 @@ module.exports = class LXPackage extends EventEmitter {
             throw new Error('missing_name')
         }
 
-        if (!db || db.constructor.name !== 'LXDatabase') {
+        if (!db || db.constructor.name !== 'Database') {
             return console.error('Package requires database to construct')
         }
 
