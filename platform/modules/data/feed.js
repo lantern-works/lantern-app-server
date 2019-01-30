@@ -136,25 +136,13 @@ module.exports = class Feed extends EventEmitter {
         // optimistically assume package exists
         this.packages[id] = true
 
-        let node = this.db.get('pkg').get(name).get('data')
-
-        node.once((v, k) => {
-            if (v && v.hasOwnProperty(version)) {
-                // verified that version exists
-                node
-                    .get(version)
-                    .map()
-                    .on((v, k) => {
-                    // start watching for changes
-                        this.watchItem(k, id)
-                    })
-                console.log(`${this.logPrefix} watching changes: ${id}`)
-            } else {
-                // disable our package subscription if we find out it is missing
-                this.packages[id] = false
-                console.warn(`${this.logPrefix} missing package version to watch: ${id}`)
-            }
-        })
+        let node = this.db.get('pkg').get(name).get('data').get('version')
+        console.log(`${this.logPrefix} watching the changes: ${id}`)
+        node.map()
+            .on((v, k) => {
+                // start watching for changes
+                    this.watchItem(k, id)
+                })
     }
 
     removeManyPackages (packages) {

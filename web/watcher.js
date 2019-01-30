@@ -38,7 +38,6 @@ module.exports = (app) => {
     */
     const runChangeHook = (key, msg) => {
         if (changeHooks.hasOwnProperty(key)) {
-
             let msgKey = util.getSimpleMessage(msg)
 
             // loop through all inbox items but ignore sequence number at front
@@ -58,15 +57,23 @@ module.exports = (app) => {
             }
 
             if (typeof (changeHooks[key]) === 'string') {
-                let ps = execFile(changeHooks[key], [msg])
-                ps.stdout.on('data', (data) => {
-                    log.debug(`${util.logPrefix('watcher')} ${msg} >> `)
-                    // log.debug(`${key} hook output: ${data}`)
-                })
-                ps.stderr.on('data', (err) => {
-                    log.warn(`${util.logPrefix('watcher')} ${msg} !! `)
-                    log.warn(`${key} hook could not run: ${err}`)
-                })
+                console.log(changeHooks[key])
+                try {
+                    let ps = execFile(changeHooks[key], [msg])
+                    ps.stdout.on('data', (data) => {
+                        log.debug(`${util.logPrefix('watcher')} ${msg} >> `)
+                        // log.debug(`${key} hook output: ${data}`)
+                    })
+                    ps.stderr.on('data', (err) => {
+                        log.warn(`${util.logPrefix('watcher')} ${msg} !! `)
+                        log.warn(`${key} hook could not run: ${err}`)
+                    })
+                }
+                catch(e) {
+                   log.warn(`${key} hook could not run: ${changeHooks[key]}`)
+                   log.warn("is the hook executable?")
+                }
+       
             } else {
                 log.debug(`${util.logPrefix('watcher')} ${msg}`)
             }
@@ -77,7 +84,6 @@ module.exports = (app) => {
     * Watch for and announce changes to given item
     */
     const watchItem = (itemData, itemID) => {
-
         // detected drop
         if (itemData === null) {
             // this can be triggered when an item is first created due to the way we use put(null)
@@ -88,7 +94,7 @@ module.exports = (app) => {
             }
             return
         }
-        
+
         // prevent duplicate runs
         if (items[itemID]) return
         items[itemID] = true
@@ -106,7 +112,7 @@ module.exports = (app) => {
     }
 
     // listen for updates
-     node.once((v,k) => {
+    node.once((v, k) => {
         // don't output initial data load
         setTimeout(() => {
             log.debug(`${util.logPrefix('watcher')} waiting for changes...`)
@@ -114,5 +120,4 @@ module.exports = (app) => {
         }, 300)
         node.map().on(watchItem)
     })
-
 }

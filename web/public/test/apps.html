@@ -8,10 +8,22 @@
     <link href="/styles/global.css" rel="stylesheet"  />
 </head>
 <body>
+
+    <!-- menu interface -->
+    <div id="pie-menu" 
+        data-wheelnav
+        data-wheelnav-slicepath='DonutSlice'
+        data-wheelnav-init
+        data-wheelnav-rotateoff
+        data-wheelnav-cssmode>
+    </div>
+    <div id="pie-menu-mask"></div>
+    
     <div id="app-container">
         <div id="username" class="notification"></div>
         <div id="packages" class="notification"></div>
     </div>
+
     <script src="/scripts/data.js"></script>
     <script src="/scripts/apps.js"></script>
     <script>

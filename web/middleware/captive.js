@@ -23,8 +23,11 @@ module.exports = (req, res, next) => {
         return (req.get('User-Agent') && req.get('User-Agent').indexOf('CaptiveNetworkSupport') !== -1)
     }
 
+    const sendSuccessMessage = () => {
+        return res.status(204).send('SUCCESS')
+    }
     const sendOfflineMessage = () => {
-        return res.end('NO SUCCESS')
+        return res.status(200).send('NO SUCCESS')
     }
 
     // ------------------------------------------------------------------
@@ -45,7 +48,7 @@ module.exports = (req, res, next) => {
         res.status(200).send('success\n')
     } else if (req.url === '/generate_204') {
         log.debug('[captive] google captive portal check')
-        sendOfflineMessage()
+        sendSuccessMessage()
     }
     // check for captive portal logic
     else if (isCaptiveNetworkSupport()) {
