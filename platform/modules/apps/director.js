@@ -59,8 +59,8 @@ module.exports = class Director extends EventEmitter {
                     }
                 })
                 .then((json) => {
-                    json.forEach(item => {
-                        this.createApp(item)
+                    json.apps.forEach(item => {
+                        this.createApp(item, json.data)
                         info.apps.push(item.name)
                     })
                     resolve(info)
@@ -86,7 +86,7 @@ module.exports = class Director extends EventEmitter {
         document.body.appendChild(el)
     }
     // ------------------------------------------------------------------------
-    createApp (item) {
+    createApp (item, data) {
         if (!item.children) {
             console.warn('[Direct] Ignoring app directory with no children:', item.name)
             return
@@ -94,7 +94,7 @@ module.exports = class Director extends EventEmitter {
 
         if (!this.apps.hasOwnProperty(item.name)) {
             this.withUser((user) => {
-                let obj = this.apps[item.name] = new App(item)
+                let obj = this.apps[item.name] = new App(item, data)
 
                 obj.on('load', (page) => {
                     // console.log("[Direct] App loads page: ", page.componentID );

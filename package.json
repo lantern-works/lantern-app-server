@@ -8,6 +8,7 @@
         "@trust/webcrypto": "*",
         "body-parser": "*",
         "bulma": "*",
+        "browserify": "^16.2.3",
         "compression": "^1.7.3",
         "concat": "*",
         "directory-tree": "^2.2.1",

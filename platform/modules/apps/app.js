@@ -2,14 +2,14 @@ const EventEmitter = require('event-emitter-es6')
 const Vue = require('vue')
 
 module.exports = class App extends EventEmitter {
-    constructor (obj) {
+    constructor (obj, data) {
         super()
         this.name = obj.name
         this.css_id = `lx-app-${this.name}-css`
         this.children = obj.children
         this.pages = []
         this._component_opened = {}
-        this.data = {}
+        this.data = data || {}
         this.load()
     }
 
@@ -31,7 +31,9 @@ module.exports = class App extends EventEmitter {
         if (logic) {
             if (logic.data) {
                 // keep multiple components in same app together with same data
-                self.data = logic.data
+                Object.keys(logic.data).forEach(key => {
+                    self.data[key] = logic.data[key]
+                })
                 cmp.data = function () {
                     return self.data
                 }

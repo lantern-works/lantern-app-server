@@ -26,7 +26,10 @@ module.exports = (serv) => {
 
         let filteredTree = directoryTree(appsDir, { extensions: /\.(html|js|json|css|png|gif|jpg|jpeg)$/ })
 
-        let finalResult = []
+        let finalResult = {
+            data: {},
+            apps: []
+        }
 
         util.removeMeta(filteredTree, 'path')
         let result = (filteredTree.hasOwnProperty('children') ? filteredTree.children : [])
@@ -34,14 +37,28 @@ module.exports = (serv) => {
         // which type of files do we read in advance?
         let readBodyFor = ['.js', '.css', '.html']
 
-        result.forEach((app) => {
-            if (app.name[0] !== '.') {
-                app.children.forEach((item) => {
+        result.forEach((resource) => {
+
+            if (resource.type == "directory" && resource.name[0] !== '.') {
+                // app directory
+                resource.children.forEach((item) => {
                     if (readBodyFor.indexOf(item.extension) > -1) {
-                        item.body = String(fs.readFileSync(appsDir + '/' + app.name + '/' + item.name))
+                        item.body = String(fs.readFileSync(appsDir + '/' + resource.name + '/' + item.name))
                     }
                 })
-                finalResult.push(app)
+                finalResult.apps.push(resource)
+            }
+            else if (resource.type == "file" && resource.extension == ".json") {
+                // json data
+                try {
+                    let data = JSON.parse(String(fs.readFileSync(appsDir + '/' + resource.name)))
+                    Object.keys(data).forEach(key => {
+                        finalResult.data[key] = data[key]
+                    })
+                }
+                catch(e) {
+                    log.error('unable to parse data.json for apps', e)
+                }
             }
         })
         res.status(200).json(finalResult)
