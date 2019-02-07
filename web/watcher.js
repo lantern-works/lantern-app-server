@@ -105,11 +105,26 @@ module.exports = (app) => {
     }
 
     const runHook = (key) => {
-        let data = JSON.stringify(packages)
+        let changesToDate = packages
+        let data = JSON.stringify(changesToDate)
+        let hasChange = false
+        Object.keys(packages).forEach((packageID) => {
+            if (Object.keys(packages[packageID]).length) {
+                hasChange = true
+                packages[packageID] = {}
+            }
+        })
+
+        if (!hasChange) {
+            //log.debug(`skip hook since no data change`)
+            return
+        }
+
         try {
             let ps = execFile(hook, [data])
             ps.stdout.on('data', (data) => {
-                // log.debug(`hook output: ${data}`)
+                // if we got confirmation back, we can clear our queue
+                 //log.debug(`hook output: ${data}`)
             })
             ps.stderr.on('data', (err) => {
                 log.warn(`hook could not run: ${err}`)
