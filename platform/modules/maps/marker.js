@@ -5,6 +5,7 @@ module.exports = class MarkerItem extends Item {
     constructor (db) {
     // now set defaults for key compression
         super(db, {
+            'label': ['l'],
             'geohash': ['g'],
             'ping': ['p', []],
             'score': ['s']
@@ -64,6 +65,21 @@ module.exports = class MarkerItem extends Item {
     get geohash () {
         return this._data.geohash
     }
+
+    // -------------------------------------------------------------------------
+
+    get label () {
+        return this._data.label
+    }
+
+    set label (val) {
+        if (val && typeof(val) == 'string' && val != this._data.label) {
+            this._data.label = val
+            this._new.label = true
+        }
+    }
+
+
 
     // -------------------------------------------------------------------------
     get score () {
