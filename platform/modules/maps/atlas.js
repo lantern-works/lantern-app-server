@@ -1,5 +1,6 @@
 const EventEmitter = require('event-emitter-es6')
 const Location = require('./location')
+
 const MaptileConfig = require('../../config/maptiler')
 const LeafletTilesConfig = require('../../config/leaflet_tiles')
 const LeafletMapConfig = require('../../config/leaflet_map')
@@ -229,14 +230,23 @@ module.exports = class Atlas extends EventEmitter {
             return
         }
 
+        marker.layer = window.L.marker(marker.latlng, {
+            icon: marker.getDivIcon(),
+            draggable: false,
+            autoPan: true
+        })
+
+        marker.layer.on('dragend', function (e) {
+            let latlng = e.target._latlng
+            marker.geohash = Location.toGeohash(latlng)
+        })
+
         marker.layer.addTo(this.map)
 
-        if (marker.id) {
-            this.markers[marker.id] = marker
-            marker.layer.on('click', (e) => {
-                this.emit('marker-click', marker)
-            })
-        }
+        this.markers[marker.id] = marker
+        marker.layer.on('click', (e) => {
+            this.emit('marker-click', marker)
+        })
 
         this.emit('marker-add', marker)
     }

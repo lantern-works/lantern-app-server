@@ -134,47 +134,6 @@ module.exports = class MarkerItem extends Item {
     }
 
     // -------------------------------------------------------------------------
-    /**
-    * Show on map
-    */
-    show () {
-        if (this.layer !== null) {
-            return
-        } else if (!this.latlng) {
-            console.error(`${this.logPrefix} cannot show marker with missing geolocation`)
-            return
-        }
-
-        // console.log(`${this.logPrefix} showing marker`, this);
-
-        let self = this
-        this.layer = window.L.marker(this.latlng, {
-            icon: this.getDivIcon(),
-            draggable: false,
-            autoPan: true
-        })
-
-        window.LT.atlas.addToMap(this)
-
-        // console.log(`${this.logPrefix} Show`, this.layer);
-
-        this.layer.on('dragend', function (e) {
-            let latlng = e.target._latlng
-            self.geohash = Geohash.encode(latlng.lat, latlng.lng)
-        })
-        this.emit('show', self)
-    }
-
-    /**
-    * Hide from the map without altering stored data
-    */
-    hide () {
-    // console.log(`${this.logPrefix} Hide`);
-        if (this.layer && this.layer._map) {
-            window.LT.atlas.removeFromMap(this)
-            this.emit('hide', this)
-        }
-    }
 
     /**
     * Selects this marker for interaction

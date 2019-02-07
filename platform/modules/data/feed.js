@@ -23,7 +23,7 @@ module.exports = class Feed extends EventEmitter {
         if (this.watched_items.hasOwnProperty(itemID)) {
             return
         }
-        // console.log(`${this.logPrefix} Watch changes for ${itemID} within package ${pkgID}`)
+        console.log(`${this.logPrefix} watch changes for ${itemID} within package ${pkgID}`)
         let event = {
             id: itemID,
             package: pkgID
@@ -136,13 +136,16 @@ module.exports = class Feed extends EventEmitter {
         // optimistically assume package exists
         this.packages[id] = true
 
-        let node = this.db.get('pkg').get(name).get('data').get('version')
         console.log(`${this.logPrefix} watching the changes: ${id}`)
-        node.map()
+        this.db.get('pkg')
+            .get(name)
+            .get('data')
+            .get(version)
+            .map()
             .on((v, k) => {
                 // start watching for changes
-                    this.watchItem(k, id)
-                })
+                this.watchItem(k, id)
+            })
     }
 
     removeManyPackages (packages) {
