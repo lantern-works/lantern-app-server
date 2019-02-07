@@ -8,23 +8,33 @@ const path = require('path')
 const execFile = require('child_process').execFile
 
 module.exports = (app) => {
-    let node = app.locals.db.get('__LX__').get('itm')
-    let items = {}
-    let changeHooks = {
-        'update': null,
-        'drop': null
-    }
     let loaded = false
+    let hook = null
+    let node = app.locals.db.get('__LX__').get('pkg')
+    let packages = {}
+    let items = {}
 
+    // ----------------------------------------------------------------------
     /**
-    * Check to see if we have any change hooks from environment
+    * Watch for and announce changes to given package
     */
-    Object.keys(changeHooks).forEach((key) => {
-        let envVar = 'HOOK_' + key.toUpperCase()
-        if (process.env.hasOwnProperty(envVar)) {
-            changeHooks[key] = path.resolve(process.env[envVar])
+    const watchPackage = (v, k) => {
+        let packageID = [v.name, v.version].join('@')
+
+        if (packages.hasOwnProperty(packageID)) {
+            log.debug(`${util.logPrefix('watcher')} skip duplicate ${v.name} = ${v.version}`)
+            return
         }
-    })
+
+        log.debug(`${util.logPrefix('watcher')} ${v.name} = ${v.version}`)
+        packages[packageID] = {}
+
+        let subnode = node.get(v.name).get('data').get(v.version)
+        subnode.map()
+            .on((v, k) => {
+                markItemAsChanged(subnode, packageID, v, k)
+            })
+    }
 
     /**
     * Get sequence number from database to help track intended priorities
@@ -34,63 +44,15 @@ module.exports = (app) => {
     }
 
     /**
-    * Run an executable to process a change on external system
-    */
-    const runChangeHook = (key, msg) => {
-        if (changeHooks.hasOwnProperty(key)) {
-            let msgKey = util.getSimpleMessage(msg)
-
-            // loop through all inbox items but ignore sequence number at front
-            // @todo make this scale a bit better
-            let messageList = Object.keys(app.locals.inbox)
-            let isInInbox = false
-            messageList.forEach((compareMsg) => {
-                let compareMsgKey = util.getSimpleMessage(compareMsg)
-                if (compareMsgKey === msgKey) {
-                    isInInbox = true
-                }
-            })
-
-            if (isInInbox) {
-                // prevent echo of incoming message
-                return log.debug(`${util.logPrefix('watcher')} ${msg} <<`)
-            }
-
-            if (typeof (changeHooks[key]) === 'string') {
-                console.log(changeHooks[key])
-                try {
-                    let ps = execFile(changeHooks[key], [msg])
-                    ps.stdout.on('data', (data) => {
-                        log.debug(`${util.logPrefix('watcher')} ${msg} >> `)
-                        // log.debug(`${key} hook output: ${data}`)
-                    })
-                    ps.stderr.on('data', (err) => {
-                        log.warn(`${util.logPrefix('watcher')} ${msg} !! `)
-                        log.warn(`${key} hook could not run: ${err}`)
-                    })
-                }
-                catch(e) {
-                   log.warn(`${key} hook could not run: ${changeHooks[key]}`)
-                   log.warn("is the hook executable?")
-                }
-       
-            } else {
-                log.debug(`${util.logPrefix('watcher')} ${msg}`)
-            }
-        }
-    }
-
-    /**
     * Watch for and announce changes to given item
     */
-    const watchItem = (itemData, itemID) => {
+    const markItemAsChanged = (subnode, packageID, itemData, itemID) => {
         // detected drop
         if (itemData === null) {
             // this can be triggered when an item is first created due to the way we use put(null)
             // therefore, only indicate deletions if we already know about a valid item
             if (loaded && items[itemID]) {
-                let msg = `${getSeq()}-${itemID}`
-                runChangeHook('drop', msg)
+                markItemAsDropped(packageID, itemID)
             }
             return
         }
@@ -100,24 +62,70 @@ module.exports = (app) => {
         items[itemID] = true
 
         // watch for field changes
-        node.get(itemID)
-            .map().on((v, fieldID) => {
+        subnode.get(itemID)
+            .map().on((fieldData, fieldID) => {
                 // @todo identify issue where inbox can trigger this code
                 // to run twice for the same database update
                 if (loaded) {
-                    let msg = `${getSeq()}^${itemID}.${fieldID}=${v}`
-                    runChangeHook('update', msg)
+                    markItemAsUpdated(packageID, itemID, fieldID, fieldData)
                 }
             })
     }
 
-    // listen for updates
+    const markItemAsDropped = (packageID, itemID) => {
+        let msg = `${getSeq()}-${itemID}`
+        log.debug(`${util.logPrefix('watcher')} ${msg}`)
+        let target = packages[packageID][itemID] = packages[packageID][itemID] || { seq: null, data: {} }
+        target.seq = getSeq()
+        target.data = null
+    }
+
+    const markItemAsUpdated = (packageID, itemID, fieldID, fieldData) => {
+        let target = packages[packageID][itemID] = packages[packageID][itemID] || { seq: null, data: {} }
+        let msg = `${getSeq()}^${itemID}.${fieldID}=${fieldData}`
+        log.debug(`${util.logPrefix('watcher')} ${msg}`)
+        target.seq = getSeq()
+        target.data[fieldID] = fieldData
+    }
+
+    const init = () => {
+        log.debug(`${util.logPrefix('watcher')} waiting for changes...`)
+        loaded = true
+
+        // check to see if we have a change hook from environment
+        if (process.env.hasOwnProperty('HOOK_CHANGE')) {
+            hook = path.resolve(process.env['HOOK_CHANGE'])
+            let timing = (process.env.CHANGE_INTERVAL ? Number(process.env.CHANGE_INTERVAL) : 5000)
+            log.debug(`${util.logPrefix('watcher')} change hook = ${hook} (${timing}ms)`)
+            setInterval(
+                runHook, 
+                timing
+            )
+        }
+    }
+
+    const runHook = (key) => {
+        let data = JSON.stringify(packages)
+        try {
+            let ps = execFile(hook, [data])
+            ps.stdout.on('data', (data) => {
+                // log.debug(`hook output: ${data}`)
+            })
+            ps.stderr.on('data', (err) => {
+                log.warn(`hook could not run: ${err}`)
+            })
+        } catch (e) {
+            log.warn(`hook could not run: ${hook}`)
+            log.warn('is the hook executable?')
+            log.error(e)
+        }
+    }
+
+    // ----------------------------------------------------------------------
+    // identify and prepare to watch all valid packages in the database
     node.once((v, k) => {
         // don't output initial data load
-        setTimeout(() => {
-            log.debug(`${util.logPrefix('watcher')} waiting for changes...`)
-            loaded = true
-        }, 300)
-        node.map().on(watchItem)
+        setTimeout(init, 300)
     })
+        .map().on(watchPackage)
 }

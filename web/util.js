@@ -121,7 +121,7 @@ self.compressAllStylesheets = () => {
 * Pack scripts
 */
 self.packAllJavascript = () => {
-   return Promise.all([self.packJavascript('data', 'LD'),    self.packJavascript('apps', 'LA'),     self.packJavascript('maps', 'LM')])
+    return Promise.all([self.packJavascript('data', 'LD'), self.packJavascript('apps', 'LA'), self.packJavascript('maps', 'LM')])
 }
 
 self.packJavascript = (name, scope) => {

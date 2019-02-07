@@ -16,9 +16,8 @@ install:
 	git submodule update --init --recursive
 	
 start: $(CERTS)
-	HOOK_ADD="./hooks/change" \
-	HOOK_DROP="./hooks/change" \
-	HOOK_UPDATE="./hooks/change" \
+	HOOK_CHANGE="./hooks/change" \
+	CHANGE_INTERVAL=3000 \
 	HOOK_RESTORE="./hooks/restore" \
 	HOOK_BACKUP="./hooks/backup" \
 	npm start	

@@ -15,9 +15,7 @@ services:
           - DB=db/dev
           - SSL_PRIVATE_KEY=/lantern/server/web/certs/dev.lantern.link-key.pem
           - SSL_CERTIFICATE=/lantern/server/web/certs/dev.lantern.link.pem
-          - HOOK_ADD=/lantern/server/hooks/change
-          - HOOK_UPDATE=/lantern/server/hooks/change
-          - HOOK_DROP=/lantern/server/hooks/change
+          - HOOK_CHANGE=/lantern/server/hooks/change
           - HOOK_BACKUP=/lantern/server/hooks/backup
           - HOOK_RESTORE=/lantern/server/hooks/restore
 
