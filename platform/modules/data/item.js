@@ -20,21 +20,22 @@ module.exports = class Item extends EventEmitter {
         let globalDefaults = {
             'owner': ['o'],
             'editors': ['e', []],
-            'tags': ['t', []]
+            'tags': ['t', []],
+            'signatures': ['@', []]
         }
 
-        defaults = Object.assign(globalDefaults, defaults)
+        this._defaults = Object.assign(globalDefaults, defaults)
 
-        for (var idx in defaults) {
-            this._data[idx] = defaults[idx][1] || null
+        for (var idx in this._defaults) {
+            this._data[idx] = this._defaults[idx][1] || null
             this._new[idx] = false
         }
 
         this._key_table = {}
         this._key_table_reverse = {}
-        for (var idy in defaults) {
-            this._key_table[idy] = defaults[idy][0]
-            this._key_table_reverse[defaults[idy][0]] = idy
+        for (var idy in this._defaults) {
+            this._key_table[idy] = this._defaults[idy][0]
+            this._key_table_reverse[this._defaults[idy][0]] = idy
         }
 
         return this
@@ -59,6 +60,16 @@ module.exports = class Item extends EventEmitter {
             let unpackagedData = this.unpack(val)
             Object.keys(unpackagedData).forEach((key) => {
                 let val = unpackagedData[key]
+
+                // basic check for expected type
+                if (this._defaults[key][1] === []) {
+                    // expects to be an array
+                    if (val.constructor !== Array) {
+                        console.log(`${this.logPrefix} skip set of unexpected value for ${key} = `, val);
+                        return
+                    }
+                }
+
                 this._data[key] = val
                 if (this._new[key] == val) {
                     delete this._new[key]
@@ -119,7 +130,20 @@ module.exports = class Item extends EventEmitter {
         this._data.editors.push(val)
         this._new.editors = true
         this.emit('editor', val)
+    } 
+
+    // ------------------------------------------------------------------- SIGNATURES
+    get signatures () {
+        return this._data.signatures
     }
+
+  set signatures (val) {
+        if (!val || val.constructor !== Array) return
+        if (val.toString() != this._data.signatures.toString()) {
+            this._data.signatures = val
+            this._new.signatures = true
+        }
+    } 
 
     // -------------------------------------------------------------------- MODE
     get mode () {
@@ -223,7 +247,10 @@ module.exports = class Item extends EventEmitter {
                     if (v.length) {
                         newObj[k] = '%' + v.join(',')
                     }
-                    // do not store empty arrays at all
+                    else {
+                        // empty array, all items have been removed
+                        newObj[k] = '%'
+                    }
                 } else {
                     newObj[k] = v
                 }
@@ -240,9 +267,9 @@ module.exports = class Item extends EventEmitter {
     */
     unpack (obj) {
         let newObj = {}
-
-        for (var idx in obj) {
+        Object.keys(obj).forEach(idx => {
             let v = obj[idx]
+
             if (this._key_table_reverse.hasOwnProperty(idx)) {
                 let k = this._key_table_reverse[idx]
 
@@ -254,11 +281,29 @@ module.exports = class Item extends EventEmitter {
                     if (v[0] === '%') {
                         // this is an array. expand it...
                         v = v.replace('%', '').split(',')
+                        if (v == "") {
+                            // empty array
+                            v = []
+                        }
                     }
                 }
+
+
+                // basic check for expected type
+                if (this._defaults[k][1]) {
+                    // expects to be an array
+                    if (v.constructor !== Array) {
+                        // default value 
+                        console.log(`${this.logPrefix} use default rather than unexpected value for ${k} = `, v);
+                        v = this._defaults[k][1]
+                        return
+                    }
+                }
+
                 newObj[k] = v
             }
-        }
+         })
+
         // console.log(`${this.logPrefix} Unpacked:`, obj, newObj);
         return newObj
     }
@@ -424,4 +469,33 @@ module.exports = class Item extends EventEmitter {
             })
         })
     }
+
+
+    // -------------------------------------------------------------------------
+    /**
+    * Add your trust to this item
+    */
+    approve (sig) {
+        if (this._data.signatures.indexOf(sig) === -1) {
+            this._data.signatures.push(sig)
+            this._new.signatures = true
+        }
+        return this.update(['signatures'])            
+    }
+
+    /**
+    * Dispute item accuracy
+    */
+    dispute (sig) {
+        if (this._data.signatures.indexOf(sig) !== -1) {
+            this._data.signatures.remove(sig)
+            this._new.signatures = true
+        }
+        return this.update(['signatures'])
+    }
+
+    hasSignature (sig) {
+        return this._data.signatures && this._data.signatures.indexOf(sig) !== -1
+    }
+
 }
