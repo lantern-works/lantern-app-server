@@ -23,7 +23,7 @@ module.exports = class Feed extends EventEmitter {
         if (this.watched_items.hasOwnProperty(itemID)) {
             return
         }
-        console.log(`${this.logPrefix} watch changes for ${itemID} within package ${pkgID}`)
+        //console.log(`${this.logPrefix} watch changes for ${itemID} within package ${pkgID}`)
         let event = {
             id: itemID,
             package: pkgID

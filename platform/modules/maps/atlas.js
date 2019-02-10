@@ -1,9 +1,9 @@
 const EventEmitter = require('event-emitter-es6')
 const Location = require('./location')
-
 const MaptileConfig = require('../../config/maptiler')
 const LeafletTilesConfig = require('../../config/leaflet_tiles')
 const LeafletMapConfig = require('../../config/leaflet_map')
+require('../../helpers/math')
 require('leaflet')
 require('leaflet.locatecontrol')
 
@@ -46,18 +46,12 @@ module.exports = class Atlas extends EventEmitter {
     render (useCloud) {
         this.setTileHost(useCloud)
         this.setupMap()
-        this.setViewFromCenterLocationCache()
 
         // map event for when location is found...
         this.map.on('locationfound', this.cacheUserLocation.bind(this))
 
-        // map event for when location changes...
-        this.map.on('dragend', (e) => {
-            this.calculateZoomClass()
-            this.cacheCenterLocation()
-        })
-
-        this.map.on('zoomend', (e) => {
+ 
+        this.map.on('moveend', (e) => {
             this.calculateZoomClass()
             this.cacheCenterLocation()
         })
@@ -106,8 +100,9 @@ module.exports = class Atlas extends EventEmitter {
     /**
     * Fly in while zooming
     */
-    zoomToPoint (latlng) {
-        this.map.flyTo(latlng, Math.limit(this.map.getZoom() + 2, 1, LeafletMapConfig.maxZoom), {
+    zoomToPoint (latlng, level) {
+        level = level || this.map.getZoom() + 2
+        this.map.flyTo(latlng, Math.limit(level, 1, LeafletMapConfig.maxZoom), {
             pan: {
                 animate: true,
                 duration: 1.5
@@ -115,10 +110,6 @@ module.exports = class Atlas extends EventEmitter {
             zoom: {
                 animate: true
             }
-        })
-
-        this.map.once('moveend', () => {
-            this.removePointer()
         })
     }
 
@@ -131,9 +122,6 @@ module.exports = class Atlas extends EventEmitter {
                 animate: true,
                 duration: 1.5
             }
-        })
-        this.map.once('moveend', () => {
-            this.removePointer()
         })
     }
 
@@ -190,16 +178,29 @@ module.exports = class Atlas extends EventEmitter {
             // http://www.bigfastblog.com/geohash-intro
             let precision = Math.round(this.precision.center_max * (this.map.getZoom() / 20))
             let gh = Location.toGeohash(this.map.getCenter(), precision)
-            // console.log(`${this.logPrefix} center geohash: ${gh}`);
+            //console.log(`${this.logPrefix} center geohash: ${gh}`);
             this.center = gh
             // only save to database if user has paused on this map for a few seconds
             setTimeout(() => {
+                if (gh === "ew") {
+                    // don't bother saving default north american view
+                    return
+                }
+
                 let newCtr = this.getCenterAsString()
                 if (origCtr === newCtr) {
                     this.clientStorage.setItem('lx-ctr', newCtr)
+                    console.log(`${this.logPrefix} caching center geohash: ${gh} (${this.map.getCenter()})`);
                 }
             }, timeout || 7000)
         })
+    }
+
+    /**
+    * By default center over North America
+    */
+    setDefaultView() {        
+        this.map.setView([38.42, -12.79], 3)
     }
 
     /**
@@ -210,13 +211,10 @@ module.exports = class Atlas extends EventEmitter {
         try {
             let parts = ctr.split('/')
             this.map.setView([parts[0], parts[1]], parts[2])
+            console.log(`${this.logPrefix} restoring view = ${parts}`)
         } catch (e) {
-            this.map.setView([38.42, -12.79], 3)
-            // fine if we don't have context or can't retrieve...
-            // if we have markers, let's now zoom in on these...
-            if (this.markers.length) {
-                this.fitMapToAllMarkers()
-            }
+            // will fall back to default view if no markers available
+            this.setViewFromRandomMarker()
         }
     }
 
@@ -291,6 +289,47 @@ module.exports = class Atlas extends EventEmitter {
             if (this.markers[id] !== null) count++
         })
         return count
+    }
+
+    /**
+    * Finds a random marker
+    */
+    getRandomMarker() {
+        let keys = Object.keys(this.markers)
+        keys.forEach(key => {
+            if (this.markers[key] === null) {
+                keys.remove()
+            }
+        })
+        let item = this.markers[keys[ keys.length * Math.random() << 0]]
+        return item
+    }
+
+    /**
+    * Finds a random marker and zooms in
+    */
+    zoomToRandomMarker () {
+        let item = this.getRandomMarker()
+        console.log(`${this.logPrefix} zooming to random marker = ${item.id}`)
+        this.panToPoint(item.latlng)
+        setTimeout(() => {
+            this.map.zoomIn(8)
+        }, 1500)
+    }
+
+    /**
+    * Sets view based on a random marker
+    */
+    setViewFromRandomMarker() {
+        let item = this.getRandomMarker()
+        if (item) {
+            console.log(`${this.logPrefix} set view from random marker = ${item.id}`)
+            this.map.setView(item.latlng, 14)
+        }
+        else {
+            this.setDefaultView()
+        }
+
     }
 
     /**
