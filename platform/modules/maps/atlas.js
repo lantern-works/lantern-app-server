@@ -227,12 +227,12 @@ module.exports = class Atlas extends EventEmitter {
             console.log(`${this.logPrefix} ${marker.id} already added to map. skipping...`)
             return
         }
-
         marker.layer = window.L.marker(marker.latlng, {
             icon: marker.getDivIcon(),
             draggable: false,
             autoPan: true
         })
+
 
         marker.layer.on('dragend', function (e) {
             let latlng = e.target._latlng
@@ -241,11 +241,16 @@ module.exports = class Atlas extends EventEmitter {
 
         marker.layer.addTo(this.map)
 
+
+        if (marker.mode == 'draft') {
+            // special behaviors for permanent markers, only...
+            return
+        }
+
         this.markers[marker.id] = marker
         marker.layer.on('click', (e) => {
             this.emit('marker-click', marker)
         })
-
         this.emit('marker-add', marker)
     }
 
