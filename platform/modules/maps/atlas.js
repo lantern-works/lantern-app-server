@@ -276,6 +276,13 @@ module.exports = class Atlas extends EventEmitter {
     }
 
     /**
+    * Check to see if given marker is within view
+    */
+    isMarkerWithinView (marker) {
+        return this.map.getBounds().contains(marker.latlng)
+    }
+
+    /**
     * Remove small dot
     */
     removePointer () {
