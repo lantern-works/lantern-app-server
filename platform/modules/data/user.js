@@ -1,6 +1,6 @@
 const EventEmitter = require('event-emitter-es6')
 const shortid = require('shortid')
-const SEA = require('sea')
+// const SEA = require('sea')
 const Feed = require('./feed')
 
 module.exports = class User extends EventEmitter {
@@ -88,24 +88,32 @@ module.exports = class User extends EventEmitter {
             return this.register()
         } else {
             // check browser for known credentials for this user
-            let creds = this.clientStorage.getItem('lx-auth')
-            if (!creds) {
-                return this.register()
-            } else {
-                try {
-                    let u = creds.split(':')[0]
-                    let p = creds.split(':')[1]
-                    return this.authenticate(u, p)
-                        .catch(err => {
-                            // this database may not know about our user yet, so create it...
-                            // we assume local storage is a better indicator of truth than database peer
-                            return this.register(u, p)
-                        })
-                } catch (e) {
-                    this.clearCredentials()
-                    return this.register()
+            let creds = this.clientStorage.getItem('lx-auth', (err, result) => {
+                if (err) {
+                    console.log('error getting creds from local storage', err);
+                    return this.register();
                 }
-            }
+
+                let creds = result;
+
+                if (!creds) {
+                    return this.register()
+                } else {
+                    try {
+                        let u = creds.split(':')[0]
+                        let p = creds.split(':')[1]
+                        return this.authenticate(u, p)
+                            .catch(err => {
+                                // this database may not know about our user yet, so create it...
+                                // we assume local storage is a better indicator of truth than database peer
+                                return this.register(u, p)
+                            })
+                    } catch (e) {
+                        this.clearCredentials()
+                        return this.register()
+                    }
+                }
+            })
         }
     }
 

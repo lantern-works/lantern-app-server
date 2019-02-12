@@ -1,11 +1,10 @@
 const EventEmitter = require('event-emitter-es6')
 const Location = require('./location')
-
-const MaptileConfig = require('../../config/maptiler')
-const LeafletTilesConfig = require('../../config/leaflet_tiles')
-const LeafletMapConfig = require('../../config/leaflet_map')
-require('leaflet')
-require('leaflet.locatecontrol')
+// const MaptileConfig = require('../../config/maptiler')
+// const LeafletTilesConfig = require('../../config/leaflet_tiles')
+// const LeafletMapConfig = require('../../config/leaflet_map')
+// require('leaflet')
+// require('leaflet.locatecontrol')
 
 module.exports = class Atlas extends EventEmitter {
     constructor (clientStorage, useCloud) {
@@ -26,7 +25,7 @@ module.exports = class Atlas extends EventEmitter {
             center_max: 10
         }
 
-        this.setTileHost(useCloud)
+        // this.setTileHost(useCloud)
         this._mapClicked = 0 // used to distinguish between click and double-click
     }
 
@@ -44,40 +43,40 @@ module.exports = class Atlas extends EventEmitter {
     }
 
     render (useCloud) {
-        this.setTileHost(useCloud)
-        this.setupMap()
-        this.setViewFromCenterLocationCache()
+        // this.setTileHost(useCloud)
+        // this.setupMap()
+        // this.setViewFromCenterLocationCache()
 
-        // map event for when location is found...
-        this.map.on('locationfound', this.cacheUserLocation.bind(this))
+        // // map event for when location is found...
+        // this.map.on('locationfound', this.cacheUserLocation.bind(this))
 
-        // map event for when location changes...
-        this.map.on('dragend', (e) => {
-            this.calculateZoomClass()
-            this.cacheCenterLocation()
-        })
+        // // map event for when location changes...
+        // this.map.on('dragend', (e) => {
+        //     this.calculateZoomClass()
+        //     this.cacheCenterLocation()
+        // })
 
-        this.map.on('zoomend', (e) => {
-            this.calculateZoomClass()
-            this.cacheCenterLocation()
-        })
+        // this.map.on('zoomend', (e) => {
+        //     this.calculateZoomClass()
+        //     this.cacheCenterLocation()
+        // })
 
-        this.map.on('click', (e) => {
-            this.emit('map-click-start', e)
-            this._mapClicked += 1
-            setTimeout(() => {
-                if (this._mapClicked === 1) {
-                    this._mapClicked = 0
-                    this.emit('map-click', e)
-                }
-            }, 200)
-        })
+        // this.map.on('click', (e) => {
+        //     this.emit('map-click-start', e)
+        //     this._mapClicked += 1
+        //     setTimeout(() => {
+        //         if (this._mapClicked === 1) {
+        //             this._mapClicked = 0
+        //             this.emit('map-click', e)
+        //         }
+        //     }, 200)
+        // })
 
-        this.map.on('dblclick', (e) => {
-            this._mapClicked = 0
-            this.emit('map-double-click', e)
-        })
-        this.calculateZoomClass()
+        // this.map.on('dblclick', (e) => {
+        //     this._mapClicked = 0
+        //     this.emit('map-double-click', e)
+        // })
+        // this.calculateZoomClass()
     }
 
     get logPrefix () {
@@ -230,23 +229,14 @@ module.exports = class Atlas extends EventEmitter {
             return
         }
 
-        marker.layer = window.L.marker(marker.latlng, {
-            icon: marker.getDivIcon(),
-            draggable: false,
-            autoPan: true
-        })
+        // marker.layer.addTo(this.map)
 
-        marker.layer.on('dragend', function (e) {
-            let latlng = e.target._latlng
-            marker.geohash = Location.toGeohash(latlng)
-        })
-
-        marker.layer.addTo(this.map)
-
-        this.markers[marker.id] = marker
-        marker.layer.on('click', (e) => {
-            this.emit('marker-click', marker)
-        })
+        if (marker.id) {
+            this.markers[marker.id] = marker
+            // marker.layer.on('click', (e) => {
+            //     this.emit('marker-click', marker)
+            // })
+        }
 
         this.emit('marker-add', marker)
     }
