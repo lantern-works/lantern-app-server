@@ -26,8 +26,19 @@ module.exports = class Director extends EventEmitter {
         }
     }
 
+    withAtlas (fn) {
+        if (this._atlas) {
+            fn(this._atlas)
+        } else {
+            this.once('atlas', function () {
+                fn(this._atlas)
+            }.bind(this))
+        }
+    }
+
     set atlas (val) {
         this._atlas = val
+        this.emit('atlas', this._atlas)
     }
 
     get atlas () {

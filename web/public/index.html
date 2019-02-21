@@ -41,21 +41,23 @@
     <script src="/scripts/apps.min.js"></script>
     <script src="/scripts/maps.min.js"></script>
     <script>
+        // database
         let db = new LD.Database(window.location.origin + '/gun')
-        let director = new LA.Director(db);
-        window.LT = director
-        director.loadStylesheet('/styles/vendor.css')
-        director.loadStylesheet('/styles/global.css')
-        director.atlas = new LM.Atlas(window.localStorage)
+        db.setup()
+        
+        // apps
+        let director = window.LT = new LA.Director(db)
         director.loadApps().then( info => {
             console.log('[platform]', info)
-            // let our database load before loading tiles
-            // for maximum speed
+            // map
+            director.atlas = new LM.Atlas(window.localStorage)
             director.atlas.render(info.cloud == '1')
             director.loadScript('/scripts/raphael.min.js')
-            db.setup()
-            // export these for simple acccess by developers
-        });
+        })
+
+        // styles
+        director.loadStylesheet('/styles/vendor.css')
+        director.loadStylesheet('/styles/global.css')
     </script>
 </body>
 </html>
