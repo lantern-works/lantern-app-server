@@ -91,24 +91,21 @@ module.exports = class Director extends EventEmitter {
             console.warn('[Direct] Ignoring app directory with no children:', item.name)
             return
         }
-
         if (!this.apps.hasOwnProperty(item.name)) {
-            this.withUser((user) => {
-                let obj = this.apps[item.name] = new App(item, data)
+            let obj = this.apps[item.name] = new App(item, data)
 
-                obj.on('load', (page) => {
-                    // console.log("[Direct] App loads page: ", page.componentID );
-                })
+            obj.on('load', (page) => {
+                // console.log("[Direct] App loads page: ", page.componentID );
+            })
 
-                obj.on('open', (componentID) => {
-                    // console.log("[Direct] App opens component:", componentID);
-                    this.view.data.app_components.push(componentID)
-                })
+            obj.on('open', (componentID) => {
+                // console.log("[Direct] App opens component:", componentID);
+                this.view.data.app_components.push(componentID)
+            })
 
-                obj.on('close', (componentID) => {
-                    // console.log("[Direct] App closes component:", componentID);
-                    this.view.data.app_components.remove(componentID)
-                })
+            obj.on('close', (componentID) => {
+                // console.log("[Direct] App closes component:", componentID);
+                this.view.data.app_components.remove(componentID)
             })
         }
     }

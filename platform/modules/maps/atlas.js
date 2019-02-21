@@ -46,10 +46,10 @@ module.exports = class Atlas extends EventEmitter {
     render (useCloud) {
         this.setTileHost(useCloud)
         this.setupMap()
+        this.setViewFromCenterLocationCache()
 
         // map event for when location is found...
         this.map.on('locationfound', this.cacheUserLocation.bind(this))
-
  
         this.map.on('moveend', (e) => {
             this.calculateZoomClass()
@@ -211,7 +211,7 @@ module.exports = class Atlas extends EventEmitter {
         try {
             let parts = ctr.split('/')
             this.map.setView([parts[0], parts[1]], parts[2])
-            console.log(`${this.logPrefix} restoring view = ${parts}`)
+            // console.log(`${this.logPrefix} restoring view = ${parts}`)
         } catch (e) {
             // will fall back to default view if no markers available
             this.setViewFromRandomMarker()
