@@ -52,6 +52,13 @@ module.exports = (serv) => {
         preq
             .on('response', (pres) => {
                 // log.debug("Streamed tile from cloud: " + req.url);
+
+                // also stream to file system for cache
+                preq.pipe(fs.createWriteStream(getLocalPathForTile(req.params)))
+                    .on('error', (err) => {
+                        log.error('Could not save tile for: ' + req.url)
+                        log.error(err)
+                    })
             })
             .on('error', (err) => {
                 log.error('Could not stream tile for: ' + req.url)
@@ -59,18 +66,13 @@ module.exports = (serv) => {
                 sendEmptyTile(res)
             })
             .pipe(res)
-
-        // also stream to file system for cache
-        preq.pipe(fs.createWriteStream(getLocalPathForTile(req.params)))
-            .on('error', (err) => {
-                log.error('Could not save tile for: ' + req.url)
-                log.error(err)
-            })
     }
 
     // ----------------------------------------------------------------------
+
+
     /**
-    * MapTiler Proxy
+    * Tile Proxy
     */
     serv.get('/c/:id/styles/:map/:z/:x/:y.png', (req, res, next) => {
         // use offline cache if available, avoids hitting external sever

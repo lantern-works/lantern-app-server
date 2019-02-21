@@ -3,12 +3,13 @@ const Location = require('./location')
 const MaptileConfig = require('../../config/maptiler')
 const LeafletTilesConfig = require('../../config/leaflet_tiles')
 const LeafletMapConfig = require('../../config/leaflet_map')
+const fetch = window.fetch
 require('../../helpers/math')
 require('leaflet')
 require('leaflet.locatecontrol')
 
 module.exports = class Atlas extends EventEmitter {
-    constructor (clientStorage, useCloud) {
+    constructor (clientStorage, online) {
         super()
 
         if (!clientStorage) {
@@ -26,7 +27,7 @@ module.exports = class Atlas extends EventEmitter {
             center_max: 10
         }
 
-        this.setTileHost(useCloud)
+        this._online = online
         this._mapClicked = 0 // used to distinguish between click and double-click
     }
 
@@ -154,6 +155,13 @@ module.exports = class Atlas extends EventEmitter {
         return distance
     }
 
+
+    getXYZ(lat, lng, zoom) {
+        var xtile = parseInt(Math.floor( (lng + 180) / 360 * (1<<zoom) ));
+        var ytile = parseInt(Math.floor( (1 - Math.log(Math.tan(lat.toRad()) + 1 / Math.cos(lat.toRad())) / Math.PI) / 2 * (1<<zoom) ));
+        return [xtile, ytile, zoom];
+    }
+
     // ------------------------------------------------------------------------
 
     /**
@@ -188,13 +196,52 @@ module.exports = class Atlas extends EventEmitter {
                     // don't bother saving default north american view
                     return
                 }
-
                 let newCtr = this.getCenterAsString()
                 if (origCtr === newCtr) {
                     this.clientStorage.setItem('lx-ctr', newCtr)
                     console.log(`${this.logPrefix} caching center geohash: ${gh} (${this.map.getCenter()})`);
+
+                    if (this._online) {
+                        this.cacheTilesFromCenter()                        
+                    }
                 }
-            }, timeout || 7000)
+            }, timeout || 5000)
+        })
+    }
+
+    /**
+    * Cache tiles based on center of map
+    */
+    cacheTilesFromCenter() {
+        let ctr = this.map.getCenter()
+        console.log(`${this.logPrefix} caching extra tiles from center of map`);
+        for (var i= LeafletTilesConfig.minZoom; i < LeafletTilesConfig.maxZoom;  i++) {
+            let xyz = this.getXYZ(ctr.lat, ctr.lng, i)
+            setTimeout(() => {
+
+                this.cacheTile(xyz)
+                xyz[1] += 1
+                this.cacheTile(xyz)
+                xyz[1] -= 2
+                this.cacheTile(xyz)
+
+            }, i*500)
+        }
+    }
+
+    /**
+    * Cache tile for a given leaflet-style URI
+    */
+    cacheTile(xyz) {
+        let uri = this.tile_uri
+            .replace('{x}', xyz[0])
+            .replace('{y}', xyz[1])
+            .replace('{z}', xyz[2])
+
+        fetch(uri, {
+            headers: {
+                'Content-Type': 'application/json'
+            }
         })
     }
 

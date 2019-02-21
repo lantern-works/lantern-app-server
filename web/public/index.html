@@ -50,7 +50,7 @@
         director.loadApps().then( info => {
             console.log('[platform]', info)
             // map
-            director.atlas = new LM.Atlas(window.localStorage)
+            director.atlas = new LM.Atlas(window.localStorage, info.online == '1')
             director.atlas.render(info.cloud == '1')
             director.loadScript('/scripts/raphael.min.js')
         })
