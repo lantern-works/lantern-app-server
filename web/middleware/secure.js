@@ -7,6 +7,11 @@ module.exports = (req, res, next) => {
         // OK, continue
         return next()
     };
+
+    if (req.url.indexOf('/c/') !== -1) {
+        return next()
+    }
+
     // handle port numbers if you need non defaults
     let uri = 'https://' + req.hostname
     let port = util.getHttpsPort()

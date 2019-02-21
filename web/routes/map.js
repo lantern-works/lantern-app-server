@@ -74,20 +74,18 @@ module.exports = (serv) => {
     */
     serv.get('/c/:id/styles/:map/:z/:x/:y.png', (req, res, next) => {
         // use offline cache if available, avoids hitting external sever
-        fs.readFile(getLocalPathForTile(req.params), (err, buffer) => {
-            if ((err && err.code === 'ENOENT') || buffer.length < 100) {
+        let tileFile = getLocalPathForTile(req.params)
+        res.type('png')
+        let tileStream = fs.createReadStream(tileFile)
+            .on('error', (err) => {
                 if (!assumeInternet) {
                     // log.debug(`Skip offline attempt for: ${req.url}`);
                     return sendEmptyTile(res)
                 } else {
                     getTileFromCloud(req, res)
                 }
-            } else if (err) {
-                log.error(err)
-            } else {
-                res.type('png')
-                res.send(buffer)
-            }
-        })
+            })
+
+        tileStream.pipe(res)
     })
 }

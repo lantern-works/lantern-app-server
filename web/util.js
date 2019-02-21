@@ -38,7 +38,7 @@ self.logPrefix = (val) => {
 * Get HTTP Non-Secure Port
 */
 self.getHttpPort = () => {
-    return (process.env.TERM_PROGRAM ? 9090 : 80)
+    return (process.env.TERM_PROGRAM ? 9080 : 80)
 }
 
 /**

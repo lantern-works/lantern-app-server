@@ -31,7 +31,8 @@ module.exports = class Atlas extends EventEmitter {
     }
 
     setTileHost (useCloud) {
-        let uriParts = window.location.href.split('/').slice(0, 3)
+        let uri = window.location.href
+        let uriParts = uri.split('/').slice(0, 3)
 
         if (useCloud) {
             uriParts[2] = '{s}.tile.lantern.link'
@@ -41,6 +42,7 @@ module.exports = class Atlas extends EventEmitter {
         this.tile_uri = [this.tile_host + '/c/', MaptileConfig.id, '/styles/',
             MaptileConfig.map, '/{z}/{x}/{y}.png?key=', MaptileConfig.key
         ].join('')
+
     }
 
     render (useCloud) {

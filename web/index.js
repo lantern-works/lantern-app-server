@@ -54,11 +54,11 @@ const startServer = () => {
         let httpServer = http.createServer(app)
         secureServer.listen(util.getHttpsPort(), () => {
             let stdServer = httpServer.listen(util.getHttpPort(), () => {
+                log.info(`${util.logPrefix('web')} standard port = ${util.getHttpPort()}`)
                 if (secureServer) {
                     log.info(`${util.logPrefix('web')} secure port = ${util.getHttpsPort()}`)
                 } else {
                     log.warn(`${util.logPrefix('web')} falling back to http for local development...`)
-                    log.info(`${util.logPrefix('web')} standard port = ${util.getHttpPort()}`)
                 }
 
                 // track inbox messags
