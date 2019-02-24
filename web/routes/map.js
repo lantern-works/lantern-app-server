@@ -49,7 +49,7 @@ module.exports = (serv) => {
         let preq = request('http://maps.tilehosting.com' + req.url)
 
         // return result as quickly as possible to browser
-        preq
+        let result = preq
             .on('response', (pres) => {
                 // log.debug("Streamed tile from cloud: " + req.url);
 
@@ -63,9 +63,14 @@ module.exports = (serv) => {
             .on('error', (err) => {
                 log.error('Could not stream tile for: ' + req.url)
                 log.error(err)
-                sendEmptyTile(res)
+                if (res) {
+                    sendEmptyTile(res)
+                }
             })
-            .pipe(res)
+
+        if (res) {
+            result.pipe(res)
+        }
     }
 
     // ----------------------------------------------------------------------
@@ -89,5 +94,24 @@ module.exports = (serv) => {
             })
 
         tileStream.pipe(res)
+    })
+
+     /**
+    * Tile Cache
+    */
+    serv.get('/c/:id/styles/:map/:z/:x/:y.json', (req, res, next) => {
+        // use offline cache if available, avoids hitting external sever
+        let tileFile = getLocalPathForTile(req.params)
+        if (!fs.existsSync(tileFile)) {
+            if (!assumeInternet) {
+                return res.status(403).json({"ok": false})
+            } else {
+                getTileFromCloud(req)
+                res.status(201).json({"ok": true})
+            }
+        }
+        else {
+            res.status(200).json({"ok": true})
+        }
     })
 }
