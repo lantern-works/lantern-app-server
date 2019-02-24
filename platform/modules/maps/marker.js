@@ -15,9 +15,6 @@ module.exports = class MarkerItem extends Item {
         this._set = null
         this.layer = null
 
-        this.on('remove', () => {
-            this.hide()
-        })
         this.on('mode', (mode) => {
             if (this.layer) {
                 // keep dom updated to reflect mode
@@ -170,33 +167,20 @@ module.exports = class MarkerItem extends Item {
         })
     }
 
-    getIcon () {
+    get icon () {
         return this._icon
     }
 
-    setIcon (value) {
-        if (!this.layer) {
-            console.error(`${this.logPrefix} marker must have layer before icon can be set`)
-            return
-        }
-
+    set icon (value) {
         if (value) {
             // console.log(`${this.logPrefix} icon = ${value}`);
-        } else {
+            this._icon = value
+            if (this.layer) {
+                this.layer.setIcon(this.getDivIcon())
+            }
+        } else if (value == null) {
+            this._icon = null
             // console.log(`${this.logPrefix} clearing icon`);
         }
-        this._icon = value
-        this.layer.setIcon(this.getDivIcon())
-    }
-
-    /**
-    * Display custom icon based on marker class names
-    */
-    setIcons (map) {
-        this.tags.forEach((tag) => {
-            if (map.hasOwnProperty(tag)) {
-                this.setIcon(map[tag])
-            }
-        })
     }
 }

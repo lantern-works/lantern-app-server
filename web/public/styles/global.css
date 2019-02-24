@@ -339,7 +339,7 @@ body .app {
 .menu-app-frame ul.menu li {
 	font-weight: 500;
     color: #3273dc;
-    padding: 1em 1.35em;
+    padding: 0.75em 1em;
     padding-right: 0.25em;
     border-bottom: 1px solid #EEE;
     width: 100%;
