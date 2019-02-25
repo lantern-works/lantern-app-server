@@ -68,6 +68,11 @@ body .app {
 	color: #FFF;
 }
 
+#map .leaflet-bar a:active, #map .leaflet-bar a:active span  {
+	background: rgba(255,255,255,0.92);
+	color: #444;
+}
+
 #map .leaflet-bar a.leaflet-disabled:hover {
 	background: rgba(255,255,255,0.6);
 }

@@ -116,6 +116,13 @@ module.exports = class Atlas extends EventEmitter {
         })
     }
 
+    /** 
+    * Check if we are using max zoom level
+    */
+    hasMaxZoom () {
+        return (LeafletMapConfig.maxZoom - this.map.getZoom() < 1)
+    }
+
     /**
     * Pan to a point
     */
