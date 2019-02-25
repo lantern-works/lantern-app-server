@@ -54,7 +54,7 @@ body .app {
 	width: 35px;
 	height: 35px;
 	line-height: 35px;
-	background: rgba(255,255,255,0.8);
+	background: rgba(255,255,255,0.92);
 	border-color: #EEE;
 }
 
@@ -63,8 +63,9 @@ body .app {
 	color: #444;
 }
 
-#map .leaflet-bar a:hover  {
-	background: rgba(255,255,255,0.95);
+#map .leaflet-bar a:hover, #map .leaflet-bar a:hover span  {
+	background: #3273dc;
+	color: #FFF;
 }
 
 #map .leaflet-bar a.leaflet-disabled:hover {
@@ -339,7 +340,7 @@ body .app {
 .menu-app-frame ul.menu li {
 	font-weight: 500;
     color: #3273dc;
-    padding: 0.75em 1em;
+    padding: 1em 1.25em;
     padding-right: 0.25em;
     border-bottom: 1px solid #EEE;
     width: 100%;
