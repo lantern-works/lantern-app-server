@@ -237,6 +237,7 @@ module.exports = class Atlas extends EventEmitter {
             .replace('{x}', xyz[0])
             .replace('{y}', xyz[1])
             .replace('{z}', xyz[2])
+            .replace('{s}.tile.', '')
             .replace('.png', '.json')
 
         fetch(uri, {
