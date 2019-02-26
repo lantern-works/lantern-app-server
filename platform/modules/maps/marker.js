@@ -146,15 +146,8 @@ module.exports = class MarkerItem extends Item {
         return 'Unknown Category'
     }
 
-    // -------------------------------------------------------------------------
 
-    /**
-    * Selects this marker for interaction
-    */
-    focus () {
-        this.emit('focus', this)
-    }
-
+    
     // -------------------------------------------------------------------------
     getDivIcon () {
         let cls = 'fa'

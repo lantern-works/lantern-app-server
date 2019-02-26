@@ -111,11 +111,14 @@ module.exports = class Atlas extends EventEmitter {
     * Pan to a point
     */
     panToPoint (latlng) {
-        this.map.panTo(latlng, {
-            pan: {
-                animate: true,
-                duration: 1.5
-            }
+        return new Promise((resolve, reject) => {
+            this.map.once('moveend', resolve)  
+            this.map.panTo(latlng, {
+                pan: {
+                    animate: true,
+                    duration: 1.5
+                }
+            })
         })
     }
 
@@ -350,6 +353,14 @@ module.exports = class Atlas extends EventEmitter {
         setTimeout(() => {
             this.map.zoomIn(8)
         }, 1500)
+    }
+
+    zoomMinimum(level) {
+        if (this.map.getZoom() < level) {
+            let increase = level-this.map.getZoom()
+            console.log(`${this.logPrefix} zooming in extra = ${increase}`)
+            this.map.zoomIn(increase)
+        }
     }
 
     /**

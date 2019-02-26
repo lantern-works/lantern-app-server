@@ -168,7 +168,7 @@ body .app {
 
 
 /*----------------------------------------------------------------------------*/
-#app-container, .app-mask, #pie-menu-mask {
+#app-container, .app-mask {
 	position: absolute;
 	top: 0;
 	left: 0;
@@ -181,7 +181,7 @@ body .app {
 }
 
 .app-mask {	
-	background: rgba(0,0,0,0.6);
+	background: rgba(0,0,0,0.33);
     pointer-events: auto;
 }
 
@@ -240,61 +240,6 @@ body .app {
 
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.04);
 }
-
-
-
-/*----------------------------------------------------------------------------*/
-#pie-menu {
-	position: absolute;
-	z-index: -100;
-
-}
-
-#pie-menu.active {
-	z-index: 3;
-    pointer-events: auto;
-}
-
-#pie-menu > svg { 
-	width: 100%; 
-	height: 100%; 
-    -webkit-filter: drop-shadow(2px 2px 10px rgba(0,0,0,0.1));      
-    filter: drop-shadow(2px 2px 8px rgba(0,0,0,0.1));  
-}
-
-#pie-menu-mask {
-	background: rgba(0,0,0,0.15);
-	display: none;
-	pointer-events: none;
-}
-
-#pie-menu-mask.active {
-	z-index: 2;
-	display: block;
-	pointer-events: auto;
-}
-
-#pie-menu { height: 200px; width: 200px; margin:auto; }
-
-@media (max-width: 200px) { #pie-menu { height: 150px; width: 150px; } }
-
-[class|=wheelnav-pie-menu-slice-basic] { fill: #FFF; stroke: none; 
-	fill-opacity: 0.85;
-	stroke: #DDD; 
-}
-
-
-[class|=wheelnav-pie-menu-slice-selected] { fill: #FAFAFA; 
-	stroke: #DDD; }
-[class|=wheelnav-pie-menu-slice-hover] { fill: #FFF; 
-	stroke: #DDD;  fill-opacity: 1; cursor: pointer; }
-
-[class|=wheelnav-pie-menu-title-basic] { fill: #FFF; stroke: none; }
-
-
-[class|=wheelnav-pie-menu-title-selected] { stroke: none; }
-[class|=wheelnav-pie-menu-title-hover] { stroke: none; cursor: pointer; }
-[class|=wheelnav-pie-menu-title] > tspan { font-family: Montserrat, sans-serif; font-weight: 600; font-size: 18px; }
 
 
 
