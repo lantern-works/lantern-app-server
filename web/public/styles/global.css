@@ -63,20 +63,6 @@ body .app {
 	color: #444;
 }
 
-#map .leaflet-bar a:hover, #map .leaflet-bar a:hover span  {
-	background: #3273dc;
-	color: #FFF;
-}
-
-#map .leaflet-bar a:active, #map .leaflet-bar a:active span  {
-	background: rgba(255,255,255,0.92);
-	color: #444;
-}
-
-#map .leaflet-bar a.leaflet-disabled:hover {
-	background: rgba(255,255,255,0.6);
-}
-
 
 #map .leaflet-right .leaflet-control {
 	margin-bottom: 0.85em;
@@ -204,7 +190,7 @@ body .app {
 }
 
 .app-frame {
-	background: rgba(255,255,255,0.95);
+	background: rgba(255,255,255,0.93);
 	margin: 0.6em;
 	padding: 0.5em;
 	border-radius: 6px;
@@ -345,8 +331,8 @@ body .app {
 .menu-app-frame ul.menu li {
 	font-weight: 500;
     color: #3273dc;
-    padding: 1em 1.25em;
-    padding-right: 0.25em;
+    padding: 0.8em 1.2em;
+    padding-right: 0.2em;
     border-bottom: 1px solid #EEE;
     width: 100%;
     display: block;
