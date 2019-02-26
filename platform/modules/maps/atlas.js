@@ -39,7 +39,7 @@ module.exports = class Atlas extends EventEmitter {
         }
 
         this.tile_host = uriParts.join('/')
-        this.tile_uri = [this.tile_host + '/c/', MaptileConfig.id, '/styles/',
+        this.tile_uri = [this.tile_host + '/styles/',
             MaptileConfig.map, '/{z}/{x}/{y}.png?key=', MaptileConfig.key
         ].join('')
 
@@ -149,13 +149,6 @@ module.exports = class Atlas extends EventEmitter {
         return distance
     }
 
-
-    getXYZ(lat, lng, zoom) {
-        var xtile = parseInt(Math.floor( (lng + 180) / 360 * (1<<zoom) ));
-        var ytile = parseInt(Math.floor( (1 - Math.log(Math.tan(lat.toRad()) + 1 / Math.cos(lat.toRad())) / Math.PI) / 2 * (1<<zoom) ));
-        return [xtile, ytile, zoom];
-    }
-
     // ------------------------------------------------------------------------
 
     /**
@@ -207,37 +200,17 @@ module.exports = class Atlas extends EventEmitter {
     * Cache tiles based on center of map
     */
     cacheTilesFromCenter() {
-        let ctr = this.map.getCenter()
         console.log(`${this.logPrefix} caching extra tiles from center of map`);
-        for (var i= LeafletTilesConfig.minZoom; i < LeafletTilesConfig.maxZoom;  i++) {
-            let xyz = this.getXYZ(ctr.lat, ctr.lng, i)
-            setTimeout(() => {
-
-                this.cacheTile(xyz)
-                xyz[1] += 1
-                this.cacheTile(xyz)
-                xyz[1] -= 2
-                this.cacheTile(xyz)
-
-            }, i*500)
-        }
-    }
-
-    /**
-    * Cache tile for a given leaflet-style URI
-    */
-    cacheTile(xyz) {
-        let uri = this.tile_uri
-            .replace('{x}', xyz[0])
-            .replace('{y}', xyz[1])
-            .replace('{z}', xyz[2])
-            .replace('{s}.tile.', '')
-            .replace('.png', '.json')
-
-        fetch(uri, {
+        fetch(`${this.tile_host}/api/map/${MaptileConfig.map}/${this.getCenterAsString()}.json?key=${MaptileConfig.key}`, {
+            method: "PUT",
             headers: {
                 'Content-Type': 'application/json'
             }
+        }).then(response => {
+            return response.json()
+        })
+        .then(json => {
+            console.log(json)
         })
     }
 
