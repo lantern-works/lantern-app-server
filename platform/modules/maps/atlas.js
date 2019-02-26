@@ -28,7 +28,6 @@ module.exports = class Atlas extends EventEmitter {
         }
 
         this._online = online
-        this._mapClicked = 0 // used to distinguish between click and double-click
     }
 
     setTileHost (useCloud) {
@@ -59,21 +58,6 @@ module.exports = class Atlas extends EventEmitter {
             this.cacheCenterLocation()
         })
 
-        this.map.on('click', (e) => {
-            this.emit('map-click-start', e)
-            this._mapClicked += 1
-            setTimeout(() => {
-                if (this._mapClicked === 1) {
-                    this._mapClicked = 0
-                    this.emit('map-click', e)
-                }
-            }, 200)
-        })
-
-        this.map.on('dblclick', (e) => {
-            this._mapClicked = 0
-            this.emit('map-double-click', e)
-        })
         this.calculateZoomClass()
     }
 
@@ -325,29 +309,10 @@ module.exports = class Atlas extends EventEmitter {
     }
 
     /**
-    * Add small dot based on cursor or tap position
-    */
-    addPointer (latlng) {
-        if (this.pointer) return
-        this.pointer = window.L.circle(latlng, { radius: 1 }).addTo(this.map)
-        this.emit('pointer-add', { 'latlng': latlng })
-    }
-
-    /**
     * Check to see if given marker is within view
     */
     isMarkerWithinView (marker) {
         return this.map.getBounds().contains(marker.latlng)
-    }
-
-    /**
-    * Remove small dot
-    */
-    removePointer () {
-        if (!this.pointer) return
-        this.pointer.remove()
-        this.pointer = null
-        this.emit('pointer-remove')
     }
 
     /**
@@ -421,40 +386,5 @@ module.exports = class Atlas extends EventEmitter {
             let group = new window.L.featureGroup(allLayers)
             this.map.fitBounds(group.getBounds())
         }
-    }
-
-    /**
-    * Ensures map target is not too close to edge of screen
-    */
-    moveFromEdge (latlng) {
-        let map = this.map
-        let margin = 90
-
-        return new Promise((resolve, reject) => {
-            // are we too close to the edge for our menu?
-            let pos = map.latLngToContainerPoint(latlng)
-            let dimensions = document.getElementById('map').getBoundingClientRect()
-            let centerPoint = map.getSize().divideBy(2)
-
-            if (pos.x < margin || pos.x > dimensions.width - margin) {
-                let direction = (pos.x < margin ? 'subtract' : 'add')
-                let targetPoint = centerPoint[direction]([margin, 0])
-                let targetLatLng = map.containerPointToLatLng(targetPoint)
-                map.panTo(targetLatLng)
-                map.once('moveend', () => {
-                    resolve(latlng)
-                })
-            } else if (pos.y < margin || pos.y > dimensions.height - margin) {
-                let direction = (pos.y < margin ? 'subtract' : 'add')
-                let targetPoint = centerPoint[direction]([0, margin])
-                let targetLatLng = map.containerPointToLatLng(targetPoint)
-                map.panTo(targetLatLng)
-                map.once('moveend', () => {
-                    resolve(latlng)
-                })
-            } else {
-                resolve(latlng)
-            }
-        })
     }
 }

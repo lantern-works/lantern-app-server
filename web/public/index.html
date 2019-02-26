@@ -19,16 +19,6 @@
     <!-- map display -->
     <div id="map">
     </div>
-    <!-- menu interface -->
-    <div id="pie-menu" 
-        data-wheelnav
-        data-wheelnav-slicepath='DonutSlice'
-        data-wheelnav-init
-        data-wheelnav-rotateoff
-        data-wheelnav-cssmode>
-    </div>
-    <div id="pie-menu-mask"></div>
-
 
     <!-- application display -->
     <div id="app-container" v-cloak>
@@ -52,7 +42,6 @@
             // map
             director.atlas = new LM.Atlas(window.localStorage, info.online == '1')
             director.atlas.render(info.cloud == '1')
-            director.loadScript('/scripts/raphael.min.js')
         })
 
         // styles

@@ -1,7 +1,6 @@
 const EventEmitter = require('event-emitter-es6')
 const Vue = require('vue')
 const VueLongPress = require('vue-long-press-directive')
-const Menu = require('./menu')
 
 module.exports = class View extends EventEmitter {
     constructor () {
@@ -17,6 +16,5 @@ module.exports = class View extends EventEmitter {
         })
         Vue.use(VueLongPress, { duration: 750 })
         this.data = this.vue.$data
-        this.menu = new Menu()
     }
 }
