@@ -21,8 +21,13 @@ module.exports = (app) => {
     const watchPackage = (v, k) => {
         let packageID = [v.name, v.version].join('@')
 
+
         if (packages.hasOwnProperty(packageID)) {
             log.debug(`${util.logPrefix('watcher')} skip duplicate ${v.name} = ${v.version}`)
+            return
+        }
+        if (!v.name || !v.version) {
+            log.warn(`${util.logPrefix('watcher')} missing name or version for package ${k}: `, v)
             return
         }
 
