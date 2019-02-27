@@ -387,7 +387,8 @@ module.exports = class Atlas extends EventEmitter {
     * Finds a random marker
     */
     getRandomMarker() {
-        this.markerList.forEach(key => {
+        let keys = JSON.parse(JSON.stringify(this.markerList))
+        keys.forEach(key => {
             if (this.markers[key] === null) {
                 keys.remove()
             }
