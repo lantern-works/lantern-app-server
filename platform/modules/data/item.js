@@ -207,6 +207,7 @@ module.exports = class Item extends EventEmitter {
         tag = this.sanitizeTag(tag)
         this._data.tags.remove(tag)
         this.emit('untag', tag)
+        this._new.tags = true
         return this.tags
     }
 
@@ -218,6 +219,7 @@ module.exports = class Item extends EventEmitter {
             this.emit('untag', tag)
         })
         this._data.tags = []
+        this._new.tags = true
         return this.tags
     }
 
