@@ -71,7 +71,7 @@ module.exports = class Package extends EventEmitter {
                     this.emit('publish')
                     console.log(`${this.logPrefix} published version: ${this.id}`)
                 } else {
-                    // console.log(`${this.logPrefix} already published version: ${this.id}`)
+                    console.log(`${this.logPrefix} already published version: ${this.id}`)
                 }
             })
             .catch((e) => {
@@ -105,7 +105,14 @@ module.exports = class Package extends EventEmitter {
 
             // attach item to the package graph
             let itemNode = this.db.get('itm').get(id)
-            this.node.get('data').get(this.version).set(itemNode)
+
+            let versionNode = this.node.get('data').get(this.version)
+            
+            this.db.getOrPut(versionNode, {}).then(saved => {
+                versionNode.set(itemNode).once(() => {
+                    resolve()                
+                })
+            })
         })
     }
 

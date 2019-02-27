@@ -133,19 +133,33 @@ module.exports = class Feed extends EventEmitter {
             return
         }
 
-        // optimistically assume package exists
-        this.packages[id] = true
 
-        console.log(`${this.logPrefix} watching the changes: ${id}`)
-        this.db.get('pkg')
+        let targetNode = this.db.get('pkg')
             .get(name)
             .get('data')
             .get(version)
-            .map()
-            .on((v, k) => {
-                // start watching for changes
-                this.watchItem(k, id)
+
+        targetNode.once((v,k) => {
+                if (!v) {
+                    console.log(`${this.logPrefix} missing package: ${id}`)
+                }
+                else {
+                    console.log(`${this.logPrefix} watching the changes: ${id}`)
+                    this.packages[id] = true
+                    
+                    this.emit("watch", id)
+
+                    targetNode.map()
+                    .on((v, k) => {
+                        // start watching for changes
+                        this.watchItem(k, id)
+                    })
+                }
             })
+    }
+
+    removeAllPackages () {
+        Object.keys(this.packages).forEach(this.removeOnePackage.bind(this))
     }
 
     removeManyPackages (packages) {
@@ -160,8 +174,11 @@ module.exports = class Feed extends EventEmitter {
             return
         }
 
-        console.log(`${this.logPrefix} unwatch changes for ${id}`)
-        this.packages[id] = false
+        if (this.packages[id] === true) {
+            console.log(`${this.logPrefix} unwatch changes for ${id}`)
+            this.packages[id] = false
+            this.emit("unwatch", id)
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -172,6 +189,7 @@ module.exports = class Feed extends EventEmitter {
     addOneTopic (name) {
         console.log(`${this.logPrefix} add topic ${name}`)
         this.topics[name] = true
+        this.emit("subscribe", name)
     }
 
     removeManyTopics (topics) {
@@ -180,5 +198,6 @@ module.exports = class Feed extends EventEmitter {
     removeOneTopic (name) {
         console.log(`${this.logPrefix} remove topic ${name}`)
         this.topics[name] = false
+        this.emit("unsubscribe", name)
     }
 }

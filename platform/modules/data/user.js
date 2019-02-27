@@ -23,8 +23,7 @@ module.exports = class User extends EventEmitter {
         this.once('auth', () => {
             console.log(`${this.logPrefix} sign-in complete`)
             this.listPackages().then((packages) => {
-                console.log(`${this.logPrefix} found packages: ${packages.length}`)
-                this.feed.addManyPackages(packages)
+                console.log(`${this.logPrefix} found packages: ${packages}`)
             })
         })
     }

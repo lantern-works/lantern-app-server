@@ -45,6 +45,15 @@ module.exports = class Director extends EventEmitter {
         return this._atlas
     }
 
+    loadMap(packages) {
+        console.log("--------------------------------------------- MAP = " + packages)
+        this.withUser((user) => {
+            this.user.feed.removeAllPackages()
+            this.atlas.removeAllFromMap()
+            this.user.feed.addManyPackages(packages)
+        })
+    }
+
     loadApps () {
         return new Promise((resolve, reject) => {
             // info that may be useful to the browser or environment
@@ -105,7 +114,6 @@ module.exports = class Director extends EventEmitter {
         if (!this.apps.hasOwnProperty(item.name)) {
             let isolatedData = JSON.parse(JSON.stringify(data))
             let obj = this.apps[item.name] = new App(item, isolatedData)
-
             obj.on('load', (page) => {
                 // console.log("[Direct] App loads page: ", page.componentID );
             })

@@ -1,1 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <style>
+        [v-cloak] { display:none }
+        #map, body, html {  
+            height: 100%;
+            width: 100%;
+            padding: 0em;
+            margin: 0em;
+            background: #88cdf8;
         }
+    </style>
+</head>
+<body>
+    <!-- map display -->
+    <div id="map">
+    </div>
+
+    <!-- application display -->
+    <div id="app-container" v-cloak>
+        <component v-for="app in app_components" v-bind:is="app" :key="app" v-bind:id="app" class="app"></component>
+    </div>
+    
+
+    <!-- platform setup -->
+    <script src="/scripts/data.min.js"></script>
+    <script src="/scripts/apps.min.js"></script>
+    <script src="/scripts/maps.min.js"></script>
+    <script>
+
+        // database
+        let db = new LD.Database(window.location.origin + '/gun')
+        db.setup()
+
+        // apps
+        let director = window.LT = new LA.Director(db)
+        // maps
+        director.loadApps().then( info => {
+            console.log('[platform]', info)
+            director.atlas = new LM.Atlas(window.localStorage, info.online == '1')
+            director.atlas.render(info.cloud == '1')
+            if (window.location.hash) {
+                director.loadMap(window.location.hash.replace('#', '').split(','))
+            }
+            window.onhashchange = (hash) => {
+                director.loadMap(window.location.hash.replace('#', '').split(','))
+            }
+        })
+
+        // styles
+        director.loadStylesheet('/styles/vendor.css')
+        director.loadStylesheet('/styles/global.css')
+    </script>
+</body>
+</html>

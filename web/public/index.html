@@ -5,48 +5,69 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="apple-mobile-web-app-capable" content="yes">
     <style>
-        [v-cloak] { display:none }
-        #map, body, html {  
-            height: 100%;
-            width: 100%;
-            padding: 0em;
-            margin: 0em;
-            background: #88cdf8;
+        #app-container {
+            background: #86ccf6;
         }
+        [v-cloak] { display:none }
     </style>
+    <link rel="stylesheet" href="/styles/vendor.css"/>
+    <link rel="stylesheet" href="/styles/global.css"/>
 </head>
 <body>
-    <!-- map display -->
-    <div id="map">
-    </div>
 
-    <!-- application display -->
-    <div id="app-container" v-cloak>
-        <component v-for="app in app_components" v-bind:is="app" :key="app" v-bind:id="app" class="app"></component>
+    <div id="app-container">
+        <div class="app-full-screen" v-cloak>
+            <section v-for='map in maps' class="map-card" v-if="show">
+                <h1>{{map.name}}</h1>
+                <a class="button" :href='"./map.html#"+map.id'>Launch</a>
+            </section>
+        </div>
     </div>
-    
 
     <!-- platform setup -->
     <script src="/scripts/data.min.js"></script>
     <script src="/scripts/apps.min.js"></script>
-    <script src="/scripts/maps.min.js"></script>
     <script>
         // database
         let db = new LD.Database(window.location.origin + '/gun')
         db.setup()
-        
-        // apps
-        let director = window.LT = new LA.Director(db)
-        director.loadApps().then( info => {
-            console.log('[platform]', info)
-            // map
-            director.atlas = new LM.Atlas(window.localStorage, info.online == '1')
-            director.atlas.render(info.cloud == '1')
+
+        // maps
+        let vue = new LA.Vue({
+            el: '#app-container',
+            data: {
+                maps: [],
+                show: false
+            }
         })
 
-        // styles
-        director.loadStylesheet('/styles/vendor.css')
-        director.loadStylesheet('/styles/global.css')
+        // get data for maps
+        db.get('pkg').map((v,k) => {
+            if (v.name && v.version) {
+                let id = [v.name,v.version].join('@')
+              
+                // for now, redirect to first valid package
+                window.location = './map.html#'+id
+
+                console.log("[package] verified package: " + id)
+                db.get('pkg').get(v.name)
+                    .get('organization')
+                    .once((orgV,orgK) => {
+                        let item = {
+                            id: id,
+                            name: v.name,
+                            version: v.version,
+                            org: orgV.name
+                        }
+                        vue.maps.push(item)
+
+
+                    })
+            }
+            else {
+                console.log("[package] missing name or version: " + k)
+            }
+        })
     </script>
 </body>
 </html>
