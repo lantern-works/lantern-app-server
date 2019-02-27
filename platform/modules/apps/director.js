@@ -103,7 +103,8 @@ module.exports = class Director extends EventEmitter {
             return
         }
         if (!this.apps.hasOwnProperty(item.name)) {
-            let obj = this.apps[item.name] = new App(item, data)
+            let isolatedData = JSON.parse(JSON.stringify(data))
+            let obj = this.apps[item.name] = new App(item, isolatedData)
 
             obj.on('load', (page) => {
                 // console.log("[Direct] App loads page: ", page.componentID );
