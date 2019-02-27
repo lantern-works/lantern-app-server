@@ -67,24 +67,28 @@ module.exports = (serv) => {
     const cacheManyTiles = (params, key,  i) => {
         let lat = Number(params.lat)
         let lng = Number(params.lng)
+        let delay = i*(750+Math.random(2000))
 
-        // start y
-        let xyz =  getXYZ(lat, lng, i)
-        cacheTile(xyz, params, key)
-
-        // up y
         setTimeout(() => {
-            let up = JSON.parse(JSON.stringify(xyz))
-            up.y += 1
-            cacheTile(up, params, key)
-        }, 250)
+            // start y
+            let xyz =  getXYZ(lat, lng, i)
+            cacheTile(xyz, params, key)
 
-        // down y
-        setTimeout(() => {
-            let down = JSON.parse(JSON.stringify(xyz))
-            down.y -= 1
-            cacheTile(down, params, key)
-        }, 500)
+            // up y
+            setTimeout(() => {
+                let up = JSON.parse(JSON.stringify(xyz))
+                up.y += 1
+                cacheTile(up, params, key)
+            }, 250)
+
+            // down y
+            setTimeout(() => {
+                let down = JSON.parse(JSON.stringify(xyz))
+                down.y -= 1
+                cacheTile(down, params, key)
+            }, 500)
+
+        }, delay)
     }
 
     /**
@@ -123,7 +127,7 @@ module.exports = (serv) => {
                 let contentType = pres.headers['content-type']
 
                 if (contentType != 'image/png') {
-                    log.error('[map] non-image for tile: ' + streamUrl)
+                    log.warn('[map] non-image for tile: ' + streamUrl)
                     if (res) {
                         sendEmptyTile(res)
                     }
@@ -133,16 +137,16 @@ module.exports = (serv) => {
                 // also stream to file system for cache
                 preq.pipe(fs.createWriteStream(getLocalPathForTile(params)))
                     .on('error', (err) => {
-                        log.error('[map] no save for tile: ' + url)
-                        log.error(err)  
+                        log.warn('[map] no save for tile: ' + url)
+                        log.warn(err)  
                     })
             })
             .on('error', (err) => {
                 if (err.code == "ESOCKETTIMEDOUT") {
-                    log.error('[map] timeout trying tile: ' + url)
+                    log.warn('[map] timeout trying tile: ' + url)
                 } else {
-                    //log.error('[map] no stream for tile: ' + streamUrl)
-                    //log.error(err)
+                    //log.warn('[map] no stream for tile: ' + streamUrl)
+                    //log.warn(err)
                 }
 
                 if (res) {
@@ -180,9 +184,7 @@ module.exports = (serv) => {
     */
     serv.put('/api/map/:map/:lat/:lng/:zoom.json', (req, res) => {
         for (var i= minZoom; i < maxZoom;  i++) {
-            setTimeout(() => {
-                cacheManyTiles(req.params, req.query.key, i)  
-            }, i*(100+Math.random(1000)))
+            cacheManyTiles(req.params, req.query.key, i)  
         }
         res.status(200).json({"ok": true})
     })
