@@ -247,7 +247,7 @@ module.exports = class Item extends EventEmitter {
                     if (v.length) {
                         newObj[k] = '%' + v.join(',')
                     }
-                    else {
+                    else if (this._new[idx]) {
                         // empty array, all items have been removed
                         newObj[k] = '%'
                     }
