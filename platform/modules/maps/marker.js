@@ -1,5 +1,6 @@
 const Geohash = require('latlon-geohash')
 const Item = require('../data/item')
+const Location = require('./location')
 
 module.exports = class MarkerItem extends Item {
     constructor (db) {
@@ -55,13 +56,20 @@ module.exports = class MarkerItem extends Item {
         }
     }
 
+    get geohash () {
+        return this._data.geohash
+    }
+
     get latlng () {
         return Geohash.decode(this._data.geohash)
     }
 
-    get geohash () {
-        return this._data.geohash
+    set latlng(val) {
+        if (val) {
+            this.geohash = Location.toGeohash(val)
+        }
     }
+
 
     // -------------------------------------------------------------------------
 
