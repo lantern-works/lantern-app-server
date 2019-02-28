@@ -5,6 +5,7 @@ h1 {
 body .app {
     font-family: "montserrat",sans-serif;
     letter-spacing: 0.06em;
+    min-width: 320px;
 }
 
 .app h1 { 
