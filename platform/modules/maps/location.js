@@ -7,7 +7,7 @@ const Location = {}
 * Attempt to reduce any type of location into a geohash for storage and processing
 */
 Location.toGeohash = function (input, precision) {
-    precision = precision || 10
+    precision = precision || 8
     if (typeof (input) === 'string') {
         try {
             Geohash.decode(input)

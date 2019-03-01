@@ -427,6 +427,10 @@ module.exports = class Item extends EventEmitter {
                         console.log(`${this.logPrefix} saved`, key, val)
                     })
 
+                    fields.forEach((field) => {
+                        this._new[field] = false
+                    })
+
                     this.emit('save', fields)
                     this.emit('update', fields)
                     this.mode = 'shared'

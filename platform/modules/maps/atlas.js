@@ -11,7 +11,6 @@ require('leaflet.locatecontrol')
 module.exports = class Atlas extends EventEmitter {
     constructor (clientStorage, online) {
         super()
-
         if (!clientStorage) {
             return console.error('User requires client-side storage to construct')
         }
@@ -19,16 +18,8 @@ module.exports = class Atlas extends EventEmitter {
         this.map = null // leaflet map
         this.pointer = null // leaflet location pointer
         this.center = null
-        this.userLocation = null
-
         this.markers = {}
         this.markerList = []
-
-        this.precision = {
-            user_max: 4,
-            center_max: 10
-        }
-
         this._online = online
     }
 
@@ -57,9 +48,6 @@ module.exports = class Atlas extends EventEmitter {
         this.setupMap()
         this.setViewFromCenterLocationCache()
 
-        // map event for when location is found...
-        this.map.on('locationfound', this.cacheUserLocation.bind(this))
- 
         this.map.on('moveend', (e) => {
             this.calculateZoomClass()
             this.cacheCenterLocation()
@@ -251,16 +239,7 @@ module.exports = class Atlas extends EventEmitter {
     }
 
     // ------------------------------------------------------------------ CACHE
-    /**
-    * Preserves user geolocation in-memory for future use
-    */
-    cacheUserLocation (e) {
-        let newGeo = Location.toGeohash(e.latlng, this.precision.user_max)
-        if (newGeo !== this.userLocation) {
-            this.userLocation = newGeo
-            console.log(`${this.logPrefix} New user location found: ${this.userLocation}`)
-        }
-    }
+ 
 
     /**
     * Preserves center map location with browser-based storage
@@ -269,8 +248,7 @@ module.exports = class Atlas extends EventEmitter {
         return new Promise((resolve, reject) => {
             let origCtr = this.getCenterAsString()
             // http://www.bigfastblog.com/geohash-intro
-            let precision = Math.round(this.precision.center_max * (this.map.getZoom() / 20))
-            let gh = Location.toGeohash(this.map.getCenter(), precision)
+            let gh = Location.toGeohash(this.map.getCenter())
             //console.log(`${this.logPrefix} center geohash: ${gh}`);
             this.center = gh
             // only save to database if user has paused on this map for a few seconds
