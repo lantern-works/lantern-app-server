@@ -116,8 +116,9 @@ module.exports = class Package extends EventEmitter {
             console.log(`${this.logPrefix} removing item: ${id}`)
 
             // attach item to the package graph
-            let itemNode = this.db.get('itm').get(id)
-            this.node.get('data').get(this.version).unset(itemNode).once(() => {
+            let targetNode = this.node.get('data').get(this.version)
+            let itemNode = targetNode.get(id)
+            targetNode.unset(itemNode).once(() => {
                 resolve()
             })
         })

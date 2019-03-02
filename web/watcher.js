@@ -79,7 +79,7 @@ module.exports = (app) => {
 
     const markItemAsDropped = (packageID, itemID) => {
         let msg = `${getSeq()}-${itemID}`
-        log.debug(`${util.logPrefix('watcher')} ${msg}`)
+        log.debug(`${util.logPrefix(packageID)} ${msg} ${packageID}`)
         let target = packages[packageID][itemID] = packages[packageID][itemID] || { seq: null, data: {} }
         target.seq = getSeq()
         target.data = null
@@ -88,7 +88,7 @@ module.exports = (app) => {
     const markItemAsUpdated = (packageID, itemID, fieldID, fieldData) => {
         let target = packages[packageID][itemID] = packages[packageID][itemID] || { seq: null, data: {} }
         let msg = `${getSeq()}^${itemID}.${fieldID}=${fieldData}`
-        log.debug(`${util.logPrefix('watcher')} ${msg}`)
+        log.debug(`${util.logPrefix(packageID)} ${msg} `)
         target.seq = getSeq()
         target.data[fieldID] = fieldData
     }

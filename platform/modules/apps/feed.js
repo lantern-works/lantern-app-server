@@ -44,7 +44,7 @@ module.exports = class Feed extends EventEmitter {
     /**
     * Watch a single item for any updates
     */
-    watchItem (itemID, pkgID) {
+    watchItem (itemID, pkgID, targetNode) {
         // never watch the same item twice
         if (this.items.hasOwnProperty(itemID)) {
             return
@@ -55,15 +55,14 @@ module.exports = class Feed extends EventEmitter {
             package: pkgID
         }
 
-        let itemNode = this.db.get('itm').get(itemID)
+        let itemNode = targetNode.get(itemID)
 
         itemNode.on((v, k) => {
 
-            if (this.packages[pkgID] !== true) {
-                // we are not subscribed, so ignore updates...
+
+            if (!this.packages[pkgID]) {
                 return
             }
-
 
             if (!v) {
                 if (this.items[itemID] === false) {
@@ -164,7 +163,7 @@ module.exports = class Feed extends EventEmitter {
                     targetNode.map()
                     .on((v, k) => {
                         // start watching for changes
-                        this.watchItem(k, id)
+                        this.watchItem(k, id, targetNode)
                     })
                 }
             })
