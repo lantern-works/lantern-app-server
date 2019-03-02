@@ -1,5 +1,6 @@
 module.exports = {
-    Atlas: require('./modules/maps/atlas'),
+    Map: require('./modules/maps/map'),
     Location: require('./modules/maps/location'),
-    MarkerItem: require('./modules/maps/marker')
+    MarkerItem: require('./modules/maps/marker'),
+    LocationControl: require('leaflet.locatecontrol')
 }

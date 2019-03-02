@@ -1,60 +1,36 @@
 const EventEmitter = require('event-emitter-es6')
 const View = require('./view')
+const Feed = require('./feed')
 const User = require('../data/user')
 const App = require('./app')
+const Package = require('../data/package')
 const fetch = window.fetch
 require('../../helpers/array')
 
-module.exports = class Director extends EventEmitter {
-    constructor (db) {
+module.exports = class Context extends EventEmitter {
+
+    constructor (id, db, map, user) {
         super()
-        this.ready = false
+        this.id = id
+        this.db = db
+        this.map = map
+        this.user = user
+        this.feed = new Feed(this)
         this.apps = {}
         this.view = new View()
-        this.db = db
-        this.user = new User(this.db, window.localStorage)
-        this._atlas = null
+        this._packages = []
     }
 
-    withUser (fn) {
-        if (this.user && this.user.username) {
-            fn(this.user)
-        } else {
-            this.user.once('auth', function () {
-                fn(this.user)
-            }.bind(this))
-        }
+    get logPrefix () {
+        return `[c:${this.id}]`.padEnd(20, ' ')
     }
 
-    withAtlas (fn) {
-        if (this._atlas) {
-            fn(this._atlas)
-        } else {
-            this.once('atlas', function () {
-                fn(this._atlas)
-            }.bind(this))
-        }
-    }
 
-    set atlas (val) {
-        this._atlas = val
-        this.emit('atlas', this._atlas)
-    }
-
-    get atlas () {
-        return this._atlas
-    }
-
-    loadMap(packages) {
-        console.log("--------------------------------------------- MAP = " + packages)
-        this.withUser((user) => {
-            this.user.feed.removeAllPackages()
-            this.atlas.removeAllFromMap()
-            this.user.feed.addManyPackages(packages)
-        })
-    }
-
-    loadApps () {
+    // ------------------------------------------------------------------------
+    /**
+    * Load all applications into this context
+    */
+    loadAllApps () {
         return new Promise((resolve, reject) => {
             // info that may be useful to the browser or environment
             let info = {
@@ -80,54 +56,70 @@ module.exports = class Director extends EventEmitter {
                 })
                 .then((json) => {
                     json.apps.forEach(item => {
-                        this.createApp(item, json.data)
+                        this.loadOneApp(item, json.data)
                         info.apps.push(item.name)
                     })
                     resolve(info)
                 })
                 .catch((err) => {
-                    console.warn('[Direct] No available apps to work with')
+                    console.warn(`${this.logPrefix} No available apps to work with`)
                 })
         })
     }
 
-    loadStylesheet (uri) {
-        var el = document.createElement('link')
-        el.rel = 'stylesheet'
-        el.href = uri
-        el.type = 'text/css'
-        document.head.appendChild(el)
-    }
-
-    loadScript (uri) {
-        var el = document.createElement('script')
-        el.setAttribute('type', 'text/javascript')
-        el.src = uri
-        document.body.appendChild(el)
-    }
-    // ------------------------------------------------------------------------
-    createApp (item, data) {
+    /**
+    * Load one application into this context
+    **/
+    loadOneApp (item, data) {
         if (!item.children) {
-            console.warn('[Direct] Ignoring app directory with no children:', item.name)
+            console.warn(`${this.logPrefix} Ignoring app directory with no children: ${item.name}`)
             return
         }
         if (!this.apps.hasOwnProperty(item.name)) {
             let isolatedData = JSON.parse(JSON.stringify(data))
-            let obj = this.apps[item.name] = new App(item, isolatedData)
+            let obj = this.apps[item.name] = new App(item, isolatedData, this)
             obj.on('load', (page) => {
-                // console.log("[Direct] App loads page: ", page.componentID );
+                //console.log(`${this.logPrefix} load app component: ${page.componentID}`);
             })
 
             obj.on('open', (componentID) => {
-                // console.log("[Direct] App opens component:", componentID);
+                //console.log(`${this.logPrefix} open app component: ${componentID}`);
                 this.view.data.app_components.push(componentID)
             })
 
             obj.on('close', (componentID) => {
-                // console.log("[Direct] App closes component:", componentID);
+                //console.log(`${this.logPrefix} close app component: ${componentID}`);
                 this.view.data.app_components.remove(componentID)
             })
         }
+    }
+
+    // ------------------------------------------------------------------------
+    get packages() {
+        return this._packages
+    }
+
+    set packages(packages) {
+        console.log(`${this.logPrefix} packages = ${packages}`)
+        this.feed.reset()
+        this.feed.addManyPackages(packages)
+        this._packages = []
+        packages.forEach(pkgId => {
+            let pkg = new LD.Package(pkgId, this.db)
+            this._packages.push(pkg)
+        })
+    }
+
+    addToPackages(marker) { 
+        this._packages.forEach(pkg => {
+            pkg.add(marker)
+        })
+    }
+
+    removeFromPackages(marker) { 
+        this._packages.forEach(pkg => {
+            pkg.remove(marker)
+        })
     }
 
     // ------------------------------------------------------------------------

@@ -13,19 +13,18 @@ module.exports = class Package extends EventEmitter {
             return console.error('Package requires database to construct')
         }
 
-        let version = '0.0.1' // default version
+        this.version = '0.0.1' // default version
 
         if (name.indexOf('@') !== -1) {
             let parts = name.split('@')
             name = parts[0]
-            version = parts[1]
+            this.version = parts[1]
         }
 
         this._data = {
             'name': name,
             'public': true, // only supporting public packages, for now
-            'data': {},
-            'version': version
+            'data': {}
         }
         this._data.data[this.version] = {
         }
@@ -46,16 +45,8 @@ module.exports = class Package extends EventEmitter {
         this._data.name = val
     }
 
-    get version () {
-        return this._data.version
-    }
-
-    set version (val) {
-        this._data.version = val
-    }
-
     get id () {
-        return this._data.name + '@' + this._data.version
+        return this._data.name + '@' + this.version
     }
 
     // -------------------------------------------------------------------------

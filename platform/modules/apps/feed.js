@@ -1,18 +1,18 @@
 const EventEmitter = require('event-emitter-es6')
 
 module.exports = class Feed extends EventEmitter {
-    constructor (user) {
+    constructor (context) {
         super()
-        this.user = user
+        this.context = context
         this.db = user.db
         this.packages = {} // only watch these
-        this.topics = {} // only watch these
-        this.watched_items = {}
+        this.items = {}
+        this.itemsList = []
     }
 
     // -------------------------------------------------------------------------
     get logPrefix () {
-        return `[f:${this.user.username}]`.padEnd(20, ' ')
+        return `[f:${this.context.id}]`.padEnd(20, ' ')
     }
 
     /**
@@ -20,33 +20,55 @@ module.exports = class Feed extends EventEmitter {
     */
     watchItem (itemID, pkgID) {
         // never watch the same item twice
-        if (this.watched_items.hasOwnProperty(itemID)) {
+        if (this.items.hasOwnProperty(itemID)) {
             return
         }
-        //console.log(`${this.logPrefix} watch changes for ${itemID} within package ${pkgID}`)
         let event = {
             id: itemID,
             package: pkgID
         }
+
         let itemNode = this.db.get('itm').get(itemID)
+
         itemNode.on((v, k) => {
             if (!v) {
-                if (this.watched_items[itemID] !== true) {
+                if (this.items[itemID] === false) {
                     return
                 }
-                this.emit('drop', event)
-                this.watched_items[itemID] = false
+                event.item = this.items[itemID]
+                this.items[itemID] = false
+                this.itemsList.remove(itemID)
+                this.emit('item-unwatch', event)
             } else {
+                
+                if (this.items[itemID]) return
+
+                // markers
+                let item = null
+                if (v.g && v.o && v.t) {
+                    item = new LM.MarkerItem(LT.db)
+                }
+                else {
+                    item = new LD.Item(LT.db)
+                }
+                item.id = itemID
+                item.data = v
+
+                this.items[itemID] = item
+                if (this.itemsList.indexOf(itemID) == -1) {
+                    this.itemsList.push(itemID)
+                }
+
                 event.data = v
-                this.emit('add', event)
-                setTimeout(() => {
-                    this.watched_items[itemID] = true
-                }, 2000) // ensures initial data load is complete ( @todo find more elegant solution )
+                event.item = item
+                //console.log(`${this.logPrefix} watch item: ${itemID}`)
+                this.emit('item-watch', event)
             }
         })
+
         // only allow change event to trigger after an 'add' event
         itemNode.map().on((v, k) => {
-            if (this.watched_items[itemID] !== true) {
+            if (this.items[itemID] === false) {
                 return
             }
             this.markDataChange(itemID, pkgID, v, k)
@@ -60,54 +82,16 @@ module.exports = class Feed extends EventEmitter {
             key: k,
             data: v
         }
+        if (this.items[itemID]) {
+            event.item = this.items[itemID]
+        }
         if (this.packages[pkgID]) {
-            this.emit('change', event)
+            this.emit('item-change', event)
         } else {
             console.log('skipping', event)
         }
     }
 
-    /**
-    * Allows for manual refresh of data from the feed
-    */
-    forEachItem (fn) {
-        Object.keys(this.packages).forEach(pkgID => {
-            if (this.packages[pkgID] === false) {
-                return
-            }
-
-            console.log(`${this.logPrefix} finding all items for:`, pkgID)
-            let parts = pkgID.split('@')
-            let name = parts[0]
-            let version = parts[1]
-            let pkgNode = this.db.get('pkg').get(name).get('data').get(version)
-            pkgNode.once((v, k) => {
-                if (!v) return
-                Object.keys(v).forEach((itemID) => {
-                    if (itemID === '_') return
-
-                    let targetNode = pkgNode.get(itemID)
-                    let origNode = this.db.get('itm').get(itemID)
-
-                    targetNode.once((v, k) => {
-                        if (v) {
-                            // make sure we have node in items as expected
-                            // handle case where "itm" is cleared but data is still in package
-                            // assume we want to preserve this data
-                            origNode.once((origV) => {
-                                if (!origV) {
-                                    console.warn(`${this.logPrefix} restoring orphan back into item storage`)
-                                    this.db.get('itm').set(targetNode)
-                                }
-                            })
-                        }
-
-                        fn(v, k)
-                    })
-                })
-            })
-        })
-    }
 
     // -------------------------------------------------------------------------
     addManyPackages (packages) {
@@ -144,7 +128,7 @@ module.exports = class Feed extends EventEmitter {
                     console.log(`${this.logPrefix} missing package: ${id}`)
                 }
                 else {
-                    console.log(`${this.logPrefix} watching the changes: ${id}`)
+                    console.log(`${this.logPrefix} begin watching package: ${id}`)
                     this.packages[id] = true
                     
                     this.emit("watch", id)
@@ -177,27 +161,17 @@ module.exports = class Feed extends EventEmitter {
         if (this.packages[id] === true) {
             console.log(`${this.logPrefix} unwatch changes for ${id}`)
             this.packages[id] = false
-            this.emit("unwatch", id)
+            this.emit('unwatch', id)
         }
     }
 
-    // -------------------------------------------------------------------------
-    addManyTopics (topics) {
-        topics.forEach(this.addOneTopic.bind(this))
+    reset() {
+        this.removeAllPackages()
+        this.itemsList.forEach(key => {
+            this.emit('item-unwatch', {id: key, item: this.items[key]})
+        })
+        this.itemsList.length = 0
+        this.items = {}
     }
 
-    addOneTopic (name) {
-        console.log(`${this.logPrefix} add topic ${name}`)
-        this.topics[name] = true
-        this.emit("subscribe", name)
-    }
-
-    removeManyTopics (topics) {
-        topics.forEach(this.removeOneTopic.bind(this))
-    }
-    removeOneTopic (name) {
-        console.log(`${this.logPrefix} remove topic ${name}`)
-        this.topics[name] = false
-        this.emit("unsubscribe", name)
-    }
 }

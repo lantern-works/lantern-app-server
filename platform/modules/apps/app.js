@@ -2,8 +2,9 @@ const EventEmitter = require('event-emitter-es6')
 const Vue = require('vue')
 
 module.exports = class App extends EventEmitter {
-    constructor (obj, data) {
+    constructor (obj, data, context) {
         super()
+        this.context = context
         this.name = obj.name
         this.css_id = `lx-app-${this.name}-css`
         this.children = obj.children
@@ -61,7 +62,7 @@ module.exports = class App extends EventEmitter {
 
         if (logic) {
             if (logic.callback) {
-                logic.callback.call(page)
+                logic.callback(page)
             }
             if (logic.open) {
                 self.open(componentID)
@@ -102,8 +103,8 @@ module.exports = class App extends EventEmitter {
                 }
             })
         } catch (e) {
-            console.log(`${this.logPrefix} Failed to load application`)
-            console.log(e)
+            console.warn(`${this.logPrefix} Failed to load application`)
+            console.error(e)
         }
     }
 

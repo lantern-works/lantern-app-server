@@ -1,3 +1,6 @@
+/**
+* All applications run inside a map context
+*/
 const EventEmitter = require('event-emitter-es6')
 const Location = require('./location')
 const MaptileConfig = require('../../config/maptiler')
@@ -6,25 +9,16 @@ const LeafletMapConfig = require('../../config/leaflet_map')
 const fetch = window.fetch
 require('../../helpers/math')
 require('leaflet')
-require('leaflet.locatecontrol')
 
-module.exports = class Atlas extends EventEmitter {
-    constructor (clientStorage, online) {
+module.exports = class Map extends EventEmitter {
+    constructor () {
         super()
-        if (!clientStorage) {
-            return console.error('User requires client-side storage to construct')
-        }
-        this.clientStorage = clientStorage
-        this.map = null // leaflet map
+        this.view = window.L.map('map', LeafletMapConfig) // leaflet map
         this.pointer = null // leaflet location pointer
-        this.center = null
-        this.markers = {}
-        this.markerList = []
-        this._online = online
     }
 
     get logPrefix () {
-        return '[atlas]'.padEnd(20, ' ')
+        return '[map]'.padEnd(20, ' ')
     }
 
     // -------------------------------------------------------------------- MAP
@@ -45,35 +39,23 @@ module.exports = class Atlas extends EventEmitter {
 
     render (useCloud) {
         this.setTileHost(useCloud)
-        this.setupMap()
-        this.setViewFromCenterLocationCache()
-
-        this.map.on('moveend', (e) => {
-            this.calculateZoomClass()
-            this.cacheCenterLocation()
-        })
-
-        this.calculateZoomClass()
-    }
-
-    setupMap () {
-        // bind dom element for leaflet
-        this.map = window.L.map('map', LeafletMapConfig)
-
+        
         // layer in hosted map tiles
-        window.L.tileLayer(this.tileUri, LeafletTilesConfig).addTo(this.map)
-
+        window.L.tileLayer(this.tileUri, LeafletTilesConfig).addTo(this.view)
         // stop map from going off-world
         var sw = window.L.latLng(-89.98155760646617, -180)
-
         var ne = window.L.latLng(89.99346179538875, 180)
         var bounds = window.L.latLngBounds(sw, ne)
-        this.map.setMaxBounds(bounds)
-        this.map.on('drag', function () {
-            this.map.panInsideBounds(bounds, { animate: false })
+        this.view.setMaxBounds(bounds)
+        this.view.on('drag', function () {
+            this.view.panInsideBounds(bounds, { animate: false })
         }.bind(this))
+        
+        this.view.on('moveend', (e) => {
+            this.calculateZoomClass()
+        })
+        this.calculateZoomClass()
     }
-
 
 
     // ------------------------------------------------------------------- VIEW
@@ -81,50 +63,37 @@ module.exports = class Atlas extends EventEmitter {
     * By default center over North America
     */
     setDefaultView() {        
-        this.map.setView([38.42, -12.79], 3)
+        this.view.setView([38.42, -12.79], 3)
+    }
+
+        
+    /**
+    * Get center of map in geohash format
+    */
+    getCenter () {
+        return Location.toGeohash(this.view.getCenter())
     }
 
     /**
-    * Use saved per-user location to center map
+    * Get center of map in geohash format
     */
-    setViewFromCenterLocationCache () {
-        let ctr = this.clientStorage.getItem('lx-ctr')
-        try {
-            let parts = ctr.split('/')
-            this.map.setView([parts[0], parts[1]], parts[2])
-            // console.log(`${this.logPrefix} restoring view = ${parts}`)
-        } catch (e) {
-            // will fall back to default view if no markers available
-            this.setViewFromRandomMarker()
-        }
+    getCenterAsLatLng () {
+        return this.view.getCenter()
     }
 
-    /*
+    /**
     * Gets center of map in lat/lng/zoom format
     */
     getCenterAsString () {
-        return [this.map.getCenter().lat, this.map.getCenter().lng, this.map.getZoom()].join('/')
+        return [this.view.getCenter().lat, this.view.getCenter().lng, this.view.getZoom()].join('/')
     }
 
-    /**
-    * Sets view based on a random marker
-    */
-    setViewFromRandomMarker() {
-        let item = this.getRandomMarker()
-        if (item) {
-            console.log(`${this.logPrefix} set view from random marker = ${item.id}`)
-            this.map.setView(item.latlng, 14)
-        }
-        else {
-            this.setDefaultView()
-        }
-    }
 
     /**
     * Check to see if given marker is within view
     */
     isMarkerWithinView (marker) {
-        return this.map.getBounds().contains(marker.latlng)
+        return this.view.getBounds().contains(marker.latlng)
     }
 
     // ------------------------------------------------------------- ZOOM / PAN
@@ -132,8 +101,8 @@ module.exports = class Atlas extends EventEmitter {
     * Fly in while zooming
     */
     zoomToPoint (latlng, level) {
-        level = level || this.map.getZoom() + 2
-        this.map.flyTo(latlng, Math.limit(level, 1, LeafletMapConfig.maxZoom), {
+        level = level || this.view.getZoom() + 2
+        this.view.flyTo(latlng, Math.limit(level, 1, LeafletMapConfig.maxZoom), {
             pan: {
                 animate: true,
                 duration: 1.5
@@ -148,17 +117,17 @@ module.exports = class Atlas extends EventEmitter {
     * Check if we are using max zoom level
     */
     hasMaxZoom () {
-        return (LeafletMapConfig.maxZoom - this.map.getZoom() < 1)
+        return (LeafletMapConfig.maxZoom - this.view.getZoom() < 1)
     }
 
     /**
     * Adjusts map to a minimum desired zoom level
     */
     zoomMinimum(level) {
-        if (this.map.getZoom() < level) {
-            let increase = level-this.map.getZoom()
+        if (this.view.getZoom() < level) {
+            let increase = level-this.view.getZoom()
             console.log(`${this.logPrefix} zooming in extra = ${increase}`)
-            this.map.zoomIn(increase)
+            this.view.zoomIn(increase)
         }
     }
 
@@ -167,8 +136,8 @@ module.exports = class Atlas extends EventEmitter {
     */
     panToPoint (latlng) {
         return new Promise((resolve, reject) => {
-            this.map.once('moveend', resolve)
-            this.map.panTo(latlng, {
+            this.view.once('moveend', resolve)
+            this.view.panTo(latlng, {
                 pan: {
                     animate: true,
                     duration: 1.5
@@ -182,7 +151,7 @@ module.exports = class Atlas extends EventEmitter {
     */
     calculateZoomClass () {
         let distance = 'close'
-        let zoom = this.map.getZoom()
+        let zoom = this.view.getZoom()
 
         // map scale breakpoints
         if (zoom < 6) {
@@ -213,18 +182,21 @@ module.exports = class Atlas extends EventEmitter {
         console.log(`${this.logPrefix} zooming to random marker = ${item.id}`)
         this.panToPoint(item.latlng)
         setTimeout(() => {
-            this.map.zoomIn(8)
+            this.view.zoomIn(8)
         }, 1500)
     }
 
     /**
     * Looks for all markers on map and adjusts view so all are visible
     */
-    fitMapToAllMarkers () {
+    fitMapToAllMarkers (markers) {
+        if (!markers) {
+            console.warn(`${this.logPrefix} must specify markers to fit to map`)
+            return
+        }
         let allLayers = []
-
-        Object.keys(this.markers).forEach((key) => {
-            let marker = this.markers[key]
+        Object.keys(markers).forEach((key) => {
+            let marker = markers[key]
             // markers can include null objects from past deleted markers, so ignore those...
             if (marker !== null && marker.hasOwnProperty('layer')) {
                 let layer = marker.layer
@@ -234,42 +206,12 @@ module.exports = class Atlas extends EventEmitter {
 
         if (allLayers.length) {
             let group = new window.L.featureGroup(allLayers)
-            this.map.fitBounds(group.getBounds())
+            this.view.fitBounds(group.getBounds())
         }
     }
 
     // ------------------------------------------------------------------ CACHE
  
-
-    /**
-    * Preserves center map location with browser-based storage
-    */
-    cacheCenterLocation (timeout) {
-        return new Promise((resolve, reject) => {
-            let origCtr = this.getCenterAsString()
-            // http://www.bigfastblog.com/geohash-intro
-            let gh = Location.toGeohash(this.map.getCenter())
-            //console.log(`${this.logPrefix} center geohash: ${gh}`);
-            this.center = gh
-            // only save to database if user has paused on this map for a few seconds
-            setTimeout(() => {
-                if (gh === "ew") {
-                    // don't bother saving default north american view
-                    return
-                }
-                let newCtr = this.getCenterAsString()
-                if (origCtr === newCtr) {
-                    this.clientStorage.setItem('lx-ctr', newCtr)
-                    //console.log(`${this.logPrefix} caching center geohash: ${gh} (${this.map.getCenter()})`);
-
-                    if (this._online) {
-                        this.cacheTilesFromCenter()                        
-                    }
-                }
-            }, timeout || 5000)
-        })
-    }
-
     /**
     * Cache tiles based on center of map
     */
@@ -289,11 +231,6 @@ module.exports = class Atlas extends EventEmitter {
     * Add marker to map
     */
     addToMap (marker) {
-        if (marker.id && this.markers[marker.id]) {
-            console.log(`${this.logPrefix} ${marker.id} already added to map. skipping...`)
-            return
-        }
-
         //console.log(`${this.logPrefix} add ${marker.id}`)
 
         marker.layer = window.L.marker(marker.latlng, {
@@ -309,16 +246,13 @@ module.exports = class Atlas extends EventEmitter {
             marker.geohash = Location.toGeohash(latlng)
         })
 
-        marker.layer.addTo(this.map)
+        marker.layer.addTo(this.view)
 
 
         if (marker.mode == 'draft') {
             // special behaviors for permanent markers, only...
             return
         }
-
-        this.markers[marker.id] = marker
-        this.markerList.push(marker.id)
 
         marker.layer.on('click', (e) => {
             this.emit('marker-click', marker)
@@ -331,48 +265,22 @@ module.exports = class Atlas extends EventEmitter {
     */
     removeFromMap (marker) {
         marker.layer.remove()
-        if (marker.id && this.markers[marker.id]) {
-            //console.log(`${this.logPrefix} remove ${marker.id}`)
-            this.markers[marker.id] = null
-            this.markerList.remove(marker.id)
-        }
         this.emit('marker-remove', marker)
     }
 
     /**
     * Remove all markers from map
     */
-    removeAllFromMap () {
-        Object.keys(this.markers).forEach(id => {
-            if (this.markers[id] !== null) {
-                this.removeFromMap(this.markers[id])
+    removeAllFromMap (markers) {
+        if (!markers) {
+            console.warn(`${this.logPrefix} must specify markers to remove from map`)
+            return
+        }
+        Object.keys(markers).forEach(id => {
+            if (markers[id] !== null) {
+                this.removeFromMap(markers[id])
             }
         })
-    }
-
-    /**
-    * Gets count of total number of markers on the map
-    */
-    getMarkerCount () {
-        let count = 0
-        this.markerList.forEach(id => {
-            if (this.markers[id] !== null) count++
-        })
-        return count
-    }
-
-    /**
-    * Finds a random marker
-    */
-    getRandomMarker() {
-        let keys = JSON.parse(JSON.stringify(this.markerList))
-        keys.forEach(key => {
-            if (this.markers[key] === null) {
-                keys.remove()
-            }
-        })
-        let item = this.markers[keys[ keys.length * Math.random() << 0]]
-        return item
     }
 
 }

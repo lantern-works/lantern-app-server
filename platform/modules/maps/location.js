@@ -31,6 +31,10 @@ Location.toGeohash = function (input, precision) {
     }
 }
 
+Location.fromGeohash = function(geohash) {
+    return Geohash.decode(geohash)
+}
+
 /**
 * Calculation distance between two geolocations in kilometers
 */

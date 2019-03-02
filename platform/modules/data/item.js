@@ -325,9 +325,11 @@ module.exports = class Item extends EventEmitter {
                     if (typeof (pointer) === 'object') {
                         if (pointer.length) {
                             console.log(`${this.logPrefix} changing ${idx} object to ${newData[idx]}`)
+                            this.emit('change', idx)
                         }
                     } else if (pointer) {
                         console.log(`${this.logPrefix} changing ${idx} from ${this[idx]} to ${newData[idx]}`)
+                        this.emit('change', idx)
                     }
                 }
 

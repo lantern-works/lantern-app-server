@@ -1,7 +1,6 @@
 const EventEmitter = require('event-emitter-es6')
 const shortid = require('shortid')
 const SEA = require('sea')
-const Feed = require('./feed')
 
 module.exports = class User extends EventEmitter {
     constructor (db, clientStorage) {
@@ -13,18 +12,12 @@ module.exports = class User extends EventEmitter {
         if (!clientStorage) {
             return console.error('User requires client-side storage to construct')
         }
-
         this.db = db
         this.node = this.db.stor.user()
         this.pair = null
-        this.feed = new Feed(this)
         this.clientStorage = clientStorage // typically browser localStorage
-
         this.once('auth', () => {
             console.log(`${this.logPrefix} sign-in complete`)
-            this.listPackages().then((packages) => {
-                console.log(`${this.logPrefix} found packages: ${packages}`)
-            })
         })
     }
 
@@ -32,8 +25,21 @@ module.exports = class User extends EventEmitter {
         return `[u:${this.username || 'anonymous'}]`.padEnd(20, ' ')
     }
 
-    // -------------------------------------------------------------------------
 
+
+    // -------------------------------------------------------------------------
+    onReady (fn) {
+        if (this.username) {
+            fn()
+        }
+        else {
+            this.once('auth', fn)
+        }
+    }
+
+
+
+    // -------------------------------------------------------------------------
     /**
     * Authenticates the user with decentralized database
     */
@@ -114,73 +120,7 @@ module.exports = class User extends EventEmitter {
         console.warn(`${this.logPrefix}  waiting for valid sign in or registration...`)
     }
 
-    // -------------------------------------------------------------------------
 
-    /**
-    * List packages which are installed for this user
-    */
-    listPackages () {
-        return new Promise((resolve, reject) => {
-            let node = this.node.get('packages')
-            node.once((v, k) => {
-                let packages = []
-                if (!v) {
-                    return resolve(packages)
-                }
-                Object.keys(v).forEach((pkg) => {
-                    if (pkg === '_' || pkg === '#' || v[pkg] === null) return
-                    if (typeof (v[pkg]) !== 'string') {
-                        console.warn(`${this.logPrefix} Nullifying non-string value for ${pkg} package:`, v[pkg])
-                        node.get(pkg).put(null)
-                    } else {
-                        packages.push(pkg + '@' + v[pkg])
-                    }
-                })
-                resolve(packages)
-            })
-        })
-    }
-    /**
-    * Installs a package for a given user and thereby makes available to end-user device
-    */
-    install (pkg) {
-        // allows either a package object or a string representation of pkg@version
-        let pkgID = pkg
-        if (typeof (pkg) === 'object') {
-            pkgID = `${pkg.name}@${pkg.version}`
-        }
-        let pkgName = pkgID.split('@')[0]
-        let pkgVersion = pkgID.split('@')[1]
-
-        return this.db.getOrPut(this.node.get('packages'), {})
-            .then(saved => {
-                return this.db.getOrPut(this.node.get('packages').get(pkgName), pkgVersion)
-                    .then(saved => {
-                        // console.log(`${this.logPrefix} ${saved ? 'installed ' : 'already installed'} package ${pkgID}`)
-                        if (saved) {
-                            this.emit('install', pkgID)
-                        }
-                        this.feed.addOnePackage(pkgID)
-                    })
-            })
-    }
-
-    /**
-    * Removes a package for a given user and cleans up references to related data
-    */
-    uninstall (pkg) {
-        return new Promise((resolve, reject) => {
-            this.node.get('packages').get(pkg.name)
-                .put(null)
-                .once((v, k) => {
-                    console.log(`${this.logPrefix} uninstalled package ${pkg.name}`)
-                    this.node.get('packages').get(pkg.name).put(null)
-                    this.feed.removeOnePackage(pkg.name)
-                    this.emit('uninstall', pkg.name)
-                    resolve()
-                })
-        })
-    }
 
     // -------------------------------------------------------------------------
     encrypt (data) {
@@ -193,42 +133,6 @@ module.exports = class User extends EventEmitter {
             })
         })
     }
-
-    // -------------------------------------------------------------------------
-
-    /**
-    * List topics the user has subscribed to and wants to receive data for
-    */
-    listTopics () {
-        this.node.get('topics').once((v, k) => {
-            if (!v) return
-            Object.keys(v).forEach((pkg) => {
-                if (pkg === '_' || v[pkg] === null) return
-                console.log(`${this.logPrefix} subscribed topics ${pkg}:`, v[pkg])
-            })
-        })
-    }
-
-    /**
-    * Explicitly gather data on a given topic from available packages
-    */
-    subscribe (topic) {
-        this.node.get('topics').get(topic).set(true).once(() => {
-            console.log(`${this.logPrefix} subscribe to topic ${topic}`)
-            this.emit('subscribe', topic)
-        })
-    }
-
-    /**
-    * Remove and stop watching for data on a given topic
-    */
-    unsubscribe (topic) {
-        this.node.get('topics').get(topic).set(false).once(() => {
-            console.log(`${this.logPrefix} unsubscribe from topic ${topic}`)
-            this.emit('subscribe', topic)
-        })
-    }
-
 
 
     // -------------------------------------------------------------------------

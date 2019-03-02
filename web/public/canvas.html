@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <style>
+        [v-cloak] { display:none }
+        #map, body, html {  
+            height: 100%;
+            width: 100%;
+            padding: 0em;
+            margin: 0em;
+            background: #88cdf8;
+        }
+    </style>
+    <link rel="stylesheet" href="/styles/vendor.css"/>
+    <link rel="stylesheet" href="/styles/global.css"/>
+</head>
+<body>
+    <!-- map display -->
+    <div id="map"></div>
+
+    <!-- application display -->
+    <div id="app-container" v-cloak>
+        <component v-for="app in app_components" v-bind:is="app" :key="app" v-bind:id="app" class="app"></component>
+    </div>
+    
+    <!-- platform setup -->
+    <script src="/scripts/data.js"></script>
+    <script src="/scripts/apps.js"></script>
+    <script src="/scripts/maps.js"></script>
+    <script>
+        // database
+        let db = new LD.Database(window.location.origin + '/gun')
+
+        // user
+        let user = new LD.User(db, window.localStorage)
+
+        // map
+        let map = new LM.Map()
+
+        // apps
+        let ctx = window.LT = new LA.Context("main", db, map, user)
+        ctx.loadAllApps()
+
+        // data
+        if (window.location.hash) {
+            ctx.packages = window.location.hash.replace('#', '').split(',')
+        }
+        window.onhashchange = (hash) => {
+            ctx.packages = window.location.hash.replace('#', '').split(',')
+        }
+    </script>
+</body>
+</html>
