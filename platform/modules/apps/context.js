@@ -17,7 +17,9 @@ module.exports = class Context extends EventEmitter {
         this.user = user
         this.feed = new Feed(this)
         this.apps = {}
-        this.view = new View()
+        this.view = new View()        
+        this.cloud = false
+        this.online = false
         this._packages = []
     }
 
@@ -47,8 +49,8 @@ module.exports = class Context extends EventEmitter {
             })
                 .then((result) => {
                     if (result.status === 200) {
-                        info.online = result.headers.get('X-Lantern-Online')
-                        info.cloud = result.headers.get('X-Lantern-Cloud')
+                        this.online = result.headers.get('X-Lantern-Online') === '1'
+                        this.cloud = result.headers.get('X-Lantern-Cloud') === '1'
                         return result.json()
                     } else {
                         reject(result)
@@ -57,9 +59,8 @@ module.exports = class Context extends EventEmitter {
                 .then((json) => {
                     json.apps.forEach(item => {
                         this.loadOneApp(item, json.data)
-                        info.apps.push(item.name)
                     })
-                    resolve(info)
+                    resolve()
                 })
                 .catch((err) => {
                     console.warn(`${this.logPrefix} No available apps to work with`)
