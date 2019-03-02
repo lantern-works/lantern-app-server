@@ -47,6 +47,7 @@ module.exports = class Map extends EventEmitter {
         var ne = window.L.latLng(89.99346179538875, 180)
         var bounds = window.L.latLngBounds(sw, ne)
         this.view.setMaxBounds(bounds)
+
         this.view.on('drag', function () {
             this.view.panInsideBounds(bounds, { animate: false })
         }.bind(this))
@@ -55,6 +56,13 @@ module.exports = class Map extends EventEmitter {
             this.calculateZoomClass()
         })
         this.calculateZoomClass()
+
+        setTimeout(() => {
+            if (!this.view._loaded) {
+                this.setDefaultView()
+            }
+        }, 500)
+
     }
 
 
@@ -198,7 +206,7 @@ module.exports = class Map extends EventEmitter {
         Object.keys(markers).forEach((key) => {
             let marker = markers[key]
             // markers can include null objects from past deleted markers, so ignore those...
-            if (marker !== null && marker.hasOwnProperty('layer')) {
+            if (marker !== null && marker.layer ) {
                 let layer = marker.layer
                 allLayers.push(layer)
             }

@@ -12,9 +12,35 @@ module.exports = class Feed extends EventEmitter {
 
     // -------------------------------------------------------------------------
     get logPrefix () {
-        return `[f:${this.context.id}]`.padEnd(20, ' ')
+        let id = this.context.id ? 'f:' + this.context.id : 'no-context'
+        return `[${id}]`.padEnd(20, ' ')
     }
 
+
+
+    // ------------------------------------------------------------------------
+    get activeItems() {
+        let obj = {}
+        Object.keys(this.items).forEach(key => {
+            if (this.items[key] !== false) {
+                obj[key] = this.items[key]
+            }
+        })
+        return obj
+    }
+
+    get inactiveItems() {
+        let obj = {}
+        Object.keys(this.items).forEach(key => {
+            if (this.items[key] === false) {
+                obj[key] = this.items[key]
+            }
+        })
+        return obj
+    }
+
+
+    // ------------------------------------------------------------------------
     /**
     * Watch a single item for any updates
     */
@@ -23,6 +49,7 @@ module.exports = class Feed extends EventEmitter {
         if (this.items.hasOwnProperty(itemID)) {
             return
         }
+
         let event = {
             id: itemID,
             package: pkgID
@@ -31,6 +58,13 @@ module.exports = class Feed extends EventEmitter {
         let itemNode = this.db.get('itm').get(itemID)
 
         itemNode.on((v, k) => {
+
+            if (this.packages[pkgID] !== true) {
+                // we are not subscribed, so ignore updates...
+                return
+            }
+
+
             if (!v) {
                 if (this.items[itemID] === false) {
                     return
@@ -61,7 +95,7 @@ module.exports = class Feed extends EventEmitter {
 
                 event.data = v
                 event.item = item
-                //console.log(`${this.logPrefix} watch item: ${itemID}`)
+                //console.log(`${this.logPrefix} watch item: ${itemID}`, this.packages)
                 this.emit('item-watch', event)
             }
         })
@@ -71,25 +105,19 @@ module.exports = class Feed extends EventEmitter {
             if (this.items[itemID] === false) {
                 return
             }
-            this.markDataChange(itemID, pkgID, v, k)
+            if (this.packages[pkgID]) {
+                this.markDataChange(this.items[itemID], pkgID, v, k)
+            }
         }, { change: true })
     }
 
-    markDataChange (itemID, pkgID, v, k) {
-        let event = {
-            id: itemID,
-            package: pkgID,
-            key: k,
-            data: v
+    markDataChange (item, pkgID, v, k) {
+        if (!item) {
+            return
         }
-        if (this.items[itemID]) {
-            event.item = this.items[itemID]
-        }
-        if (this.packages[pkgID]) {
-            this.emit('item-change', event)
-        } else {
-            console.log('skipping', event)
-        }
+        let obj = {}
+        obj[k] = v
+        item.refresh(obj)
     }
 
 
@@ -128,7 +156,7 @@ module.exports = class Feed extends EventEmitter {
                     console.log(`${this.logPrefix} missing package: ${id}`)
                 }
                 else {
-                    console.log(`${this.logPrefix} begin watching package: ${id}`)
+                    console.log(`${this.logPrefix} watch package: ${id}`)
                     this.packages[id] = true
                     
                     this.emit("watch", id)
@@ -159,7 +187,7 @@ module.exports = class Feed extends EventEmitter {
         }
 
         if (this.packages[id] === true) {
-            console.log(`${this.logPrefix} unwatch changes for ${id}`)
+            console.log(`${this.logPrefix} unwatch package: ${id}`)
             this.packages[id] = false
             this.emit('unwatch', id)
         }
@@ -167,11 +195,13 @@ module.exports = class Feed extends EventEmitter {
 
     reset() {
         this.removeAllPackages()
-        this.itemsList.forEach(key => {
-            this.emit('item-unwatch', {id: key, item: this.items[key]})
+        this.itemsList.forEach(itemID => {
+            //console.log(`${this.logPrefix} unwatch item: ${itemID}`)
+            this.emit('item-unwatch', {id: itemID, item: this.items[itemID]})
         })
         this.itemsList.length = 0
         this.items = {}
+        this.emit('reset')
     }
 
 }

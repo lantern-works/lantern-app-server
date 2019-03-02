@@ -19,11 +19,11 @@ module.exports = (app) => {
     * Watch for and announce changes to given package
     */
     const watchPackage = (v, k) => {
-        let packageID = [v.name, v.version].join('@')
+        let packageID = [k, v.version].join('@')
 
 
         if (packages.hasOwnProperty(packageID)) {
-            log.debug(`${util.logPrefix('watcher')} skip duplicate ${v.name} = ${v.version}`)
+            log.debug(`${util.logPrefix('watcher')} skip duplicate ${k} = ${packageID}`)
             return
         }
         if (!v.name || !v.version) {
@@ -31,10 +31,10 @@ module.exports = (app) => {
             return
         }
 
-        log.debug(`${util.logPrefix('watcher')} ${v.name} = ${v.version}`)
+        log.debug(`${util.logPrefix('watcher')} ${v.name} = ${packageID}`)
         packages[packageID] = {}
 
-        let subnode = node.get(v.name).get('data').get(v.version)
+        let subnode = node.get(k).get('data').get(v.version)
         subnode.map()
             .on((v, k) => {
                 markItemAsChanged(subnode, packageID, v, k)

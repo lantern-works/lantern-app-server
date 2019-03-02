@@ -24,7 +24,8 @@ module.exports = class Package extends EventEmitter {
         this._data = {
             'name': name,
             'public': true, // only supporting public packages, for now
-            'data': {}
+            'data': {},
+            'version': this.version
         }
         this._data.data[this.version] = {
         }

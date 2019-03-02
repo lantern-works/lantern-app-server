@@ -9,9 +9,8 @@ require('../../helpers/array')
 
 module.exports = class Context extends EventEmitter {
 
-    constructor (id, db, map, user) {
+    constructor (db, map, user) {
         super()
-        this.id = id
         this.db = db
         this.map = map
         this.user = user
@@ -20,11 +19,42 @@ module.exports = class Context extends EventEmitter {
         this.view = new View()        
         this.cloud = false
         this.online = false
+        this._id = null
         this._packages = []
     }
 
     get logPrefix () {
-        return `[c:${this.id}]`.padEnd(20, ' ')
+        let tag = this._id ? 'c:'+this._id : 'context'
+        return `[${tag}]`.padEnd(20, ' ')
+    }
+
+    get id() {
+        return this._id
+    }
+
+    set id(val) {
+        if (!val) {
+            this.feed.reset()
+            this._id = val
+            return
+        }
+
+        this.db.get('ctx').get(val).once((v,k) => {
+            if (!v || !v.packages || typeof(v.packages) !== "string") {
+                console.warn(`${this.logPrefix} no packages defined for ${val}`)
+                return
+            }
+            this._id = val
+            let packages = v.packages.split(',')
+            console.log(`${this.logPrefix} packages = ${packages}`)
+            this.feed.reset()
+            this.feed.addManyPackages(packages)
+            this._packages = []
+            packages.forEach(pkgId => {
+                let pkg = new LD.Package(pkgId, this.db)
+                this._packages.push(pkg)
+            })
+        })
     }
 
 
@@ -96,20 +126,6 @@ module.exports = class Context extends EventEmitter {
     }
 
     // ------------------------------------------------------------------------
-    get packages() {
-        return this._packages
-    }
-
-    set packages(packages) {
-        console.log(`${this.logPrefix} packages = ${packages}`)
-        this.feed.reset()
-        this.feed.addManyPackages(packages)
-        this._packages = []
-        packages.forEach(pkgId => {
-            let pkg = new LD.Package(pkgId, this.db)
-            this._packages.push(pkg)
-        })
-    }
 
     addToPackages(marker) { 
         this._packages.forEach(pkg => {

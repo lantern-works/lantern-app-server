@@ -103,7 +103,7 @@ module.exports = class App extends EventEmitter {
                 }
             })
         } catch (e) {
-            console.warn(`${this.logPrefix} Failed to load application`)
+            console.warn(`${this.logPrefix} failed to load application`)
             console.error(e)
         }
     }
