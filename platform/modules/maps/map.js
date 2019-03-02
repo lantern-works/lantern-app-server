@@ -4,8 +4,8 @@
 const EventEmitter = require('event-emitter-es6')
 const Location = require('./location')
 const MaptileConfig = require('../../config/maptiler')
-const LeafletTilesConfig = require('../../config/leaflet_tiles')
-const LeafletMapConfig = require('../../config/leaflet_map')
+const LeafletTilesConfig = require('../../config/leafletTiles')
+const LeafletMapConfig = require('../../config/leafletMap')
 const fetch = window.fetch
 require('../../helpers/math')
 require('leaflet')
