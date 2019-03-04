@@ -365,19 +365,25 @@ module.exports = class Item extends EventEmitter {
 
             // save to our shared database...
             this.db.get('itm').set(obj, (ack) => {
+
+                if (ack.err) {
+                    return reject(new Error('save_failed_ack'))
+                }
+
                 // clear new state once saved
                 Object.keys(this._new).forEach((item) => {
                     this._new[item] = false
                 })
                 // acknowledge this item is now shared with network
                 this.mode = 'shared'
-            }).once((v, k) => {
+                
                 // database assigns unique identifier
-                this.id = k
-                // now let our application know we are saved
-                console.log(`${this.logPrefix} saved`, obj)
                 this.emit('save')
-                resolve(v)
+                resolve()
+            }).once((v, k) => {
+                this.id = k
+                // saves locally but we want confirmation from ack
+                console.log(`${this.logPrefix} attempted save`, obj)
             })
         })
     }
