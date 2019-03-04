@@ -9,7 +9,7 @@ require('../../helpers/array')
 
 module.exports = class Context extends EventEmitter {
 
-    constructor (db, map, user) {
+    constructor (db, user, map) {
         super()
         this.db = db
         this.map = map
@@ -20,7 +20,7 @@ module.exports = class Context extends EventEmitter {
         this.cloud = false
         this.online = false
         this._id = null
-        this._packages = []
+        this.packages = []
     }
 
     get logPrefix () {
@@ -47,12 +47,14 @@ module.exports = class Context extends EventEmitter {
             this._id = val
             let packages = v.packages.split(',')
             console.log(`${this.logPrefix} packages = ${packages}`)
-            this.feed.reset()
+            if (this.packages.length) {
+                this.feed.reset()
+            }
             this.feed.addManyPackages(packages)
-            this._packages = []
+            this.packages = []
             packages.forEach(pkgId => {
                 let pkg = new LD.Package(pkgId, this.db)
-                this._packages.push(pkg)
+                this.packages.push(pkg)
             })
         })
     }
@@ -128,13 +130,13 @@ module.exports = class Context extends EventEmitter {
     // ------------------------------------------------------------------------
 
     addToPackages(marker) { 
-        this._packages.forEach(pkg => {
+        this.packages.forEach(pkg => {
             pkg.add(marker)
         })
     }
 
     removeFromPackages(marker) { 
-        this._packages.forEach(pkg => {
+        this.packages.forEach(pkg => {
             pkg.remove(marker)
         })
     }
