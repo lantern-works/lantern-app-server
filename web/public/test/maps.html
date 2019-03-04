@@ -12,11 +12,11 @@
     </div>
     <script src="/scripts/maps.js"></script>
     <script>
-        let atlas = new LM.Atlas(window.localStorage)
-        atlas.render()
+        let map = new LM.Map()
+        map.render()
         let zoom = L.control.zoom();
         zoom.setPosition('topleft');
-        zoom.addTo(atlas.map);
+        zoom.addTo(map.view);
     </script>
 </body>
 </html>

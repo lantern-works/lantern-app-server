@@ -24,7 +24,6 @@
 
         db.once('ready', function() {
              db.get('tnt').get('number').once((v,k) => {
-                console.log(v,k)
                 el.innerHTML = v = v || start
             })
 

@@ -8,39 +8,20 @@
     <link href="/styles/global.css" rel="stylesheet"  />
 </head>
 <body>
-
-    <!-- menu interface -->
-    <div id="pie-menu" 
-        data-wheelnav
-        data-wheelnav-slicepath='DonutSlice'
-        data-wheelnav-init
-        data-wheelnav-rotateoff
-        data-wheelnav-cssmode>
-    </div>
-    <div id="pie-menu-mask"></div>
-    
     <div id="app-container">
         <div id="username" class="notification"></div>
-        <div id="packages" class="notification"></div>
     </div>
-
     <script src="/scripts/data.js"></script>
     <script src="/scripts/apps.js"></script>
-    <script>
+    <script>   
+        // database
         let db = new LD.Database(window.location.origin + '/gun')
-        let director = new LA.Director(db) 
-
-        director.user.authOrRegister().then((data) => {
-            document.getElementById('username').innerHTML = director.user.username
-            director.user.listPackages().then(packages => {
-                packages.forEach((package) => {
-                    let pkg = new LD.Package(package, db)
-                    pkg.getItems().then(items => {
-                        document.getElementById('packages').innerHTML += `<h1>${package}</h1>`
-                        document.getElementById('packages').innerHTML += `<div>${items.length} Items</div>`
-                    })
-                })
-            })
+        // user
+        let user = new LD.User(db, window.localStorage)
+        // apps       
+        let ctx = window.LT = new LA.Context(db, user)
+        user.authOrRegister().then(data => {
+            document.getElementById('username').innerHTML = ctx.user.username
         })
     </script>
 </body>
