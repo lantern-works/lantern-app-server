@@ -23,7 +23,9 @@ const backup = require('./backup')
 const log = util.Logger
 log.setLevel(process.env.LOG_LEVEL || 'debug')
 log.info('##############################################')
-log.info('Lantern App Server')
+log.info('#    ')
+log.info('#    Lantern App Server')
+log.info('#    ')
 log.info('##############################################')
 
 // ----------------------------------------------------------------------
@@ -65,15 +67,20 @@ const startServer = () => {
                 app.locals.inbox = {}
                 // track outbox messages
                 app.locals.outbox = []
-
-                // get sense of what sort of device we have here
-                util.checkInternet().then(status => {
-                    app.locals.online = status ? '1' : '0'
-                    app.locals.cloud = process.env.CLOUD === 'true' ? '1' : '0'
-                    resolve(secureServer || stdServer)
-                })
+                checkOnlineStatus()
+                resolve(secureServer || stdServer)
+                // re-check for internet access every five seconds
+                setInterval(checkOnlineStatus, 5000)
             })
         })
+    })
+}
+
+const checkOnlineStatus = () => {
+    // get sense of what sort of device we have here
+    util.checkInternet().then(status => {
+        app.locals.online = status ? '1' : '0'
+        app.locals.cloud = process.env.CLOUD === 'true' ? '1' : '0'
     })
 }
 
@@ -81,7 +88,7 @@ const startServer = () => {
 * Create or use existing database
 */
 const setupDatabase = (server) => {
-    log.info(`${util.logPrefix('db')} path = ${dbPath}`)
+    // log.debug(`${util.logPrefix('db')} path = ${dbPath}`)
 
     // run a backup of data every day
 
