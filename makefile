@@ -17,7 +17,7 @@ install:
 	
 start: $(CERTS)
 	HOOK_CHANGE="./hooks/change" \
-	CHANGE_INTERVAL=3000 \
+	CHANGE_INTERVAL=6000 \
 	HOOK_RESTORE="./hooks/restore" \
 	HOOK_BACKUP="./hooks/backup" \
 	npm start	

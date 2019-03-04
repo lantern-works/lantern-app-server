@@ -31,7 +31,7 @@ self.Logger = require('simple-node-logger').createSimpleLogger({
 })
 
 self.logPrefix = (val) => {
-    return `[${val}]`.padEnd(10, ' ')
+    return `[${val}]`.padEnd(17, ' ')
 }
 
 /**
@@ -86,14 +86,6 @@ self.getClientIP = (req) => {
 self.isRemoteClient = (req) => {
     let ip = self.getClientIP(req)
     return ip && (ip.indexOf('127.0.0.1') === -1)
-}
-
-// ----------------------------------------------------------------------
-/**
-* Simplifies message by removing sequence, useful for comparisons
-*/
-self.getSimpleMessage = (msg) => {
-    return msg.replace(/^([0-9]+)([\^\+\-])/, '')
 }
 
 // ----------------------------------------------------------------------

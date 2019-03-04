@@ -33,25 +33,27 @@ describe('inbox', () => {
             })
     })
 
-    it('should accept a key for unknown and then known item', (done) => {
-        putMessage({ 'message': `1^test.me=yes` })
+    it('should accept a query', (done) => {
+        putMessage({ 'message': 'demo@0.0.1::3::13::1551694707084' })
             .then(response => response.json())
             .then((json) => {
                 json.ok.should.equal(true)
+                done()
             })
-            .then(() => {
-                putMessage({ 'message': `2^test.me=again` })
-                    .then(response => response.json())
-                    .then((json) => {
-                        json.ok.should.equal(true)
-                        done()
-                    })
+    })
+
+    it('should accept updates', (done) => {
+        putMessage({ 'message': `demo@0.0.1::3::13::1551694707084|jsu5eoqr4NPZaLoqApNb^s=${Math.random()}` })
+            .then(response => response.json())
+            .then((json) => {
+                json.ok.should.equal(true)
+                done()
             })
     })
 
     after((done) => {
         // clean up the existing node we created
-        putMessage({ 'message': `3-test` })
+        putMessage({ 'message': `demo@0.0.1::3::13::1551694707084|test-|another-` })
             .then(response => response.json())
             .then((json) => {
                 json.ok.should.equal(true)

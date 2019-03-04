@@ -5,6 +5,6 @@ if (len(sys.argv) > 1):
     sys.argv.pop(0)
     for item in sys.argv:
         val =  str(item).encode("ascii")
-        print("echo " + val)
+        print(val)
 else:
-    print("no message to queue for outbox...")
+    print("no change received...")

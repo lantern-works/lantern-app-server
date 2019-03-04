@@ -64,7 +64,7 @@ const startServer = () => {
                 }
 
                 // track inbox messags
-                app.locals.inbox = {}
+                app.locals.inbox = []
                 // track outbox messages
                 app.locals.outbox = []
                 checkOnlineStatus()

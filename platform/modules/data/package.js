@@ -25,7 +25,8 @@ module.exports = class Package extends EventEmitter {
             'name': name,
             'public': true, // only supporting public packages, for now
             'data': {},
-            'version': this.version
+            'version': this.version,
+            'seq': 0
         }
         this._data.data[this.version] = {
         }
@@ -48,6 +49,13 @@ module.exports = class Package extends EventEmitter {
 
     get id () {
         return this._data.name + '@' + this.version
+    }
+
+    get seq() {
+        return this._data.seq
+    }
+    set seq(val) {
+        return this._data.seq = val
     }
 
     // -------------------------------------------------------------------------
@@ -102,6 +110,9 @@ module.exports = class Package extends EventEmitter {
             
             this.db.getOrPut(versionNode, {}).then(saved => {
                 versionNode.set(itemNode).once(() => {
+                    this.node.get('seq').once(v => {
+                        this.seq = v+1
+                    }).put(this.seq)
                     resolve()                
                 })
             })
@@ -112,13 +123,14 @@ module.exports = class Package extends EventEmitter {
         return new Promise((resolve, reject) => {
             // accept string id or item object
             let id = item.id || item
-
             console.log(`${this.logPrefix} removing item: ${id}`)
-
             // attach item to the package graph
             let targetNode = this.node.get('data').get(this.version)
             let itemNode = targetNode.get(id)
-            targetNode.unset(itemNode).once(() => {
+            targetNode.unset(itemNode).once(() => {  
+                this.node.get('seq').once(v => {
+                        this.seq = v+1
+                    }).put(this.seq)
                 resolve()
             })
         })

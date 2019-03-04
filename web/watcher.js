@@ -1,6 +1,8 @@
 /**
 * Lantern Database Watcher
-*
+* 
+* Use this to update hardware or connect to other services each time changes are made locally. Batches changes 
+* per-package and issues a signal every few seconds and will run any specificed change hook binary
 */
 const util = require('./util')
 const log = util.Logger
@@ -19,19 +21,27 @@ module.exports = (app) => {
     * Watch for and announce changes to given package
     */
     const watchPackage = (v, k) => {
-        let packageID = [k, v.version].join('@')
 
-
-        if (packages.hasOwnProperty(packageID)) {
-            log.debug(`${util.logPrefix('watcher')} skip duplicate ${k} = ${packageID}`)
+        if (!v) {
+            // package deleted, ignore...
             return
         }
+
         if (!v.name || !v.version) {
             log.warn(`${util.logPrefix('watcher')} missing name or version for package ${k}: `, v)
             return
         }
 
-        log.debug(`${util.logPrefix('watcher')} ${v.name} = ${packageID}`)
+
+        let packageID = [k, v.version].join('@')
+
+
+        if (packages.hasOwnProperty(packageID)) {
+            log.debug(`${util.logPrefix(packageID)} skip duplicate}`)
+            return
+        }
+
+        log.debug(`${util.logPrefix(packageID)} begin watching...`)
         packages[packageID] = {}
 
         let subnode = node.get(k).get('data').get(v.version)
@@ -39,13 +49,6 @@ module.exports = (app) => {
             .on((v, k) => {
                 markItemAsChanged(subnode, packageID, v, k)
             })
-    }
-
-    /**
-    * Get sequence number from database to help track intended priorities
-    */
-    const getSeq = () => {
-        return app.locals.db._.root.once
     }
 
     /**
@@ -78,30 +81,25 @@ module.exports = (app) => {
     }
 
     const markItemAsDropped = (packageID, itemID) => {
-        let msg = `${getSeq()}-${itemID}`
-        log.debug(`${util.logPrefix(packageID)} ${msg} ${packageID}`)
-        let target = packages[packageID][itemID] = packages[packageID][itemID] || { seq: null, data: {} }
-        target.seq = getSeq()
-        target.data = null
+        packages[packageID] = packages[packageID] || {}
+        packages[packageID][itemID] = null
     }
 
     const markItemAsUpdated = (packageID, itemID, fieldID, fieldData) => {
-        let target = packages[packageID][itemID] = packages[packageID][itemID] || { seq: null, data: {} }
-        let msg = `${getSeq()}^${itemID}.${fieldID}=${fieldData}`
-        log.debug(`${util.logPrefix(packageID)} ${msg} `)
-        target.seq = getSeq()
-        target.data[fieldID] = fieldData
+        packages[packageID] = packages[packageID] || {}
+        packages[packageID][itemID] = packages[packageID][itemID] || {}
+        packages[packageID][itemID][fieldID] = fieldData
     }
 
     const init = () => {
-        log.debug(`${util.logPrefix('watcher')} waiting for changes...`)
+        //log.debug(`${util.logPrefix('watcher')} waiting for changes...`)
         loaded = true
 
         // check to see if we have a change hook from environment
         if (process.env.hasOwnProperty('HOOK_CHANGE')) {
             hook = path.resolve(process.env['HOOK_CHANGE'])
             let timing = (process.env.CHANGE_INTERVAL ? Number(process.env.CHANGE_INTERVAL) : 5000)
-            log.debug(`${util.logPrefix('watcher')} change hook = ${hook} (${timing}ms)`)
+            //log.debug(`${util.logPrefix('watcher')} change hook = ${hook} (${timing}ms)`)
             setInterval(
                 runHook, 
                 timing
@@ -110,26 +108,27 @@ module.exports = (app) => {
     }
 
     const runHook = (key) => {
-        let changesToDate = packages
-        let data = JSON.stringify(changesToDate)
-        let hasChange = false
+
+        let changes = {}
         Object.keys(packages).forEach((packageID) => {
             if (Object.keys(packages[packageID]).length) {
-                hasChange = true
+                changes[packageID] = packages[packageID]
                 packages[packageID] = {}
             }
         })
 
-        if (!hasChange) {
+        if (!Object.keys(changes).length) {
             //log.debug(`skip hook since no data change`)
             return
         }
 
+        let changeString = JSON.stringify(changes)
+
         try {
-            let ps = execFile(hook, [data])
+            let ps = execFile(hook, [changeString])
             ps.stdout.on('data', (data) => {
                 // if we got confirmation back, we can clear our queue
-                 //log.debug(`hook output: ${data}`)
+                 log.debug(`${util.logPrefix('change')} ${data}`)
             })
             ps.stderr.on('data', (err) => {
                 log.warn(`hook could not run: ${err}`)
