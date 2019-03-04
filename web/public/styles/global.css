@@ -190,7 +190,7 @@ body .app {
 }
 
 .app-frame {
-	background: rgba(255,255,255,0.93);
+	background: rgba(255,255,255,0.91);
 	margin: 0.6em;
 	padding: 0.5em;
 	border-radius: 6px;
@@ -305,6 +305,7 @@ body .app {
 	padding-right: 0px;
 }
 
+
 .menu-app-frame .inline-btn,  
 	.menu-app-frame .button.is-secondary {
 	text-align: center;
@@ -331,6 +332,11 @@ body .app {
 	color: #FFF;
 }
 
+
+.menu-app-frame ul.menu li.inline-btn {
+	background: #FFF;
+	padding: 1.25em;
+}
 
 /*----------------------------------------------------------------------------*/
 #hotspot #app-container {
