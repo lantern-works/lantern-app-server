@@ -181,19 +181,6 @@ module.exports = class Map extends EventEmitter {
         return distance
     }
 
-
-    /**
-    * Finds a random marker and zooms in
-    */
-    zoomToRandomMarker () {
-        let item = this.getRandomMarker()
-        console.log(`${this.logPrefix} zooming to random marker = ${item.id}`)
-        this.panToPoint(item.latlng)
-        setTimeout(() => {
-            this.view.zoomIn(8)
-        }, 1500)
-    }
-
     /**
     * Looks for all markers on map and adjusts view so all are visible
     */
