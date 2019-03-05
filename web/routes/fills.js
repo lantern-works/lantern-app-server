@@ -3,6 +3,7 @@
 *
 * Ensure no expected routes are missing
 **/
+const express = require('express')
 const path = require('path')
 
 module.exports = (serv) => {
@@ -15,4 +16,7 @@ module.exports = (serv) => {
     serv.get('/styles/files/:filename', (req, res) => {
         res.sendFile(dir + '/typeface-montserrat/files/' + req.params.filename)
     })
+
+    const modulesPath = path.resolve(dir + '/@fortawesome/fontawesome-free/webfonts')
+    serv.use('/webfonts/', express.static(modulesPath))
 }

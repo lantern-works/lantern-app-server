@@ -20,6 +20,7 @@ start: $(CERTS)
 	CHANGE_INTERVAL=6000 \
 	HOOK_RESTORE="./hooks/restore" \
 	HOOK_BACKUP="./hooks/backup" \
+	HOOK_COMMAND="./hooks/command" \
 	npm start	
 
 $(VENDOR_CSS):

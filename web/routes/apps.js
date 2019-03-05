@@ -4,7 +4,6 @@
 * API to get and refresh custom apps available on this server
 **/
 const fs = require('fs-extra')
-const exec = require('child_process').exec
 const directoryTree = require('directory-tree')
 const path = require('path')
 const util = require('../util')
@@ -62,23 +61,5 @@ module.exports = (serv) => {
             }
         })
         res.status(200).json(finalResult)
-    })
-
-    /**
-    * Update to latest version of apps from git repository
-    */
-    serv.post('/api/apps', (req, res) => {
-        exec('cd ' + appsDir + '; git pull;', (err, stdout, stderr) => {
-            if (err) {
-                log.error('git pull for apps: ', err)
-                res.status(500).json({ 'ok': false })
-            } else if (stderr) {
-                log.error('git pull for apps: ', stderr)
-                res.status(500).json({ 'ok': false })
-            } else {
-                res.status(201).json({ 'ok': true })
-                log.info('git pull for apps: ', stdout)
-            }
-        })
     })
 }
