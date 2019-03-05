@@ -206,18 +206,34 @@ module.exports = class Map extends EventEmitter {
     }
 
     // ------------------------------------------------------------------ CACHE
- 
+    
+    cacheTiles(lat, lon) {
+        let uri = `${this.tileHost.replace('{s}.tile.', '')}/api/tiles/${MaptileConfig.map}/${lat}/${lon}.json?key=${MaptileConfig.key}`
+        return fetch(uri, {
+            method: "GET",
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+    }
+
     /**
     * Cache tiles based on center of map
     */
     cacheTilesFromCenter() {
         //console.log(`${this.logPrefix} caching extra tiles from center of map`);
-        fetch(`${this.tileHost.replace('{s}.tile.', '')}/api/map/${MaptileConfig.map}/${this.getCenterAsString()}.json?key=${MaptileConfig.key}`, {
-            method: "PUT",
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        })
+        this.cacheTiles(this.getCenterAsLatLng().lat, this.getCenterAsLatLng().lng)
+    }
+    
+     /**
+    * Cache tiles based on marker
+    */
+    cacheTilesFromMarker(marker) {
+        if (!marker || !marker.id || !marker.latlng) {
+            return
+        }
+        console.log(`${this.logPrefix} cache tiles nearby marker ${marker.id} (${marker.geohash})`);
+        this.cacheTiles( marker.latlng.lat,  marker.latlng.lon)
     }
 
 

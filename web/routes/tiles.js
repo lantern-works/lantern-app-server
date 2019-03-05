@@ -26,14 +26,11 @@ module.exports = (serv) => {
     const tileUri = '/styles/:map/:z/:x/:y.png'
     const minZoom = 3
     const maxZoom = 17
-    let tilesDir = path.resolve(__dirname, '../public/tiles')
-    let assetsDir = path.resolve(__dirname, '../public/assets/')
-    let assumeInternet = true
+    const tilesDir = path.resolve(__dirname, '../public/tiles')
+    const assetsDir = path.resolve(__dirname, '../public/assets/')
 
-    // offer these routes a chance to bypass attempts at internet
-    util.checkInternet().then((isConnected) => {
-        assumeInternet = isConnected
-    })
+    let cachedTiles = {}
+    let assumeInternet = true
 
     // prepare empty tile
     let emptyTileFilePath = assetsDir + '/empty-tile.png'
@@ -69,24 +66,50 @@ module.exports = (serv) => {
         let lng = Number(params.lng)
         let delay = i*(750+Math.random(2000))
 
+        //log.debug("[tiles] caching tiles", params,  i)
         setTimeout(() => {
-            // start y
+
             let xyz =  getXYZ(lat, lng, i)
             cacheTile(xyz, params, key)
 
-            // up y
+            // up
             setTimeout(() => {
                 let up = JSON.parse(JSON.stringify(xyz))
                 up.y += 1
                 cacheTile(up, params, key)
             }, 250)
+      
+            setTimeout(() => {
+                let up = JSON.parse(JSON.stringify(xyz))
+                up.x += 1
+                cacheTile(up, params, key)
+            }, 500)
 
-            // down y
+            setTimeout(() => {
+                let up = JSON.parse(JSON.stringify(xyz))
+                up.y += 2
+                cacheTile(up, params, key)
+            }, 750)
+
+            // down
             setTimeout(() => {
                 let down = JSON.parse(JSON.stringify(xyz))
                 down.y -= 1
                 cacheTile(down, params, key)
-            }, 500)
+            }, 1000)        
+        
+          setTimeout(() => {
+                let down = JSON.parse(JSON.stringify(xyz))
+                down.x -= 1
+                cacheTile(down, params, key)
+            }, 1250)        
+
+
+            setTimeout(() => {
+                let down = JSON.parse(JSON.stringify(xyz))
+                down.y -= 2
+                cacheTile(down, params, key)
+            }, 1500)
 
         }, delay)
     }
@@ -97,16 +120,17 @@ module.exports = (serv) => {
     const cacheTile = (xyz, params, key) => {
         params = Object.assign(xyz, params)
         let tileFile = getLocalPathForTile(params)
-        // use offline cache if available, avoids hitting external sever
-        if (!assumeInternet || fs.existsSync(tileFile)) {
-            return
-        }
- 
+
         let url = tileUri
             .replace(':x', params.x)
             .replace(':y', params.y)
             .replace(':z', params.z)
             .replace(':map', params.map) + '?key=' + key
+
+        // use offline cache if available, avoids hitting external sever
+        if (!assumeInternet || fs.existsSync(tileFile)) {
+            return
+        }
         getTileFromCloud(url, params)
     }
 
@@ -115,6 +139,14 @@ module.exports = (serv) => {
     * Use MapTiler service to proxy and save tiles to local storage
     */
     const getTileFromCloud = (url, params, res) => {
+
+        if (cachedTiles[url]) {
+            log.debug('[tiles] already cached: ' + url)
+            return
+        }
+
+        cachedTiles[url] = true
+        
         let streamUrl = 'http://maps.tilehosting.com' + url
         let preq = request(streamUrl, {
             timeout: 1200
@@ -123,30 +155,36 @@ module.exports = (serv) => {
         // return result as quickly as possible to browser
         let result = preq
             .on('response', (pres) => {
-                // log.debug("[map] stream tile from cloud: " + url);
+                log.debug("[tiles] stream tile from cloud: " + url);
                 let contentType = pres.headers['content-type']
 
                 if (contentType != 'image/png') {
-                    log.warn('[map] non-image for tile: ' + streamUrl)
+                    log.warn('[tiles] non-image for tile: ' + streamUrl)
                     if (res) {
                         sendEmptyTile(res)
                     }
                     return
                 }
 
+
                 // also stream to file system for cache
                 preq.pipe(fs.createWriteStream(getLocalPathForTile(params)))
                     .on('error', (err) => {
-                        log.warn('[map] no save for tile: ' + url)
-                        log.warn(err)  
+                        if (err.errno === 'ENOTFOUND') {
+                            log.warn('[tiles] could not find online: ' + url)
+                        }
+                        else {
+                            log.warn('[tiles] no save for tile: ' + url)
+                            log.warn(err)
+                        }
                     })
             })
             .on('error', (err) => {
                 if (err.code == "ESOCKETTIMEDOUT") {
-                    log.warn('[map] timeout trying tile: ' + url)
+                    log.warn('[tiles] timeout trying tile: ' + url)
                 } else {
-                    //log.warn('[map] no stream for tile: ' + streamUrl)
-                    //log.warn(err)
+                    log.warn('[tiles] no stream for tile: ' + streamUrl)
+                    log.warn(err)
                 }
 
                 if (res) {
@@ -164,12 +202,13 @@ module.exports = (serv) => {
     */
     serv.get(tileUri, (req, res, next) => {
         // use offline cache if available, avoids hitting external sever
+        assumeInternet = res.app.locals.online == '1'
         let tileFile = getLocalPathForTile(req.params)
         res.type('png')
         let tileStream = fs.createReadStream(tileFile)
             .on('error', (err) => {
                 if (!assumeInternet) {
-                    // log.debug(`Skip offline attempt for: ${req.url}`);
+                    log.debug(`skip offline attempt for: ${req.url}`);
                     return sendEmptyTile(res)
                 } else {
                     getTileFromCloud(req.url, req.params, res)
@@ -182,8 +221,9 @@ module.exports = (serv) => {
      /**
     * Tile Cache
     */
-    serv.put('/api/map/:map/:lat/:lng/:zoom.json', (req, res) => {
-        for (var i= minZoom; i < maxZoom;  i++) {
+    serv.get('/api/tiles/:map/:lat/:lng.json', (req, res) => {
+        assumeInternet = res.app.locals.online == '1'
+        for (var i= minZoom; i <= maxZoom;  i++) {
             cacheManyTiles(req.params, req.query.key, i)  
         }
         res.status(200).json({"ok": true})
