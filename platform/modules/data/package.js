@@ -58,6 +58,12 @@ module.exports = class Package extends EventEmitter {
         return this._data.seq = val
     }
 
+    seqUp() {
+        this.node.get('seq').once(v => {
+            this.seq = v+1
+        }).put(this.seq) 
+    }
+
     // -------------------------------------------------------------------------
     /**
     * Publish a new data package to the network
@@ -92,55 +98,24 @@ module.exports = class Package extends EventEmitter {
         })
     }
 
+
     // -------------------------------------------------------------------------
-    /**
-    * Adds an item to the current version of this package
+
+    getCurrentVersion() {
+        return this.node.get('data').get(this.version)
+    }
+
+    /*
+    * Gets a specific item in the current version of this package
     */
-    add (item) {
-        return new Promise((resolve, reject) => {
-            // accept string id or item object
-            let id = item.id || item
-
-            console.log(`${this.logPrefix} adding item: ${id}`)
-
-            // attach item to the package graph
-            let itemNode = this.db.get('itm').get(id)
-
-            let versionNode = this.node.get('data').get(this.version)
-            
-            this.db.getOrPut(versionNode, {}).then(saved => {
-                versionNode.set(itemNode).once(() => {
-                    this.node.get('seq').once(v => {
-                        this.seq = v+1
-                    }).put(this.seq)
-                    resolve()                
-                })
-            })
-        })
+    getOneItem(id) {
+        return this.node.get('data').get(this.version).get(id)
     }
 
-    remove (item) {
-        return new Promise((resolve, reject) => {
-            // accept string id or item object
-            let id = item.id || item
-            console.log(`${this.logPrefix} removing item: ${id}`)
-            // attach item to the package graph
-            let targetNode = this.node.get('data').get(this.version)
-            let itemNode = targetNode.get(id)
-            targetNode.unset(itemNode).once(() => {  
-                this.node.get('seq').once(v => {
-                        this.seq = v+1
-                    }).put(this.seq)
-                resolve()
-            })
-        })
-    }
-
-    // -------------------------------------------------------------------------
     /**
     * Gets a list of all items in the current version of this package
     */
-    getItems () {
+    getAllItems () {
         return new Promise((resolve, reject) => {
             this.node.get('data').get(this.version).once((v, k) => {
                 let itemList = []

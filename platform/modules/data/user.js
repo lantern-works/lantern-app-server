@@ -134,46 +134,4 @@ module.exports = class User extends EventEmitter {
         })
     }
 
-
-    // -------------------------------------------------------------------------
-    getMarker() {
-        return new Promise((resolve, reject) => {
-            this.node.get('marker').once((markerId,k) => {
-                if (!markerId) {
-                    return resolve()
-                }
-
-                if (typeof(markerId) !== 'string') {
-                    console.log(`${this.logPrefix} clearing invalid marker format`, markerId)
-                    this.clearMarker().then(resolve)
-                    return
-                }
-
-                this.db.get('itm').get(markerId).once((data) => {
-                    resolve(data)
-                })
-            })
-        })
-    }
-
-    clearMarker() {
-        return new Promise((resolve, reject) => {
-            this.node.get('marker').once(markerId => {
-                if (markerId) {
-                    this.node.get('marker').put(null)
-                    this.db.get('itm').get(markerId).put(null).once(() => {
-                        resolve()                        
-                    })
-                }
-            })
-        })
-    }
-
-    setMarker (marker) {
-        return new Promise((resolve, reject) => {
-            this.node.get('marker').put(marker.id).once((v,k) => {
-                resolve()
-            })
-        })
-    }
 }

@@ -1,10 +1,10 @@
 const EventEmitter = require('event-emitter-es6')
+const Package = require('../data/package')
 
 module.exports = class Feed extends EventEmitter {
     constructor (context) {
         super()
         this.context = context
-        this.db = user.db
         this.packages = {} // only watch these
         this.items = {}
         this.itemsList = []
@@ -44,7 +44,7 @@ module.exports = class Feed extends EventEmitter {
     /**
     * Watch a single item for any updates
     */
-    watchItem (itemID, pkgID, targetNode) {
+    watchItem (itemID, pkg) {
         // never watch the same item twice
         if (this.items.hasOwnProperty(itemID)) {
             return
@@ -52,15 +52,14 @@ module.exports = class Feed extends EventEmitter {
 
         let event = {
             id: itemID,
-            package: pkgID
+            package: pkg.id
         }
 
-        let itemNode = targetNode.get(itemID)
+        let itemNode = pkg.getOneItem(itemID)
 
         itemNode.on((v, k) => {
 
-
-            if (!this.packages[pkgID]) {
+            if (!this.packages[pkg.id]) {
                 return
             }
 
@@ -79,10 +78,10 @@ module.exports = class Feed extends EventEmitter {
                 // markers
                 let item = null
                 if (v.g && v.o && v.t) {
-                    item = new LM.MarkerItem(LT.db)
+                    item = new LM.MarkerItem(pkg)
                 }
                 else {
-                    item = new LD.Item(LT.db)
+                    item = new LD.Item(pkg)
                 }
                 item.id = itemID
                 item.data = v
@@ -94,7 +93,7 @@ module.exports = class Feed extends EventEmitter {
 
                 event.data = v
                 event.item = item
-                //console.log(`${this.logPrefix} watch item: ${itemID}`, this.packages)
+                console.log(`${this.logPrefix} watch item: ${itemID}`, this.packages)
                 this.emit('item-watch', event)
             }
         })
@@ -104,8 +103,8 @@ module.exports = class Feed extends EventEmitter {
             if (this.items[itemID] === false) {
                 return
             }
-            if (this.packages[pkgID]) {
-                this.markDataChange(this.items[itemID], pkgID, v, k)
+            if (this.packages[pkg.id]) {
+                this.markDataChange(this.items[itemID], pkg.id, v, k)
             }
         }, { change: true })
     }
@@ -140,16 +139,12 @@ module.exports = class Feed extends EventEmitter {
         }
 
         if (this.packages[id]) {
-            // console.log(`${this.logPrefix} already watching: ${id}`)
+           console.log(`${this.logPrefix} already watching: ${id}`)
             return
         }
-
-
-        let targetNode = this.db.get('pkg')
-            .get(name)
-            .get('data')
-            .get(version)
-
+        console.log(`${this.logPrefix} start watching: ${id}`)
+        let pkg = new Package(id, this.context.db)
+        let targetNode = pkg.node.get('data').get(version)
         targetNode.once((v,k) => {
                 if (!v) {
                     console.log(`${this.logPrefix} missing package: ${id}`)
@@ -163,7 +158,7 @@ module.exports = class Feed extends EventEmitter {
                     targetNode.map()
                     .on((v, k) => {
                         // start watching for changes
-                        this.watchItem(k, id, targetNode)
+                        this.watchItem(k, pkg)
                     })
                 }
             })

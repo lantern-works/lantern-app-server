@@ -232,7 +232,7 @@ module.exports = class Map extends EventEmitter {
         if (!marker || !marker.id || !marker.latlng) {
             return
         }
-        console.log(`${this.logPrefix} cache tiles nearby marker ${marker.id} (${marker.geohash})`);
+        //console.log(`${this.logPrefix} cache tiles nearby marker ${marker.id} (${marker.geohash})`);
         this.cacheTiles( marker.latlng.lat,  marker.latlng.lon)
     }
 

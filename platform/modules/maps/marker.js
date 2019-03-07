@@ -3,9 +3,10 @@ const Item = require('../data/item')
 const Location = require('./location')
 
 module.exports = class MarkerItem extends Item {
-    constructor (db) {
-    // now set defaults for key compression
-        super(db, {
+
+    constructor (pkg) {
+         // now set defaults for key compression
+        super(pkg, {
             'label': ['l'],
             'geohash': ['g'],
             'ping': ['p', []],

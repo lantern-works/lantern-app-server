@@ -14,6 +14,7 @@ module.exports = class Context extends EventEmitter {
         this.db = db
         this.map = map
         this.user = user
+        this.name = null
         this.feed = new Feed(this)
         this.apps = {}
         this.view = new View()        
@@ -45,6 +46,9 @@ module.exports = class Context extends EventEmitter {
                 return
             }
             this._id = val
+            if (v.name) {
+                this.name = v.name
+            }
             let packages = v.packages.split(',')
             console.log(`${this.logPrefix} packages = ${packages}`)
             if (this.packages.length) {
@@ -127,19 +131,6 @@ module.exports = class Context extends EventEmitter {
         }
     }
 
-    // ------------------------------------------------------------------------
-
-    addToPackages(marker) { 
-        this.packages.forEach(pkg => {
-            pkg.add(marker)
-        })
-    }
-
-    removeFromPackages(marker) { 
-        this.packages.forEach(pkg => {
-            pkg.remove(marker)
-        })
-    }
 
     // ------------------------------------------------------------------------
     closeOneApp (appID) {

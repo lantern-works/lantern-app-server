@@ -74,7 +74,7 @@ module.exports = class Database extends EventEmitter {
             // database cannot be setup with simply {} structures
             this.getOrPut(this.get('now'), new Date().getTime())
                 .then(() => {
-                    let topLevels = ['org', 'pkg', 'itm']
+                    let topLevels = ['org', 'pkg']
                     let count = 0
                     const check = () => {
                         count++

@@ -1,15 +1,15 @@
 const EventEmitter = require('event-emitter-es6')
+const shortid = require('shortid')
 
 module.exports = class Item extends EventEmitter {
-    constructor (db, defaults) {
+    constructor (pkg, defaults) {
+    
+        if (!pkg || pkg.constructor.name !== 'Package') {
+            throw new Error('Requires package to be defined')
+        }
         super()
         this.id = null
-
-        if (!db || db.constructor.name !== 'Database') {
-            throw new Error('Requires database to be defined')
-        }
-
-        this.db = db
+        this.package = pkg
         this._mode = 'draft'
 
         // create data space for data we allow to be exported to shared database
@@ -44,6 +44,7 @@ module.exports = class Item extends EventEmitter {
     // -------------------------------------------------------------------------
     inspect () {
         console.log(`${this.logPrefix} data = ${JSON.stringify(this._data)}`)
+        console.log(this)
     }
 
     get logPrefix () {
@@ -323,10 +324,8 @@ module.exports = class Item extends EventEmitter {
             if (JSON.stringify(pointer) !== JSON.stringify(newData[idx])) {
                 if (pointer) {
                     if (typeof (pointer) === 'object') {
-                        if (pointer.length) {
-                            console.log(`${this.logPrefix} changing ${idx} object to ${newData[idx]}`)
-                            this.emit('change', idx)
-                        }
+                        console.log(`${this.logPrefix} changing ${idx} object to ${newData[idx]}`)
+                        this.emit('change', idx)
                     } else if (pointer) {
                         console.log(`${this.logPrefix} changing ${idx} from ${this[idx]} to ${newData[idx]}`)
                         this.emit('change', idx)
@@ -345,6 +344,9 @@ module.exports = class Item extends EventEmitter {
 
     // -------------------------------------------------------------------------
 
+    // @todo look at parent packages and then increase sequence count
+
+
     /**
     * Stores the composed item into a decentralized database
     */
@@ -359,32 +361,32 @@ module.exports = class Item extends EventEmitter {
             if (fields) {
                 return this.update(fields).then(resolve).catch(reject)
             }
-
-            let obj = this.pack(this._data)
             this.mode = 'locked'
-
             // save to our shared database...
-            this.db.get('itm').set(obj, (ack) => {
+            let obj = this.pack(this._data)
+            this.package.getCurrentVersion().set(obj)
+                .once((v, k) => {
+                    // @todo switch to ack once bug is fixed where ack returns a false error
+                    this.id = k
+                    // saves locally but we want confirmation from ack
+                    console.log(`${this.logPrefix} attempted save`, obj)
 
-                if (ack.err) {
-                    return reject(new Error('save_failed_ack'))
-                }
 
-                // clear new state once saved
-                Object.keys(this._new).forEach((item) => {
-                    this._new[item] = false
+                    // clear new state once saved
+                    Object.keys(this._new).forEach((item) => {
+                        this._new[item] = false
+                    })
+
+                    // acknowledge this item is now shared with network
+                    this.mode = 'shared'
+                    
+                    // database assigns unique identifier
+                    this.emit('save')
+                    console.log(`${this.logPrefix} completed save`, obj)
+                    this.package.seqUp()
+                    resolve()
                 })
-                // acknowledge this item is now shared with network
-                this.mode = 'shared'
-                
-                // database assigns unique identifier
-                this.emit('save')
-                resolve()
-            }).once((v, k) => {
-                this.id = k
-                // saves locally but we want confirmation from ack
-                console.log(`${this.logPrefix} attempted save`, obj)
-            })
+
         })
     }
 
@@ -418,18 +420,17 @@ module.exports = class Item extends EventEmitter {
                 data[fields] = this._data[fields]
             }
 
+            let versionNode = this.package.getCurrentVersion()
             let obj = this.pack(data)
-            let item = this.db.get('itm').get(this.id)
+            let item = versionNode.get(this.id)
             item.once((v, k) => {
                 if (!v) {
                     // trying to update a non-existing item
                     return reject(new Error('update_failed_missing'))
                 }
-                item.put(obj, (ack) => {
-                    if (ack.err) {
-                        return reject(new Error('update_failed_ack'))
-                    }
+                item.put(obj).once(() => {
 
+                    // @todo switch to ack once bug is fixed where ack returns a false error
                     Object.keys(obj).forEach((key) => {
                         let val = obj[key]
                         console.log(`${this.logPrefix} saved`, key, val)
@@ -442,7 +443,9 @@ module.exports = class Item extends EventEmitter {
                     this.emit('save', fields)
                     this.emit('update', fields)
                     this.mode = 'shared'
+                    this.package.seqUp()
                     return resolve()
+                    
                 })
             })
         })
@@ -462,7 +465,8 @@ module.exports = class Item extends EventEmitter {
                 // already deleted... skip...
                 return resolve()
             }
-            let item = this.db.get('itm').get(this.id)
+
+            let item = this.package.getOneItem(this.id)
 
             item.once((v, k) => {
                 if (!v) {
@@ -478,6 +482,7 @@ module.exports = class Item extends EventEmitter {
                     console.log(`${this.logPrefix} Dropped`)
                     this.mode = 'dropped'
                     this.emit('drop')
+                    this.package.seqUp()
                     return resolve()
                 })
             })

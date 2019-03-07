@@ -37,7 +37,7 @@ module.exports = (app) => {
 
 
         if (packages.hasOwnProperty(packageID)) {
-            log.debug(`${util.logPrefix(packageID)} skip duplicate}`)
+            //log.debug(`${util.logPrefix(packageID)} skip duplicate...`)
             return
         }
 
