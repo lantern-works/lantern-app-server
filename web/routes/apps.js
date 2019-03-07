@@ -8,6 +8,7 @@ const directoryTree = require('directory-tree')
 const path = require('path')
 const util = require('../util')
 const log = util.Logger
+const headers = require('../middleware/headers')
 
 module.exports = (serv) => {
     const appsDir = path.join(__dirname, '..', '..', 'apps')
@@ -16,7 +17,7 @@ module.exports = (serv) => {
     /**
     *  Retrieves available applications from this server
     */
-    serv.get('/api/apps', (req, res) => {
+    serv.get('/api/apps', headers, (req, res) => {
         if (!fs.existsSync(appsDir)) {
             return res.status(412).json({
                 'ok': false, 'message': 'Missing apps directory'

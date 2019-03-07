@@ -23,7 +23,8 @@
         let start = 2
 
         db.once('ready', function() {
-             db.get('tnt').get('number').once((v,k) => {
+            db.get('tnt').get('number').on((v,k) => {
+                console.log('got number', v,k )
                 el.innerHTML = v = v || start
             })
 

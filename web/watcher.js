@@ -142,9 +142,9 @@ module.exports = (app) => {
 
     // ----------------------------------------------------------------------
     // identify and prepare to watch all valid packages in the database
+    node.map().on(watchPackage)
     node.once((v, k) => {
         // don't output initial data load
         setTimeout(init, 300)
     })
-        .map().on(watchPackage)
 }

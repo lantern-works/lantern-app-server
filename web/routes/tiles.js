@@ -140,17 +140,14 @@ module.exports = (serv) => {
     */
     const getTileFromCloud = (url, params, res) => {
 
-        if (cachedTiles[url]) {
-            log.debug('[tiles] already cached: ' + url)
-            return
-        }
-
-        cachedTiles[url] = true
         
         let streamUrl = 'http://maps.tilehosting.com' + url
+        
         let preq = request(streamUrl, {
             timeout: 1200
         })
+
+        let useEmptyTile = false
 
         // return result as quickly as possible to browser
         let result = preq
@@ -160,12 +157,9 @@ module.exports = (serv) => {
 
                 if (contentType != 'image/png') {
                     log.warn('[tiles] non-image for tile: ' + streamUrl)
-                    if (res) {
-                        sendEmptyTile(res)
-                    }
+                    useEmptyTile = true
                     return
                 }
-
 
                 // also stream to file system for cache
                 preq.pipe(fs.createWriteStream(getLocalPathForTile(params)))
@@ -186,14 +180,16 @@ module.exports = (serv) => {
                     log.warn('[tiles] no stream for tile: ' + streamUrl)
                     log.warn(err)
                 }
-
-                if (res) {
-                    sendEmptyTile(res)
-                }
+                useEmptyTile = true
             })
 
         if (res) {
-            result.pipe(res)
+            if (useEmptyTile) {
+                sendEmptyFile(res)
+            }
+            else {
+                result.pipe(res)
+            }
         }
     }
 
@@ -205,17 +201,39 @@ module.exports = (serv) => {
         assumeInternet = res.app.locals.online == '1'
         let tileFile = getLocalPathForTile(req.params)
         res.type('png')
-        let tileStream = fs.createReadStream(tileFile)
-            .on('error', (err) => {
-                if (!assumeInternet) {
-                    log.debug(`skip offline attempt for: ${req.url}`);
-                    return sendEmptyTile(res)
-                } else {
-                    getTileFromCloud(req.url, req.params, res)
-                }
+
+        if (cachedTiles[req.url]) {
+           //log.debug('[tiles] using ram cache for ' + req.url)
+            res.send(cachedTiles[req.url])
+        }
+        else {            
+
+            let chunks = []
+
+            tileStream = fs.createReadStream(tileFile)
+
+            tileStream.on('data', (chunk) => {
+                res.write(chunk)
+                chunks.push(chunk)
             })
 
-        tileStream.pipe(res)
+            tileStream.on('end', () => {
+                let result = Buffer.concat(chunks)
+                //log.debug('[tiles] cache ' + req.url + result.length)
+                cachedTiles[req.url] = result
+                res.end()
+            })
+
+            tileStream.on('error', (err) => {
+                    if (!assumeInternet) {
+                        log.debug(`skip offline attempt for: ${req.url}`);
+                        return sendEmptyTile(res)
+                    } else {
+                        getTileFromCloud(req.url, req.params, res)
+                    }
+                })
+        }
+
     })
 
      /**

@@ -17,11 +17,26 @@ const server = express()
 
 // ----------------------------------------------------------------------------
 server.disable('x-powered-by')
+if (process.env.CLOUD) {
+    server.use(compression())
+}
+
+// ------------------------------------------------------------------------- Fills 
+const dir = path.resolve(__dirname, '../node_modules')
+const modulesPath = path.resolve(dir + '/@fortawesome/fontawesome-free/webfonts')
+server.use('/webfonts/', express.static(modulesPath))
+server.get('/styles/L.Control.Locate.min.css.map', (req, res) => {
+    res.sendFile(dir + '/leaflet.locatecontrol/dist/L.Control.Locate.min.css.map')
+})
+
+server.get('/styles/files/:filename', (req, res) => {
+    res.sendFile(dir + '/typeface-montserrat/files/' + req.params.filename)
+})
+
+
+// ------------------------------------------------------------------------- Static
 server.use(helmet.noCache())
-server.use(compression())
 server.use(require('./middleware/captive'))
-server.use(require('./middleware/headers'))
-server.use(require('./middleware/secure'))
 
 // final routes are for any static pages and binary files
 const staticPath = path.resolve(__dirname, './public/')
@@ -30,7 +45,9 @@ server.get('/@/', (req, res) => {
 })
 server.use('/', express.static(staticPath))
 
-// auto-load routes
+
+
+// ------------------------------------------------------------------------- Routes
 const routeFiles = fs.readdirSync(path.resolve(__dirname, './routes'))
 routeFiles.forEach((file) => {
     log.debug('[route] ' + file)
@@ -41,6 +58,7 @@ routeFiles.forEach((file) => {
 const appsPath = path.resolve(__dirname, '..', 'apps')
 server.use('/-/', express.static(appsPath))
 
+// ------------------------------------------------------------------------- Database
 server.use(GraphDB.serve)
 
 module.exports = server
