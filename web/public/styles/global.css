@@ -250,10 +250,9 @@ body .app {
 	padding: 1.75em 1em;
 }
 
-.app .buttons .button {
-	padding: 0 2em;
+.app .buttons {
+	flex-wrap: nowrap;
 }
-
 
 
 /*----------------------------------------------------------------------------*/
@@ -275,7 +274,7 @@ body .app {
 .menu-app-frame ul.menu li {
 	font-weight: 500;
     color: #3273dc;
-    padding: 0.8em 1.2em;
+    padding: 1em 1.25em;
     padding-right: 0.2em;
     border-bottom: 1px solid #EEE;
     width: 100%;

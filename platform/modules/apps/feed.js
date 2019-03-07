@@ -93,7 +93,7 @@ module.exports = class Feed extends EventEmitter {
 
                 event.data = v
                 event.item = item
-                console.log(`${this.logPrefix} watch item: ${itemID}`, this.packages)
+                //console.log(`${this.logPrefix} watch item: ${itemID}`, this.packages)
                 this.emit('item-watch', event)
             }
         })

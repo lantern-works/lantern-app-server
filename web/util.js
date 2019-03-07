@@ -4,10 +4,6 @@
 */
 const path = require('path')
 const fs = require('fs-extra')
-const browserify = require('browserify')
-const minify = require('@node-minify/core')
-const uglifyJS = require('@node-minify/uglify-es')
-const concat = require('concat')
 const self = {}
 
 // ----------------------------------------------------------------------

@@ -10,7 +10,7 @@ if [ $1 == 'apps-update' ]; then
     reply 'app update complete'
 elif [ $1 == 'platform-update' ]; then
     cd $PWD && git pull 
-    make pack
+    npm run pack
     reply 'platform update complete'
 elif [ $1 == 'test' ]; then
     reply $PWD
