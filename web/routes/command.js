@@ -14,7 +14,7 @@ module.exports = (serv) => {
     */
     serv.post('/api/command', bodyParser.json(), (req, res) => {
         if (!req.body.command) {
-            res.status(403).json({ok: false})
+            return res.status(403).json({ok: false})
             return
         }
 
@@ -23,23 +23,23 @@ module.exports = (serv) => {
             execFile(hook, [req.body.command], (err, stdout, stderr) => {
                 if (err) {
                     log.warn(`[command] hook could not run: ${err}`)
-                    res.status(500).json({ok: false})
+                    return res.status(500).json({ok: false})
                 }
                 else if (stderr) {
                     log.warn(`[command] hook but sent back error: ${stderr}`)
-                    res.status(500).json({ok: false})
+                    return res.status(500).json({ok: false})
                 }
                 else if (stdout) {
                     // if we got confirmation back, we can clear our queue
                      log.debug(`[command] ${stdout}`)
-                     res.status(200).json({ok: true, reply: String(stdout)})
+                     return res.status(200).json({ok: true, reply: String(stdout)})
                 }
 
             })
         }
         else {
             log.error('[command] no script to run command: ' + req.body.command)
-            res.status(403).json({ok: false})
+            return res.status(403).json({ok: false})
         }
     })
 }

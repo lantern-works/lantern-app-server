@@ -7,6 +7,7 @@ const fs = require('fs-extra')
 const path = require('path')
 const request = require('request')
 const util = require('../util')
+const headers = require('../middleware/headers')
 const log = util.Logger
 
 // ----------------------------------------------------------------------
@@ -49,7 +50,7 @@ module.exports = (serv) => {
     */
     const sendEmptyTile = (res) => {
         res.type('png')
-        res.send(emptyTileBuffer)
+        return res.send(emptyTileBuffer)
     }
 
     /**
@@ -196,7 +197,7 @@ module.exports = (serv) => {
     /**
     * Tile Proxy
     */
-    serv.get(tileUri, (req, res, next) => {
+    serv.get(tileUri, headers, (req, res, next) => {
         // use offline cache if available, avoids hitting external sever
         assumeInternet = res.app.locals.online == '1'
         let tileFile = getLocalPathForTile(req.params)
@@ -204,7 +205,7 @@ module.exports = (serv) => {
 
         if (cachedTiles[req.url]) {
            //log.debug('[tiles] using ram cache for ' + req.url)
-            res.send(cachedTiles[req.url])
+            return res.send(cachedTiles[req.url])
         }
         else {            
 
@@ -221,7 +222,7 @@ module.exports = (serv) => {
                 let result = Buffer.concat(chunks)
                 //log.debug('[tiles] cache ' + req.url + result.length)
                 cachedTiles[req.url] = result
-                res.end()
+                return res.end()
             })
 
             tileStream.on('error', (err) => {
@@ -239,11 +240,11 @@ module.exports = (serv) => {
      /**
     * Tile Cache
     */
-    serv.get('/api/tiles/:map/:lat/:lng.json', (req, res) => {
+    serv.get('/api/tiles/:map/:lat/:lng.json', headers, (req, res) => {
         assumeInternet = res.app.locals.online == '1'
         for (var i= minZoom; i <= maxZoom;  i++) {
             cacheManyTiles(req.params, req.query.key, i)  
         }
-        res.status(200).json({"ok": true})
+        return res.status(200).json({"ok": true})
     })
 }

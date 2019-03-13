@@ -17,9 +17,10 @@ const server = express()
 
 // ----------------------------------------------------------------------------
 server.disable('x-powered-by')
-if (process.env.CLOUD) {
     server.use(compression())
-}
+
+const staticPath = path.resolve(__dirname, './public/')
+server.use(express.static(staticPath))
 
 // ------------------------------------------------------------------------- Fills 
 const dir = path.resolve(__dirname, '../node_modules')
@@ -39,13 +40,9 @@ server.use(helmet.noCache())
 server.use(require('./middleware/captive'))
 
 // final routes are for any static pages and binary files
-const staticPath = path.resolve(__dirname, './public/')
 server.get('/@/', (req, res) => {
-    res.sendFile(staticPath + '/captive.html')
+    return res.sendFile(staticPath + '/captive.html')
 })
-server.use('/', express.static(staticPath))
-
-
 
 // ------------------------------------------------------------------------- Routes
 const routeFiles = fs.readdirSync(path.resolve(__dirname, './routes'))
@@ -60,5 +57,6 @@ server.use('/-/', express.static(appsPath))
 
 // ------------------------------------------------------------------------- Database
 server.use(GraphDB.serve)
+
 
 module.exports = server

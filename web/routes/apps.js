@@ -61,6 +61,6 @@ module.exports = (serv) => {
                 }
             }
         })
-        res.status(200).json(finalResult)
+        return res.status(200).json(finalResult)
     })
 }

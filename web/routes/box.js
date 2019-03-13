@@ -168,7 +168,7 @@ module.exports = (serv) => {
     * List inbox messages received
     */
     serv.get('/api/inbox', (req, res) => {
-        res.status(200).json({
+        return res.status(200).json({
             'messages': res.app.locals.inbox
         })
     })
@@ -187,17 +187,17 @@ module.exports = (serv) => {
             if (cmd.changes) {
                 log.debug(`${util.logPrefix('inbox')} accept change request: ${msg}`)
                 applyChanges(cmd, res.app.locals.outbox, req.app.locals.db)
-                res.status(201).json({ 'ok': true })
+                return res.status(201).json({ 'ok': true })
             }
             else {
                 log.debug(`${util.logPrefix('inbox')} accept query: ${msg}`)
                 runQuery(cmd,  res.app.locals.outbox, req.app.locals.db, msg)
-                res.status(200).json({ 'ok': true })
+                return res.status(200).json({ 'ok': true })
             }
         }
         else {
             log.warn(`${util.logPrefix('inbox')} reject message: ${msg}`)
-            res.status(403).json({ 'ok': false})
+            return res.status(403).json({ 'ok': false})
         }
     })
 
@@ -208,7 +208,7 @@ module.exports = (serv) => {
     * List outbox messages queued for forward
     */
     serv.get('/api/outbox', (req, res) => {
-        res.status(200).json({
+        return res.status(200).json({
             'messages': res.app.locals.outbox
         })
     })
@@ -230,8 +230,7 @@ module.exports = (serv) => {
 
         if (previousMessage && previousMessage == msg) {
             log.debug(`${util.logPrefix('outbox')} ignore duplicate message: ${msg}`)
-            res.status(200).json({ 'ok': true })
-            return
+            return res.status(200).json({ 'ok': true })
         } 
 
 
@@ -240,7 +239,7 @@ module.exports = (serv) => {
             let cmd = getCommand(msg.match(queryRegex))
             log.debug(`${util.logPrefix('outbox')} queue message: ${msg}`)
             box.push(msg)
-            res.status(201).json({ 'ok': true })
+            return res.status(201).json({ 'ok': true })
         }
         else {
             log.debug(`${util.logPrefix('outbox')} ignore invalid message ${msg}`)
@@ -262,9 +261,9 @@ module.exports = (serv) => {
 
         if (msg) {
             log.debug(`${util.logPrefix('outbox')} release from queue: ${msg}`)
-            res.status(201).json(data)
+            return res.status(201).json(data)
         } else {
-            res.status(200).json(data)
+            return res.status(200).json(data)
         }
     })
 }
