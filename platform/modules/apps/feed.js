@@ -142,7 +142,6 @@ module.exports = class Feed extends EventEmitter {
            console.log(`${this.logPrefix} already watching: ${id}`)
             return
         }
-        console.log(`${this.logPrefix} start watching: ${id}`)
         let pkg = new Package(id, this.context.db)
         let targetNode = pkg.node.get('data').get(version)
         targetNode.once((v,k) => {

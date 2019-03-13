@@ -29,16 +29,24 @@ module.exports = class Query extends EventEmitter {
                 query += (seq || 0) + '::'
                 this.package.node.get('version').once((version) => {
                     this.package.node.get('data').get(version).once(data => {
-                        let items = data['_']['>'] 
-                        Object.keys(items).forEach(itemID => {
-                            let datetime = items[itemID]
-                            if (datetime > highest) {
-                                highest = datetime
-                            }
-                        })
-                        query += `${Object.keys(data).length-1}::${highest}`
+                        if (!data) return
+                        
+                        query += `${Object.keys(data).length-1}::`
 
-
+                        // now append datetime if available
+                        if (data.hasOwnProperty('_')) {
+                            let items = data['_']['>'] 
+                            Object.keys(items).forEach(itemID => {
+                                let datetime = items[itemID]
+                                if (datetime > highest) {
+                                    highest = datetime
+                                }
+                            })
+                           query += highest
+                        }
+                        else {
+                            query += 0
+                        }
                         this.params.forEach(param => {
                             query += '|' + param[0] + '=' + param[1]
                         })

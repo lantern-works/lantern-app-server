@@ -1,0 +1,25 @@
+#!/usr/bin/env node
+const Gun = require('gun')
+const fs = require('fs-extra')
+
+fs.remove(__dirname + '/../radata', () => {
+
+    let db = Gun({peers: ['https://lantern.link/gun']})
+
+        db.get('__LX__').map((v,k) => {
+            console.log(k)
+            if (!v || k.length == 1) {
+                return
+            }
+            Object.keys(v).forEach(key => {
+                let item = v[key]
+                let results = []
+                db.get('__LX__').get(k).get(key).map((subval, subkey) => {
+                    if (subkey.length != 1 ) {
+                        console.log(`${k}.${key}.${subkey}:`, subval)
+                    }
+                })
+            })
+        })
+
+})

@@ -38,8 +38,10 @@
         // map
         let map = new LM.Map()
         // apps       
-        let ctx = window.LT = new LA.Context(db, user, map)
-        ctx.loadAllApps()
+        db.onReady( () => {
+            let ctx = window.LT = new LA.Context(db, user, map)
+            ctx.loadAllApps()
+        })
     </script>
 </body>
 </html>

@@ -16,6 +16,7 @@ module.exports = class Database extends EventEmitter {
         this.namespace = '__LX__'
         this.stor = Gun(this.uri) // database instance
         this.node = this.stor.get(this.namespace) // root node
+        this._ready = false
     }
 
     // -------------------------------------------------------------------------
@@ -64,6 +65,8 @@ module.exports = class Database extends EventEmitter {
         })
     }
 
+
+
     // -------------------------------------------------------------------------
     /**
     * Ensure expected nodes are available to work with
@@ -72,23 +75,32 @@ module.exports = class Database extends EventEmitter {
         return new Promise((resolve, reject) => {
             // demonstrates write ability and creates database files if non-existing
             // database cannot be setup with simply {} structures
-            this.getOrPut(this.get('now'), new Date().getTime())
-                .then(() => {
-                    let topLevels = ['org', 'pkg']
-                    let count = 0
-                    const check = () => {
-                        count++
-                        if (count === topLevels.length) {
-                            console.log(`${this.logPrefix} database ready`)
-                            resolve()
-                            this.emit('ready')
-                        }
-                    }
-                    topLevels.forEach((key) => {
-                        this.getOrPut(this.get(key), {}).then(check)
-                    })
-                })
+            let topLevels = ['org', 'pkg', 'ctx']
+            let count = 0
+            const check = () => {
+                count++
+                if (count === topLevels.length) {
+                    console.log(`${this.logPrefix} database ready`)
+                    this._ready = true
+                    resolve()
+                    this.emit('ready')
+                }
+            }
+            topLevels.forEach((key) => {
+                this.getOrPut(this.get(key), {}).then(check)
+            })
         })
+    }
+
+    onReady (fn) {
+        if (this._ready) {
+            fn()
+        }
+        else {
+            this.setup().then(() => {
+                fn()
+            })
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -107,7 +119,7 @@ module.exports = class Database extends EventEmitter {
                 this.print(path, newPointer, node)
             } else {
                 // we reached the target node here
-                console.log(`[DB] ${path} = `, v)
+                console.log('[DB]' + path + ' = ', v)
             }
         })
         return split.length
@@ -195,26 +207,7 @@ module.exports = class Database extends EventEmitter {
                         var promise
                         let val = v[item]
 
-                        if (item === 'organization' || item === 'packages') {
-                            // special rule for packages to avoid circular display of organization data
-                            promise = new Promise((resolve, reject) => {
-                                node.get(item).once((val, key) => {
-                                    let names = {}
-
-                                    if (val.name) {
-                                        pointer[k][item] = val.name
-                                        return resolve(val.name)
-                                    }
-
-                                    Object.keys(val).forEach((name) => {
-                                        if (name !== '_') names[name] = true
-                                    })
-
-                                    pointer[k][item] = names
-                                    resolve(names)
-                                })
-                            })
-                        } else if (val !== null && typeof (val) === 'object') {
+                        if (val !== null && typeof (val) === 'object') {
                             promise = self.jsonify.apply(self, [node.get(item), tree, pointer[k]])
                         } else {
                             promise = pointer[k][item] = val
