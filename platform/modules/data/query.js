@@ -34,7 +34,7 @@ module.exports = class Query extends EventEmitter {
                         query += `${Object.keys(data).length-1}::`
 
                         // now append datetime if available
-                        if (data.hasOwnProperty('_')) {
+                        if (data.hasOwnProperty('_') && data['_'].hasOwnProperty('>')) {
                             let items = data['_']['>'] 
                             Object.keys(items).forEach(itemID => {
                                 let datetime = items[itemID]
