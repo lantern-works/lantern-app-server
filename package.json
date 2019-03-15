@@ -14,7 +14,7 @@
         "geohash-distance": "*",
         "gun": "^0.9.9999991",
         "gun-tag": "*",
-        "helmet": "^3.15.1",
+        "helmet": "^3.16.0",
         "latlon-geohash": "*",
         "leaflet": "^1.4.0",
         "leaflet.locatecontrol": "^0.66.2",
@@ -24,7 +24,7 @@
         "simple-node-logger": "^18.12.22",
         "text-encoding": "^0.7.0",
         "typeface-montserrat": "0.0.54",
-        "vue": "^2.6.8",
+        "vue": "^2.6.9",
         "vue-long-press-directive": "^1.0.2"
     },
     "devDependencies": {

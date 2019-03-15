@@ -227,7 +227,7 @@ module.exports = (serv) => {
 
             tileStream.on('error', (err) => {
                     if (!assumeInternet) {
-                        log.debug(`skip offline attempt for: ${req.url}`);
+                        // log.debug(`skip offline attempt for: ${req.url}`);
                         return sendEmptyTile(res)
                     } else {
                         getTileFromCloud(req.url, req.params, res)

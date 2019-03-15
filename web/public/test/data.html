@@ -22,7 +22,9 @@
         let db = new LD.Database(window.location.origin + '/gun')
         let start = 2
 
-        db.once('ready', function() {
+        db.onReady(() => {
+            el.innerHTML = 1 
+            
             db.get('tnt').get('number').on((v,k) => {
                 console.log('got number', v,k )
                 el.innerHTML = v = v || start
@@ -40,6 +42,9 @@
                         console.log(ack)
                         el.innerHTML = num
                     }
+                })
+                .once((v,k) => {
+                    console.log('attempted number save', v, k)
                 })
             }
 
