@@ -26,6 +26,11 @@ self.Logger = require('simple-node-logger').createSimpleLogger({
     dateFormat: 'YYYY.MM.DD'
 })
 
+self.DBLogger = require('simple-node-logger').createSimpleLogger({
+    logFilePath: path.resolve(__dirname, '../logs', 'db.log'),
+    dateFormat: 'YYYY.MM.DD'
+})
+
 self.logPrefix = (val) => {
     return `[${val}]`.padEnd(17, ' ')
 }

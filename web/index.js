@@ -19,8 +19,9 @@ const https = require('https')
 const util = require('./util')
 const app = require('./server')
 const watch = require('./watcher')
-const backup = require('./backup')
 const log = util.Logger
+const setupDatabase = require('./db')
+
 log.setLevel(process.env.LOG_LEVEL || 'debug')
 log.info('##############################################')
 log.info('#    ')
@@ -84,41 +85,19 @@ const checkOnlineStatus = () => {
     })
 }
 
-/**
-* Create or use existing database
-*/
-const setupDatabase = (server) => {
-    // log.debug(`${util.logPrefix('db')} path = ${dbPath}`)
-
-    // run a backup of data every day
-
-    let db = require('gun')({
-        file: dbPath,
-        web: server
-    })
-
-    // attach database instance as a local app variable for express routes
-    app.locals.db = db
-
-    return Promise.resolve(dbPath)
-}
 
 // ----------------------------------------------------------------------------
 
-// choose database location
-let dbPath = path.resolve(__dirname, '../db/dev')
-if (process.env.DB) {
-    dbPath = path.resolve(__dirname, '../' + process.env.DB)
-}
 
 // restores an existing database or backs up existing one
-backup(dbPath)
-    .then(startServer)
-    .then(setupDatabase)
-    .then((dbPath) => {
+startServer()
+    .then((server) => {
+        return setupDatabase(server,app)
+    })
+    .then(() => {
         return new Promise((resolve, reject) => {
             // starts watching for changes
-            watch(app)
+            //watch(app)
             setTimeout(resolve, 1000)
         })
     })
