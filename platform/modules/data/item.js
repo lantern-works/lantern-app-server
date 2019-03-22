@@ -364,12 +364,25 @@ module.exports = class Item extends EventEmitter {
             this.mode = 'locked'
             // save to our shared database...
             let obj = this.pack(this._data)
-            this.package.getCurrentVersion().set(obj)
+
+            console.log(`${this.logPrefix} about to save new item`)
+            this.package.getCurrentVersion()
+                .set(obj, ack => {
+                    // @todo remove work-around once ack properly returns
+                    // data is saved properly but fails to properly ack
+                    if (ack.err) {
+                        console.warn(`${this.logPrefix} no ack for save`)
+                        // return reject(new Error('save_failed'))
+                    }
+                    else {
+                        console.log(`${this.logPrefix} saved to remote storage`, obj)
+                    }
+                })
                 .once((v, k) => {
                     // @todo switch to ack once bug is fixed where ack returns a false error
                     this.id = k
                     // saves locally but we want confirmation from ack
-                    console.log(`${this.logPrefix} attempted save`, obj)
+                    console.log(`${this.logPrefix} saved to local storage`, obj)
 
 
                     // clear new state once saved
@@ -382,7 +395,6 @@ module.exports = class Item extends EventEmitter {
                     
                     // database assigns unique identifier
                     this.emit('save')
-                    console.log(`${this.logPrefix} completed save`, obj)
                     this.package.seqUp()
                     resolve()
                 })
@@ -423,30 +435,29 @@ module.exports = class Item extends EventEmitter {
             let versionNode = this.package.getCurrentVersion()
             let obj = this.pack(data)
             let item = versionNode.get(this.id)
-            item.once((v, k) => {
-                if (!v) {
-                    // trying to update a non-existing item
-                    return reject(new Error('update_failed_missing'))
+            item.put(obj, ack => {
+
+                if (ack.err) {
+                    console.log(`${this.logPrefix} no ack for update`)
+                    return reject(new Error('update_failed_'+key))
                 }
-                item.put(obj).once(() => {
 
-                    // @todo switch to ack once bug is fixed where ack returns a false error
-                    Object.keys(obj).forEach((key) => {
-                        let val = obj[key]
-                        console.log(`${this.logPrefix} saved`, key, val)
-                    })
-
-                    fields.forEach((field) => {
-                        this._new[field] = false
-                    })
-
-                    this.emit('save', fields)
-                    this.emit('update', fields)
-                    this.mode = 'shared'
-                    this.package.seqUp()
-                    return resolve()
-                    
+                // @todo switch to ack once bug is fixed where ack returns a false error
+                Object.keys(obj).forEach((key) => {
+                    let val = obj[key]
+                    console.log(`${this.logPrefix} updated at remote storage`, key, val)
                 })
+
+                fields.forEach((field) => {
+                    this._new[field] = false
+                })
+
+                this.emit('save', fields)
+                this.emit('update', fields)
+                this.mode = 'shared'
+                this.package.seqUp()
+                return resolve()
+                
             })
         })
     }
@@ -479,7 +490,7 @@ module.exports = class Item extends EventEmitter {
                     if (ack.err) {
                         return reject(new Error('drop_failed'))
                     }
-                    console.log(`${this.logPrefix} Dropped`)
+                    console.log(`${this.logPrefix} dropped`)
                     this.mode = 'dropped'
                     this.emit('drop')
                     this.package.seqUp()
