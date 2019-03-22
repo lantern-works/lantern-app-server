@@ -14,7 +14,6 @@ module.exports = class Map extends EventEmitter {
     constructor () {
         super()
         this.view = window.L.map('map', LeafletMapConfig) // leaflet map
-        this.pointer = null // leaflet location pointer
     }
 
     get logPrefix () {
@@ -134,7 +133,7 @@ module.exports = class Map extends EventEmitter {
     zoomMinimum(level) {
         if (this.view.getZoom() < level) {
             let increase = level-this.view.getZoom()
-            console.log(`${this.logPrefix} zooming in extra = ${increase}`)
+            // console.log(`${this.logPrefix} zooming in extra = ${increase}`)
             this.view.zoomIn(increase)
         }
     }

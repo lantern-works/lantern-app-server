@@ -153,7 +153,7 @@ module.exports = (serv) => {
         // return result as quickly as possible to browser
         let result = preq
             .on('response', (pres) => {
-                log.debug("[tiles] stream tile from cloud: " + url);
+                //log.debug("[tiles] stream tile from cloud: " + url);
                 let contentType = pres.headers['content-type']
 
                 if (contentType != 'image/png') {

@@ -22,39 +22,37 @@
         let db = new LD.Database(window.location.origin + '/gun')
         let start = 2
 
-        db.onReady(() => {
-            el.innerHTML = 1 
-            
-            db.get('tnt').get('number').on((v,k) => {
-                console.log('got number', v,k )
-                el.innerHTML = v = v || start
-            })
+        el.innerHTML = 1 
+        
+        let node = db.get('tnt')
 
-            btn.onclick = () => {
-                let num = Number(el.innerHTML)
-                num *= start
-                console.log(`PUT ${num}`)
-                db.get('tnt').put({'number': num}, (ack) => {
-                    if (ack.error) {
-                        console.error(ack)
-                    }
-                    else {
-                        console.log(ack)
-                        el.innerHTML = num
-                    }
-                })
-                .once((v,k) => {
-                    console.log('attempted number save', v, k)
-                })
-            }
-
-            reset.onclick = () => {
-                db.get('tnt').put(null)
-                el.innerHTML = start
-            }
+        node.get('number').on((v,k) => {
+            console.log('got number', v,k )
+            el.innerHTML = v = v || start
         })
 
-        db.setup();
+        btn.onclick = () => {
+            let num = Number(el.innerHTML)
+            num *= start
+            console.log(`PUT ${num}`)
+            node.put({'number': num}, (ack) => {
+                if (ack.error) {
+                    console.error(ack)
+                }
+                else {
+                    console.log(ack)
+                    el.innerHTML = num
+                }
+            })
+            .once((v,k) => {
+                console.log('attempted number save', v, k)
+            })
+        }
+
+        reset.onclick = () => {
+            db.get('tnt').put(null)
+            el.innerHTML = start
+        }
     </script>
 </body>
 </html>
