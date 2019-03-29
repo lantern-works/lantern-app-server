@@ -54,13 +54,24 @@ module.exports = class Database extends EventEmitter {
                         return resolve(false)
                     }
                 }
-                // otherwise do create the node
-                targetNode.put(val)
-                    .once((v, k) => {
+
+                if (typeof(val) == "object") {
+                    // creates a node we can save to
+                    targetNode.put({})
+                    targetNode.put(val).once((v, k) => {
                         // won't ack an empty {} but will prepare database
                         // for a future write to this sub-node
                         resolve(true)
                     })
+                }
+                else {
+                    // otherwise do create the node
+                    targetNode.put(val)
+                        .once((v, k) => {
+                            resolve(true)
+                        })
+                }
+
             })
         })
     }

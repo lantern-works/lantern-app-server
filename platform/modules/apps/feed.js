@@ -45,6 +45,7 @@ module.exports = class Feed extends EventEmitter {
     * Watch a single item for any updates
     */
     watchItem (itemID, pkg) {
+
         // never watch the same item twice
         if (this.items.hasOwnProperty(itemID)) {
             return
@@ -58,6 +59,7 @@ module.exports = class Feed extends EventEmitter {
         let itemNode = pkg.getOneItem(itemID)
 
         itemNode.on((v, k) => {
+
 
             if (!this.packages[pkg.id]) {
                 return
@@ -77,7 +79,8 @@ module.exports = class Feed extends EventEmitter {
 
                 // markers
                 let item = null
-                if (v.g && v.o && v.t) {
+                if (v.g && v.t) {
+                    // geohash and tags will be enough to display on map
                     item = new LM.MarkerItem(pkg)
                 }
                 else {
@@ -128,38 +131,39 @@ module.exports = class Feed extends EventEmitter {
     * @todo to avoid confusion, prevent user from watching the same package with multple versions
     */
     addOnePackage (id) {
-        var parts, name, version
-        try {
-            parts = id.split('@')
-            name = parts[0]
-            version = parts[1]
-        } catch (e) {
-            console.error(`${this.logPrefix} invalid identifier provided to add package: ${id}`)
+        var pkg, parts, name, version
+
+
+        if (id.constructor.name == 'Package') {
+            pkg = id
+        }
+        else {
+            try {
+                parts = id.split('@')
+                name = parts[0]
+                version = parts[1]    
+            } catch (e) {
+                console.error(`${this.logPrefix} invalid identifier provided to add package: ${id}`)
+                return
+            }
+            pkg = new Package(id, this.context.db)
+        }
+
+
+        if (this.packages[pkg.id]) {
+           console.log(`${this.logPrefix} already watching: ${pkg.id}`)
             return
         }
 
-        if (this.packages[id]) {
-           console.log(`${this.logPrefix} already watching: ${id}`)
-            return
-        }
-        let pkg = new Package(id, this.context.db)
-        let targetNode = pkg.node.get('data').get(version)
-        targetNode.once((v,k) => {
-                if (!v) {
-                    console.log(`${this.logPrefix} missing package: ${id}`)
-                }
-                else {
-                    console.log(`${this.logPrefix} watch package: ${id}`)
-                    this.packages[id] = true
-                    
-                    this.emit("watch", id)
 
-                    targetNode.map()
-                    .on((v, k) => {
-                        // start watching for changes
-                        this.watchItem(k, pkg)
-                    })
-                }
+        this.packages[pkg.id] = true
+        
+        this.emit("watch", pkg.id)
+
+        pkg.node.get('items')
+            .map((v, k) => {
+                // start watching for changes
+                this.watchItem(k, pkg)
             })
     }
 

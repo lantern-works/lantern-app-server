@@ -366,7 +366,7 @@ module.exports = class Item extends EventEmitter {
             let obj = this.pack(this._data)
 
             console.log(`${this.logPrefix} about to save new item`)
-            this.package.getCurrentVersion()
+            this.package.node.get('items')
                 .set(obj, ack => {
                     // @todo remove work-around once ack properly returns
                     // data is saved properly but fails to properly ack
@@ -381,6 +381,11 @@ module.exports = class Item extends EventEmitter {
                 .once((v, k) => {
                     // @todo switch to ack once bug is fixed where ack returns a false error
                     this.id = k
+
+
+                    // acknowledge this item is now shared with network
+                    this.mode = 'shared'
+
                     // saves locally but we want confirmation from ack
                     console.log(`${this.logPrefix} saved to local storage`, obj)
 
@@ -390,8 +395,6 @@ module.exports = class Item extends EventEmitter {
                         this._new[item] = false
                     })
 
-                    // acknowledge this item is now shared with network
-                    this.mode = 'shared'
                     
                     // database assigns unique identifier
                     this.emit('save')
@@ -432,14 +435,16 @@ module.exports = class Item extends EventEmitter {
                 data[fields] = this._data[fields]
             }
 
-            let versionNode = this.package.getCurrentVersion()
+            let itemsNode = this.package.node.get('items')
             let obj = this.pack(data)
-            let item = versionNode.get(this.id)
+            let item = itemsNode.get(this.id)
             item.put(obj, ack => {
+
+                this.mode = 'shared' // regardless of whether we saved data or not, unlock it...
 
                 if (ack.err) {
                     console.log(`${this.logPrefix} no ack for update`)
-                    return reject(new Error('update_failed_'+key))
+                    return reject(new Error('update_failed'))
                 }
 
                 // @todo switch to ack once bug is fixed where ack returns a false error
@@ -454,7 +459,8 @@ module.exports = class Item extends EventEmitter {
 
                 this.emit('save', fields)
                 this.emit('update', fields)
-                this.mode = 'shared'
+
+                console.log("ACK from put", ack)
                 this.package.seqUp()
                 return resolve()
                 

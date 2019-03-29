@@ -20,6 +20,7 @@ module.exports = class Context extends EventEmitter {
         this.view = new View()        
         this.cloud = false
         this.online = false
+        this.node = null
         this._id = null
         this.packages = []
     }
@@ -36,33 +37,68 @@ module.exports = class Context extends EventEmitter {
     set id(val) {
         if (!val) {
             this.feed.reset()
-            this._id = val
+            this._id = null
             return
         }
-
-        this.db.get('ctx').get(val).once((v,k) => {
-            if (!v || !v.packages || typeof(v.packages) !== "string") {
-                console.warn(`${this.logPrefix} no packages defined for ${val}`)
+        else if (val == this._id) {
+            return
+        }
+        this._id = val
+        this.node = this.db.get('ctx').get(this._id)
+        this.node.once((v,k) => {       
+            if (!v) {
                 return
             }
-            this._id = val
-            if (v.name) {
-                this.name = v.name
-            }
-            let packages = v.packages.split(',')
-            console.log(`${this.logPrefix} packages = ${packages}`)
-            if (this.packages.length) {
-                this.feed.reset()
-            }
-            this.feed.addManyPackages(packages)
-            this.packages = []
-            packages.forEach(pkgId => {
-                let pkg = new LD.Package(pkgId, this.db)
-                this.packages.push(pkg)
-            })
+            this.load(v)
         })
     }
 
+    // ------------------------------------------------------------------------
+    load(v) {
+
+        if (v.name) {
+            this.name = v.name
+        }       
+        // start fresh
+        this.packages = []
+        this.feed.reset() 
+
+        console.log(`${this.logPrefix} new context`)
+        // watch for any packages
+        this.node.get('packages').map().once(data => {
+            if (data && data.id) {
+                let pkg = new LD.Package(data.id, this.db)
+                // begin watching package here
+                this.feed.addOnePackage(pkg)
+                this.packages.push(pkg)
+            }
+        })
+    }
+
+    save() {
+        return new Promise((resolve, reject) => {
+            let data = {
+                id: this.id, 
+                name: this.name,
+                priority: this.priority
+            }
+            console.log(`${this.logPrefix} saving data: `, data)
+            return db.getOrPut(this.node, data)
+        })
+    }
+
+    addOnePackage(pkg) {
+        if (!pkg.node) {
+            console.warn(`${this.logPrefix} skip package missing node`, pkg)
+            return
+        }
+        console.log(`${this.logPrefix} adding package`, pkg)
+        let pkgNode = this.node.get('packages')
+        this.db.getOrPut(pkgNode, {})
+            .then((saved) => {
+                pkgNode.set(pkg.node)
+            })
+    }
 
     // ------------------------------------------------------------------------
     /**

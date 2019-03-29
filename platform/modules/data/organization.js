@@ -43,25 +43,25 @@ module.exports = class Organization extends EventEmitter {
     /**
     * Publish a new data package to the network
     */
-    register () {
+    save () {
         return this.db.getOrPut(this.node, this._data)
             .then((saved) => {
                 if (saved) {
-                    console.info(`${this.logPrefix} registered`, this.name)
-                    this.emit('register')
+                    console.info(`${this.logPrefix} save`, this.name)
+                    this.emit('save')
                 } else {
-                    // console.info(`${this.logPrefix} already registered`, this.name)
+                    // console.info(`${this.logPrefix} already saved`, this.name)
                 }
             })
     }
 
-    unregister () {
+    drop () {
         return new Promise((resolve, reject) => {
             this.db.get('org').get(this.id)
                 .put(null)
                 .once((v, k) => {
-                    console.log(`${this.logPrefix} unregistered ${this.id}`)
-                    this.emit('unregister')
+                    console.log(`${this.logPrefix} dropped ${this.id}`)
+                    this.emit('drop')
                     return resolve(v)
                 })
         })
