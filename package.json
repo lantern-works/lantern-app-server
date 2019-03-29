@@ -1,12 +1,13 @@
 {
     "name": "lantern-serve",
-    "version": "0.7.0",
+    "version": "0.7.1",
     "dependencies": {
-        "@fortawesome/fontawesome-free": "^5.7.2",
+        "@fortawesome/fontawesome-free": "^5.8.1",
         "@node-minify/core": "*",
         "body-parser": "*",
+        "bullet-catcher": "^1.0.28",
         "bulma": "^0.7.4",
-        "compression": "^1.7.3",
+        "compression": "^1.7.4",
         "directory-tree": "^2.2.1",
         "event-emitter-es6": "^1.1.5",
         "express": "^4.16.4",
@@ -24,7 +25,7 @@
         "simple-node-logger": "^18.12.22",
         "text-encoding": "^0.7.0",
         "typeface-montserrat": "0.0.54",
-        "vue": "^2.6.9",
+        "vue": "^2.6.10",
         "vue-long-press-directive": "^1.0.2"
     },
     "devDependencies": {
