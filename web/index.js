@@ -42,7 +42,9 @@ const startServer = () => {
             let certificatePath = process.env.SSL_CERTIFICATE || path.resolve(__dirname, './certs/dev.lantern.link.pem')
             let credentials = {
                 key: fs.readFileSync(privateKeyPath, 'utf8'),
-                cert: fs.readFileSync(certificatePath, 'utf8')
+                cert: fs.readFileSync(certificatePath, 'utf8'),
+                requestCert: true,
+                rejectUnauthorized: false
             }
             secureServer = https.createServer(credentials, app)
         } catch (e) {

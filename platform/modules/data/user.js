@@ -59,6 +59,8 @@ module.exports = class User extends EventEmitter {
                     reject(new Error('user_auth_failed'))
                 } else {
                     this.username = username
+                    // @todo secure token to make sure server can trust we are signed in
+                    db.token = username
                     completeAuth()
                 }
             })

@@ -37,9 +37,10 @@
         let user = new LD.User(db, window.localStorage)
         // map
         let map = new LM.Map()
-        // apps       
+        // apps
+        let ctx = null   
         db.onReady( () => {
-            let ctx = window.LT = new LA.Context(db, user, map)
+            ctx = window.LT = new LA.Context(db, user, map)
             ctx.loadAllApps()
         })
     </script>

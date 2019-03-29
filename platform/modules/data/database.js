@@ -12,8 +12,30 @@ Gun.chain.unset = function (node) {
 module.exports = class Database extends EventEmitter {
     constructor (uri) {
         super()
+
+        let self = this
+
         this.uri = uri
         this.namespace = '__LX__'
+        this.token = null
+
+        // attach validation                
+        Gun.on('opt', function (opt) {
+
+            console.log('attaching validation')
+            if (opt.once) {
+                return
+            }
+            opt.on('out', function (msg) {
+                let to = this.to
+                // Adds headers for put
+                msg.headers = {
+                  token: self.token
+                }
+                to.next(msg) // pass to next middleware
+            })
+        })
+
         this.stor = Gun(this.uri) // database instance
         this.node = this.stor.get(this.namespace) // root node
         this._ready = false
@@ -91,7 +113,7 @@ module.exports = class Database extends EventEmitter {
             const check = () => {
                 count++
                 if (count === topLevels.length) {
-                    console.log(`${this.logPrefix} database ready`)
+                    console.log(`${this.logPrefix} database verified`)
                     this._ready = true
                     resolve()
                     this.emit('ready')
