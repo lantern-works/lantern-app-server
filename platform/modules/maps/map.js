@@ -70,6 +70,7 @@ module.exports = class Map extends EventEmitter {
     * By default center over North America
     */
     setDefaultView() {        
+        // console.log(`${this.logPrefix} set default view`)
         this.view.setView([38.42, -12.79], 3)
     }
 
@@ -108,6 +109,7 @@ module.exports = class Map extends EventEmitter {
     * Fly in while zooming
     */
     zoomToPoint (latlng, level) {
+        console.log(`${this.logPrefix} zooming to point = ${latlng}`)
         level = level || this.view.getZoom() + 2
         this.view.flyTo(latlng, Math.limit(level, 1, LeafletMapConfig.maxZoom), {
             pan: {
@@ -133,7 +135,7 @@ module.exports = class Map extends EventEmitter {
     zoomMinimum(level) {
         if (this.view.getZoom() < level) {
             let increase = level-this.view.getZoom()
-            // console.log(`${this.logPrefix} zooming in extra = ${increase}`)
+            console.log(`${this.logPrefix} zooming in extra = ${increase}`)
             this.view.zoomIn(increase)
         }
     }
@@ -197,9 +199,9 @@ module.exports = class Map extends EventEmitter {
                 allLayers.push(layer)
             }
         })
-
         if (allLayers.length) {
             let group = new window.L.featureGroup(allLayers)
+            // console.log(`${this.logPrefix} fitting map to all markers`, markers)
             this.view.fitBounds(group.getBounds())
         }
     }
@@ -241,7 +243,16 @@ module.exports = class Map extends EventEmitter {
     * Add marker to map
     */
     addToMap (marker) {
-        //console.log(`${this.logPrefix} add ${marker.id}`)
+
+        if (!marker) {
+            console.log(`${this.logPrefix} cannot add missing marker to map`)
+            return
+        }
+        else if (marker.constructor.name !== 'MarkerItem') {
+            console.log(`${this.logPrefix} cannot add non-marker to map with type = ${marker.constructor.name}`)     
+            return       
+        }
+        // console.log(`${this.logPrefix} add ${marker.id}`)
 
         marker.layer = window.L.marker(marker.latlng, {
             icon: marker.getDivIcon(),
