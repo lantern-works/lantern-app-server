@@ -21,8 +21,6 @@ module.exports = class Database extends EventEmitter {
 
         // attach validation                
         Gun.on('opt', function (opt) {
-
-            console.log('attaching validation')
             if (opt.once) {
                 return
             }
@@ -33,6 +31,13 @@ module.exports = class Database extends EventEmitter {
                   token: self.token
                 }
                 to.next(msg) // pass to next middleware
+            })
+
+            opt.on('in', function(msg) {
+                if(msg.put) {
+                    self.emit('sync', msg)
+                }
+                this.to.next(msg)
             })
         })
 
