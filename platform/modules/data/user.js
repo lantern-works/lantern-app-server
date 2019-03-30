@@ -14,18 +14,35 @@ module.exports = class User extends EventEmitter {
         }
         this.db = db
         this.node = this.db.stor.user()
-        this.pair = null
+        this.username = null
         this.clientStorage = clientStorage // typically browser localStorage
-        this.once('auth', () => {
-            console.log(`${this.logPrefix} sign-in complete`)
-        })
     }
 
     get logPrefix () {
-        return `[u:${this.username || 'anonymous'}]`.padEnd(20, ' ')
+        if (this.username) {
+            return `[u:${this.username}]`.padEnd(20, ' ')
+        }
+        else {
+
+            return `[u:anonymous]`.padEnd(20, ' ')
+        }
     }
 
-
+    /**
+    * Generates a unique color to match the username
+    */
+    get color() {
+          var hash = 0;
+          for (var i = 0; i < this.username.length; i++) {
+            hash = this.username.charCodeAt(i) + ((hash << 5) - hash);
+          }
+          var color = '#';
+          for (var i = 0; i < 3; i++) {
+            var value = (hash >> (i * 8)) & 0xFF;
+            color += ('00' + value.toString(16)).substr(-2);
+          }
+          return color;
+    }
 
     // -------------------------------------------------------------------------
     onReady (fn) {
@@ -45,32 +62,45 @@ module.exports = class User extends EventEmitter {
     */
     authenticate (username, password) {
         return new Promise((resolve, reject) => {
-            const completeAuth = () => {
-                SEA.pair().then((pair) => {
-                    this.pair = pair
-                    this.emit('auth', this.pair)
-                    resolve(this.pair)
-                })
-            }
-
             this.node.auth(username, password, (ack) => {
                 if (ack.err) {
                     console.warn(`${this.logPrefix} invalid auth`, ack.err)
                     reject(new Error('user_auth_failed'))
                 } else {
-                    this.username = username
                     // @todo secure token to make sure server can trust we are signed in
-                    db.token = username
-                    completeAuth()
+                    db.token = this.username = username 
+                    console.log(`${this.logPrefix} sign-in complete`)
+                    this.emit('auth')
+                    resolve()
                 }
             })
         })
     }
 
+    leave() {
+        return new Promise((resolve, reject) => {
+            if (this.node) {
+                this.node.leave()
+                if (this.node._.hasOwnProperty('sea')) {
+                    reject('user_failed_leave')
+                }
+                else {
+                    console.log(`${this.logPrefix} sign-out complete`)
+                    db.token = this.username = null
+                    resolve()                    
+                }
+            }
+            else {
+                console.log(`${this.logPrefix} already signed out`)
+                resolve()
+            }
+        })
+    }
+
     /**
-    * Registers first-time user into the decentralized database
+    * Registers and stores user within decentralized database
     */
-    register (username, password) {
+    create (username, password) {
         return new Promise((resolve, reject) => {
             username = username || shortid.generate()
             password = password || shortid.generate()
@@ -78,26 +108,26 @@ module.exports = class User extends EventEmitter {
             this.node.create(username, password, (ack) => {
                 if (ack.err) {
                     console.log(`${this.logPrefix} unable to save`, ack.err)
-                    return reject(new Error('user_register_failed'))
+                    return reject(new Error('user_create_failed'))
                 }
                 console.log(`${this.logPrefix} saved to browser`)
                 let creds = this.clientStorage.setItem('lx-auth', [username, password].join(':'))
                 this.authenticate(username, password)
-                this.emit('registered')
+                this.emit('created')
                 resolve()
             })
         })
     }
 
-    authOrRegister (skipCheck) {
+    authOrCreate (skipCheck) {
         if (skipCheck) {
             console.log(`${this.logPrefix} make new credentials by explicit request`)
-            return this.register()
+            return this.create()
         } else {
             // check browser for known credentials for this user
             let creds = this.clientStorage.getItem('lx-auth')
             if (!creds) {
-                return this.register()
+                return this.create()
             } else {
                 try {
                     let u = creds.split(':')[0]
@@ -106,11 +136,11 @@ module.exports = class User extends EventEmitter {
                         .catch(err => {
                             // this database may not know about our user yet, so create it...
                             // we assume local storage is a better indicator of truth than database peer
-                            return this.register(u, p)
+                            return this.create(u, p)
                         })
                 } catch (e) {
                     this.clearCredentials()
-                    return this.register()
+                    return this.create()
                 }
             }
         }
@@ -119,7 +149,7 @@ module.exports = class User extends EventEmitter {
     clearCredentials () {
         console.warn(`${this.logPrefix}  removing invalid creds from storage`)
         this.clientStorage.removeItem('lx-auth')
-        console.warn(`${this.logPrefix}  waiting for valid sign in or registration...`)
+        console.warn(`${this.logPrefix}  waiting for valid sign in or creation...`)
     }
 
 
