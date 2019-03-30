@@ -10,7 +10,6 @@ module.exports = class Item extends EventEmitter {
         super()
         this.id = null
         this.package = pkg
-        this._mode = 'draft'
 
         // create data space for data we allow to be exported to shared database
         this._data = {}
@@ -75,9 +74,6 @@ module.exports = class Item extends EventEmitter {
                 if (this._new[key] == val) {
                     delete this._new[key]
                 }
-                // if we're passing in data, we assume it's coming from
-                // an exising data source and therefore item is shared
-                this._mode = 'shared'
             })
         }
     }
@@ -146,15 +142,6 @@ module.exports = class Item extends EventEmitter {
         }
     } 
 
-    // -------------------------------------------------------------------- MODE
-    get mode () {
-        return this._mode
-    }
-    set mode (val) {
-        if (!val) return
-        this._mode = val
-        this.emit('mode', val)
-    }
 
     // -------------------------------------------------------------------- TAGS
     /**
@@ -352,16 +339,12 @@ module.exports = class Item extends EventEmitter {
     */
     save (fields) {
         return new Promise((resolve, reject) => {
-            // do not operate on locked items
-            if (this.mode === 'locked') {
-                return reject(new Error('save_failed_locked'))
-            }
 
             // if we have fields to work with, update existing object
             if (fields) {
                 return this.update(fields).then(resolve).catch(reject)
             }
-            this.mode = 'locked'
+
             // save to our shared database...
             let obj = this.pack(this._data)
 
@@ -381,24 +364,17 @@ module.exports = class Item extends EventEmitter {
                 .once((v, k) => {
                     // @todo switch to ack once bug is fixed where ack returns a false error
                     this.id = k
-
-
-                    // acknowledge this item is now shared with network
-                    this.mode = 'shared'
-
                     // saves locally but we want confirmation from ack
                     console.log(`${this.logPrefix} saved to local storage`, obj)
-
 
                     // clear new state once saved
                     Object.keys(this._new).forEach((item) => {
                         this._new[item] = false
                     })
 
-                    
                     // database assigns unique identifier
-                    this.emit('save')
                     this.package.seqUp()
+                    this.emit('save')
                     resolve()
                 })
 
@@ -410,18 +386,15 @@ module.exports = class Item extends EventEmitter {
     */
     update (fields) {
         return new Promise((resolve, reject) => {
-            // do not operate on locked items
-            if (this.mode === 'locked') {
-                return reject(new Error('update_failed_locked'))
-            }
-
             // require an array of fields
             if (fields.constructor !== Array) {
                 console.log(`${this.logPrefix} Update requires fields in array format: ${fields}`)
-                return reject(new Error('update_failed_invalid_fields'))
+                let err = new Error()
+                err.name = 'update_failed_invalid_fields'
+                err.message = fields.join(', ')
+                return reject(err)
             }
 
-            this.mode = 'locked'
             let data = {}
             if (fields.constructor === Array) {
                 fields.forEach((field) => {
@@ -439,12 +412,12 @@ module.exports = class Item extends EventEmitter {
             let obj = this.pack(data)
             let item = itemsNode.get(this.id)
             item.put(obj, ack => {
-
-                this.mode = 'shared' // regardless of whether we saved data or not, unlock it...
-
                 if (ack.err) {
                     console.log(`${this.logPrefix} no ack for update`)
-                    return reject(new Error('update_failed'))
+                    let err = new Error()
+                    err.name = 'update_failed'
+                    err.message = fields.join(', ')
+                    return reject(err)
                 }
 
                 // @todo switch to ack once bug is fixed where ack returns a false error
@@ -456,12 +429,8 @@ module.exports = class Item extends EventEmitter {
                 fields.forEach((field) => {
                     this._new[field] = false
                 })
-
-                this.emit('save', fields)
-                this.emit('update', fields)
-
-                console.log("ACK from put", ack)
                 this.package.seqUp()
+                this.emit('update', fields)
                 return resolve()
                 
             })
@@ -474,14 +443,6 @@ module.exports = class Item extends EventEmitter {
     drop () {
         return new Promise((resolve, reject) => {
             // do not operate on locked items
-            if (this.mode === 'locked') {
-                return reject(new Error('drop_failed_locked'))
-            }
-
-            if (this.mode === 'dropped') {
-                // already deleted... skip...
-                return resolve()
-            }
 
             let item = this.package.getOneItem(this.id)
 
@@ -497,9 +458,8 @@ module.exports = class Item extends EventEmitter {
                         return reject(new Error('drop_failed'))
                     }
                     console.log(`${this.logPrefix} dropped`)
-                    this.mode = 'dropped'
-                    this.emit('drop')
                     this.package.seqUp()
+                    this.emit('drop')
                     return resolve()
                 })
             })
