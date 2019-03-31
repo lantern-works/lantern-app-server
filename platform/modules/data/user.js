@@ -87,6 +87,7 @@ module.exports = class User extends EventEmitter {
                 else {
                     console.log(`${this.logPrefix} sign-out complete`)
                     db.token = this.username = null
+                    this.emit('leave')
                     resolve()                    
                 }
             }
@@ -112,8 +113,8 @@ module.exports = class User extends EventEmitter {
                 }
                 console.log(`${this.logPrefix} saved to browser`)
                 let creds = this.clientStorage.setItem('lx-auth', [username, password].join(':'))
-                this.authenticate(username, password)
                 this.emit('created')
+                this.authenticate(username, password)
                 resolve()
             })
         })

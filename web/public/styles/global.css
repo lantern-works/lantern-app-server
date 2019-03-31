@@ -265,6 +265,33 @@ body .app {
 }
 
 
+
+.button-box-title {
+    background: #FFF;
+    border-bottom: 1px solid #EFEFEF;
+}
+
+.button-box {
+    text-align: center;
+    padding: 1em;
+}
+
+.button-box .icon {
+    margin: auto;
+    opacity: 0.9;
+    font-size: xx-large;
+}
+
+.button-box p {
+    padding: 1em;
+}
+.button-box .button {
+    margin-top: 1em;
+    width: 100%;
+}
+
+
+
 /*----------------------------------------------------------------------------*/
 .menu-app-frame, .sheet-app-frame {
 	padding: 0em;
