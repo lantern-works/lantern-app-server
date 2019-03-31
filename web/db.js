@@ -23,10 +23,12 @@ module.exports = (server,app) => {
     log.setLevel('debug');
     log.info(`${util.logPrefix('db')} path = ${dbPath}`)
 
-    let hash = crypto.createHash('sha1')
+    let hashType = 'sha1'
+    let hash = crypto.createHash(hashType)
     hash.update(String(rules))
     hash.end()
-    log.info(`${util.logPrefix('db')} rules = sha1 ${hash.digest('hex')}`)
+    app.locals.rules = hash.digest('hex')
+    log.info(`${util.logPrefix('db')} rules = ${hashType} ${app.locals.rules}`)
 
     let db = Gun({
         file: dbPath,
