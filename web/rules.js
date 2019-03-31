@@ -9,12 +9,12 @@ const safeguard = ['pkg', 'org', 'ctx']
 * Marker Validation
 */
 const validateMarker = (id, data) => {
-    if (!data.hasOwnProperty('o') || typeof(data['o']) !== 'string') {
+    if (data.hasOwnProperty('o') && typeof(data['o']) !== 'string') {
         log.warn(`[rules] missing or invalid owner for marker ${id}`)
         log.warn(data)
         return false
     }
-    if (!data.hasOwnProperty('t') || typeof(data['t']) !== 'string' || data['t'][0] != '%') {
+    if (data.hasOwnProperty('t') && (typeof(data['t']) !== 'string' || data['t'][0] != '%')) {
         log.warn(`[rules] missing or invalid tags for marker ${id}`)
         log.warn(data)
         return false
