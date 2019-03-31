@@ -1,6 +1,6 @@
 {
     "name": "lantern-serve",
-    "version": "0.7.1",
+    "version": "0.8.0",
     "dependencies": {
         "@fortawesome/fontawesome-free": "^5.8.1",
         "@node-minify/core": "*",
@@ -37,8 +37,7 @@
     },
     "browser": {
         "vue": "vue/dist/vue.common.js",
-        "sea": "gun/sea.js",
-        "raphael": "wheelnav/js/dist/raphael.min.js"
+        "sea": "gun/sea.js"
     },
     "scripts": {
         "lint": "standardx",
