@@ -307,16 +307,13 @@ module.exports = class Item extends EventEmitter {
         // only listen for changes when we have a getter/setter pair
         for (var idx in newData) {
             let pointer = this[idx] || this._data[idx] // try to use a getter if available
-
             if (JSON.stringify(pointer) !== JSON.stringify(newData[idx])) {
-                if (pointer) {
-                    if (typeof (pointer) === 'object') {
-                        console.log(`${this.logPrefix} changing ${idx} object to ${newData[idx]}`)
-                        this.emit('change', idx)
-                    } else if (pointer) {
-                        console.log(`${this.logPrefix} changing ${idx} from ${this[idx]} to ${newData[idx]}`)
-                        this.emit('change', idx)
-                    }
+                if (typeof (pointer) === 'object') {
+                    console.log(`${this.logPrefix} changing ${idx} object to ${newData[idx]}`)
+                    this.emit('change', idx)
+                } else {
+                    console.log(`${this.logPrefix} changing ${idx} from ${this[idx]} to ${newData[idx]}`)
+                    this.emit('change', idx)
                 }
 
                 // default to use setter if available
@@ -339,7 +336,7 @@ module.exports = class Item extends EventEmitter {
     */
     save (fields) {
         return new Promise((resolve, reject) => {
-
+            
             // if we have fields to work with, update existing object
             if (fields) {
                 return this.update(fields).then(resolve).catch(reject)
@@ -349,6 +346,8 @@ module.exports = class Item extends EventEmitter {
             let obj = this.pack(this._data)
 
             console.log(`${this.logPrefix} about to save new item`)
+
+
             this.package.node.get('items')
                 .set(obj, ack => {
                     // @todo remove work-around once ack properly returns

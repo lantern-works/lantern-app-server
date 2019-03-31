@@ -63,7 +63,7 @@ module.exports = class Context extends EventEmitter {
         this.packages = []
         this.feed.reset() 
 
-        console.log(`${this.logPrefix} new context`)
+        console.log(`${this.logPrefix} context loaded`)
         // watch for any packages
         this.node.get('packages').map().once(data => {
             if (data && data.id) {
@@ -156,7 +156,7 @@ module.exports = class Context extends EventEmitter {
             })
 
             obj.on('open', (componentID) => {
-                //console.log(`${this.logPrefix} open app component: ${componentID}`);
+                // console.log(`${this.logPrefix} open app component: ${componentID}`);
                 this.view.data.app_components.push(componentID)
             })
 

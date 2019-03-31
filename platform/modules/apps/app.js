@@ -170,6 +170,8 @@ module.exports = class App extends EventEmitter {
 
     removeCSS () {
         let s = document.getElementById(this.css_id)
-        s.parentNode.removeChild(s)
+        if (s) {
+            s.parentNode.removeChild(s)
+        }
     }
 }

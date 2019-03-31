@@ -12,18 +12,9 @@ module.exports = class MarkerItem extends Item {
             'ping': ['p', []],
             'score': ['s']
         })
-
         this._icon = null
         this._set = null
         this.layer = null
-
-        this.on('mode', (mode) => {
-            if (this.layer) {
-                // keep dom updated to reflect mode
-                this.layer.setIcon(this.getDivIcon())
-                // console.log(`${this.logPrefix} mode = `, mode);
-            }
-        })
     }
 
     // -------------------------------------------------------------------------
@@ -165,7 +156,7 @@ module.exports = class MarkerItem extends Item {
         }
         return window.L.divIcon({
             html: `<i class="${cls}"></i>`,
-            className: `lx-marker lx-marker-${this.mode} ${this.tags.join(' ')}`
+            className: `lx-marker ${this.tags.join(' ')}`
         })
     }
 
