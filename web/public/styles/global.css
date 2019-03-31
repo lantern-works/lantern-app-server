@@ -1,5 +1,13 @@
+
+
+/*----------------------------------------------------------------------------*/
+body {
+	font-family: "montserrat", sans-serif;
+}
+
 /*----------------------------------------------------------------------------*/
 h1 {
+	font-size: 14pt;
 	font-weight: bold;
 }
 body .app {
@@ -85,16 +93,18 @@ body .app {
 
 #map .lx-marker {
 	text-align: center;
-	background: #1051ba;
 	color: #FFF;
 	border-width: 2px;
 	border-style: solid;
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+#map .lx-marker.did-change {
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(0, 0, 0, 0.08);
 }
 
 #map .lx-marker-draft {
-	background: #3273dcs;;
-	border-width: 0px;
-	opacity: 0.75;
+	border-color: rgba(255,255,255,0.1);
 }
 
 
@@ -130,7 +140,7 @@ body .app {
 	height: 19px !important;
 	margin-left: -9px !important;
 	margin-top: -9px !important;
-	border-width: 1px;
+	border-width: 2px;
 }
 
 
@@ -139,7 +149,7 @@ body .app {
 	height: 10px !important;
 	margin-left: -5px !important;
 	margin-top: -6px !important;
-	border-width: 1px;
+	border-width: 2px;
 }
 
 
@@ -148,7 +158,7 @@ body .app {
 	height: 6px !important;
 	margin-left: -3px !important;
 	margin-top: -3px !important;
-	border-width: 1px;
+	border-width: 2px;
 }
 
  
@@ -335,24 +345,4 @@ body .app {
 .menu-app-frame ul.menu li.inline-btn {
 	background: #FFF;
 	padding: 1.25em;
-}
-
-/*----------------------------------------------------------------------------*/
-#hotspot #app-container {
-	text-align: center;
-	background: #EEE;
-}
-
-#hotspot .app-frame {
-	margin: auto;
-	max-width: 450px;
-	min-width: 320px;
-}
-
-#hotspot img {
-	max-width: 70px;
-	margin: 1em;
-}
-#hotspot .button {
-	margin: 1em;
 }
