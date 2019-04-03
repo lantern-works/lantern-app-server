@@ -319,6 +319,8 @@ body .app {
     background: rgba(1,1,1,0.01);
 }
 
+
+
 .menu-app-frame ul.menu li:last-child {
 	border-bottom: 0px;
 }
@@ -339,6 +341,13 @@ body .app {
 .menu-app-frame ul.menu i {
 	margin-right: 0px;
 	padding-right: 0px;
+}
+
+.menu-app-frame ul.menu span {
+  text-overflow: ellipsis;
+  overflow:hidden;
+  white-space: nowrap;
+  display: block;
 }
 
 
