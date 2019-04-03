@@ -43,7 +43,7 @@ const startServer = () => {
             let credentials = {
                 key: fs.readFileSync(privateKeyPath, 'utf8'),
                 cert: fs.readFileSync(certificatePath, 'utf8'),
-                requestCert: true,
+                requestCert: false,
                 rejectUnauthorized: false
             }
             secureServer = https.createServer(credentials, app)
