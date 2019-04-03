@@ -62,10 +62,21 @@ module.exports = class User extends EventEmitter {
     */
     authenticate (username, password) {
         return new Promise((resolve, reject) => {
+
+            if (!username || !password) {
+                let err = new Error()
+                err.name = 'user_auth_skipped'
+                err.message = 'missing username or password to authenticate'
+                return reject(err)
+            }
+
             this.node.auth(username, password, (ack) => {
                 if (ack.err) {
                     console.warn(`${this.logPrefix} invalid auth`, ack.err)
-                    reject(new Error('user_auth_failed'))
+                    let err = new Error()
+                    err.name = 'user_auth_failed'
+                    err.message = username
+                    reject(err)
                 } else {
                     // @todo secure token to make sure server can trust we are signed in
                     db.token = this.username = username 
