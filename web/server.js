@@ -41,7 +41,7 @@ server.use(require('./middleware/captive'))
 
 // final routes are for any static pages and binary files
 server.get('/@/', (req, res) => {
-    return res.sendFile(staticPath + '/captive.html')
+    return res.sendFile(staticPath + '/portal/index.html')
 })
 
 // ------------------------------------------------------------------------- Routes
