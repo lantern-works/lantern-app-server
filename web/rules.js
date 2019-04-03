@@ -3,98 +3,75 @@ const log = util.DBLogger
 
 // protected database scope
 const namespace = '__LX__'
-const safeguard = ['pkg', 'org', 'ctx']
+const topLevelFields = ['pkg', 'org', 'ctx']
+
 
 /**
-* Marker Validation
+* Filter PUT At Top-Level
 */
-const validateMarker = (id, data) => {
-    if (data.hasOwnProperty('o') && typeof(data['o']) !== 'string') {
-        log.warn(`[rules] missing or invalid owner for marker ${id}`)
-        log.warn(data)
-        return false
-    }
-    if (data.hasOwnProperty('t') && (typeof(data['t']) !== 'string' || data['t'][0] != '%')) {
-        log.warn(`[rules] missing or invalid tags for marker ${id}`)
-        log.warn(data)
-        return false
-    }
+const isTopLevelPutValid = (k, v) => {
+    log.debug('[rules] check top level field: ', k, v)
+   if (v === null && topLevelFields.indexOf(k) != -1) {
+       // do not allow to nullify any top level field
+       log.warn(`[rules] prevent a nullify for sacred top-level field: ${k}`)
+       return false
+   }  
     return true
 }
 
 /**
-* Removes GunDB specific metadata when analyzing input
+* Filter PUT Command
 */
-const removeMetadata = (data) => {
+const isPutValid = (k,v) => {
 
-    let newData = data
-
-    if (typeof(data) == 'object') {
-
-        let meta = ['_', '#', '>']
-        newData = {}
-        Object.keys(data).forEach(k => {
-            if (meta.indexOf(k) == -1) {
-                newData[k] = data[k]
-            }
-        })
+    if (k[0] == '~') {
+        // always allow updates to decentralized identities
+        log.debug(`[rules] ${k}`)
+        return true
     }
-    return newData
+
+    for (var field in v) {
+
+        if (field === '#' || field === '>' || field === '_') {
+           // skip metadata
+        }
+        else {   
+             log.debug(`[rules] ${k}.${field} = ${JSON.stringify(v[field])}`)
+
+            if (k === namespace) {
+                // special treatment for our top-level of the namespace
+                // attempt to preserve a clean base
+                return isTopLevelPutValid(field, v[field])
+            }
+            else if (field == '%%%bad%%%') {
+                log.debug('[rules] test block of save')
+                return false
+            }
+        }
+    }
+    return true
 }
+
 
 /**
 * Database update validator
 */
 const rules = (msg) => {
-
-    let isValid = true
-
+    let user = (msg.headers && msg.headers.token ? msg.headers.token : 'anonymous')
     if (msg.put) {
-        isValid = msg.headers && msg.headers.token
-        let token = (isValid ? msg.headers.token : null)
+        log.debug(`[rules] PUT ATTEMPT --------------------------------------------------------------------------------`)
+        log.debug(`[rules] @user = ${user}`)
 
-        // check for required parameters
-        Object.keys(msg.put).forEach(id => {
-            let item = removeMetadata(msg.put[id])
-
-            // ducktype markers and enforce rules
-            if (item.hasOwnProperty('g')) {
-                isValid = validateMarker(id, item)
+        for (var k in msg.put) { 
+            let valid = isPutValid(k, msg.put[k])
+            if (!valid) {
+                log.warn(`[rules] PUT BLOCKED *********************************************************************************\n\n`)
+                return false
             }
-        })
-
-
-        if (!isValid) return false
-
-        // avoid a top-level namespace reset at any cost to avoid accidents
-        if (msg.put.hasOwnProperty(namespace)) {
-            let attempt = msg.put[namespace]
-            safeguard.forEach(key => {
-                if (attempt[key] === null) {
-                    // do not allow to nullify
-                    log.debug(`-- BLOCK NULLIFY FOR ${key} --`)
-                    return false
-                } 
-            })
         }
-
-        // listen for messages trying to save to this server
-        if ( (!msg.how || msg.how !== 'mem') && msg.hasOwnProperty('><')) {
-           log.debug(`--------- PUT ${isValid ? 'valid' : 'blocked'} ---------`)
-           log.debug(`%% user token = ${token} %%`)
-           Object.keys(msg.put).forEach(k => {
-                if (k[0] == '~') return // ignore user-specific puts
-                Object.keys(msg.put[k]).forEach(field => {
-                    if (field !== '#' && field !== '>'&& field !== '_') {
-                        log.debug(`  ${k} ${field} = ${JSON.stringify(msg.put[k][field])}`)
-                    }
-                })
-           })
-           log.debug(`--------- /PUT ${isValid ? 'valid' : 'blocked'} ---------/n`)
-        }
+        log.debug(`[rules] PUT SUCCESS --------------------------------------------------------------------------------\n\n`)
     }
-
-    return isValid
+    return true
 }
 
 module.exports = rules

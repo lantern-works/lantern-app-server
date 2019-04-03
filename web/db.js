@@ -28,7 +28,7 @@ module.exports = (server,app) => {
     hash.update(String(rules))
     hash.end()
     app.locals.rules = hash.digest('hex')
-    log.info(`${util.logPrefix('db')} rules = ${hashType} ${app.locals.rules}`)
+    log.info(`${util.logPrefix('db')} rules = ${hashType} ${app.locals.rules}\n\n`)
 
     let db = Gun({
         file: dbPath,
