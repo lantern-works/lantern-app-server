@@ -87,6 +87,7 @@ module.exports = class Package extends EventEmitter {
                 } else {
                     console.log(`${this.logPrefix} already saved version: ${this.id}`)
                 }
+                return saved
             })
             .catch((e) => {
                 console.error(`${this.logPrefix} failed to save version: ${this.id}`)

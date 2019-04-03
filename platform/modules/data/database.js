@@ -43,7 +43,6 @@ module.exports = class Database extends EventEmitter {
 
         this.stor = Gun(this.uri) // database instance
         this.node = this.stor.get(this.namespace) // root node
-        this._ready = false
     }
 
     // -------------------------------------------------------------------------
@@ -103,43 +102,6 @@ module.exports = class Database extends EventEmitter {
         })
     }
 
-
-
-    // -------------------------------------------------------------------------
-    /**
-    * Ensure expected nodes are available to work with
-    */
-    setup () {
-        return new Promise((resolve, reject) => {
-            // demonstrates write ability and creates database files if non-existing
-            // database cannot be setup with simply {} structures
-            let topLevels = ['org', 'pkg', 'ctx']
-            let count = 0
-            const check = () => {
-                count++
-                if (count === topLevels.length) {
-                    console.log(`${this.logPrefix} database verified`)
-                    this._ready = true
-                    resolve()
-                    this.emit('ready')
-                }
-            }
-            topLevels.forEach((key) => {
-                this.getOrPut(this.get(key), {}).then(check)
-            })
-        })
-    }
-
-    onReady (fn) {
-        if (this._ready) {
-            fn()
-        }
-        else {
-            this.setup().then(() => {
-                fn()
-            })
-        }
-    }
 
     // -------------------------------------------------------------------------
     /**

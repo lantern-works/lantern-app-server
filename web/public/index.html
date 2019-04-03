@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="apple-mobile-web-app-capable" content="yes">
     <style>
-        [v-cloak] { display:none }
         #map, body, html {  
             height: 100%;
             width: 100%;
@@ -38,11 +37,8 @@
         // map
         let map = new LM.Map()
         // apps
-        let ctx = null   
-        db.onReady( () => {
-            ctx = window.LT = new LA.Context(db, user, map)
-            ctx.loadAllApps()
-        })
+        let ctx = window.LT = new LA.Context(db, user, map)
+        ctx.loadAllApps()
     </script>
 </body>
 </html>

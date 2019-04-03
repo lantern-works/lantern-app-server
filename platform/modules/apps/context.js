@@ -10,6 +10,7 @@ require('../../helpers/array')
 module.exports = class Context extends EventEmitter {
 
     constructor (db, user, map) {
+        // @todo separate view and model elements into separate classes
         super()
         this.db = db
         this.map = map
@@ -76,28 +77,41 @@ module.exports = class Context extends EventEmitter {
     }
 
     save() {
-        return new Promise((resolve, reject) => {
-            let data = {
-                id: this.id, 
-                name: this.name,
-                priority: this.priority
-            }
-            console.log(`${this.logPrefix} saving data: `, data)
-            return db.getOrPut(this.node, data)
-        })
+        let data = {
+            id: this.id, 
+            name: this.name,
+            priority: this.priority
+        }
+        console.log(`${this.logPrefix} saving data: `, data)
+        return db.getOrPut(this.node, data)
     }
 
     addOnePackage(pkg) {
-        if (!pkg.node) {
-            console.warn(`${this.logPrefix} skip package missing node`, pkg)
-            return
-        }
-        console.log(`${this.logPrefix} adding package`, pkg)
-        let pkgNode = this.node.get('packages')
-        this.db.getOrPut(pkgNode, {})
-            .then((saved) => {
-                pkgNode.set(pkg.node)
-            })
+
+        return new Promise((resolve, reject) => {
+
+            if (!pkg.node) {
+                console.warn(`${this.logPrefix} skip package missing node`, pkg)
+                reject('missing_package_node')
+                return
+            }
+
+            console.log(`${this.logPrefix} adding package`, pkg)
+            let pkgNode = this.node.get('packages')
+            this.db.getOrPut(pkgNode, {})
+                .then((saved) => {
+                    return pkgNode.set(pkg.node, (ack) => {
+                        if (ack.err) {
+                            reject(ack.err)
+                        }
+                        else {
+                            resolve()
+                        }
+                    })
+                })
+
+        })
+
     }
 
     // ------------------------------------------------------------------------

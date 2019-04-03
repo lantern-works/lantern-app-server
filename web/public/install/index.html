@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="stylesheet" href="/styles/vendor.css"/>
+    <link rel="stylesheet" href="/styles/global.css"/><style>
+        .level-item {
+            margin: 8em auto;
+        }
+    </style>
+</head>
+<body>
+    <div id="app-container">
+
+    </div>
+
+    <!-- application display -->
+    <nav class="level">
+
+         <!-- database status -->
+         <div class="level-item has-text-centered">
+            <div>
+                <p class="heading">Database</p>
+                <p class="title" id="database-status">&hellip;</p>
+            </div>
+         </div>
+
+        <!-- user status -->
+         <div class="level-item has-text-centered">
+            <div>
+                <p class="heading">User</p>
+                <p class="title" id="user-status">&hellip;</p>
+            </div>
+         </div>
+
+         <!-- demo package status -->
+         <div class="level-item has-text-centered">
+            <div>
+                <p class="heading">Demo Package</p>
+                <p class="title" id="package-status">&hellip;</p>
+            </div>
+         </div>
+
+
+         <!-- demo context status -->
+         <div class="level-item has-text-centered">
+            <div>
+                <p class="heading">Demo Context</p>
+                <p class="title" id="context-status">&hellip;</p>
+            </div>
+         </div>
+    </nav>
+
+    <!-- platform setup -->
+    <script src="/scripts/data.min.js"></script>
+    <script src="/scripts/apps.min.js"></script>
+    <script src="/scripts/maps.min.js"></script>
+    <script>
+        // database
+        let db = new LD.Database(window.location.origin + '/gun')
+
+        // user
+        let user = new LD.User(db, window.localStorage)
+        
+        // demo package
+        let pkg = new LD.Package('demo@0.0.1', db)
+
+        // demo context
+        let ctx = new LA.Context(db, user)
+
+        const setupDatabase = () => {
+            return new Promise((resolve, reject) => {
+                // demonstrates write ability and creates database files if non-existing
+                // database cannot be setup with simply {} structures
+                let topLevels = ['org', 'pkg', 'ctx']
+                let count = 0
+                const check = () => {
+                    count++
+                    if (count === topLevels.length) {
+                        resolve()
+                    }
+                }
+                topLevels.forEach((key) => {
+                    db.getOrPut(db.get(key), {}).then(check)
+                })
+            })  
+        }
+
+        const createDemoPackage = () => {
+            return pkg.save()
+        }
+
+
+        const createDemoContext = () => {
+            // user needs to be signed-in to create first context
+            ctx.id = 'demo'
+            ctx.name = 'Demo Map'
+            ctx.priority = 1
+            return ctx.save().then(() => {
+                return ctx.addOnePackage(pkg)
+            })
+        }
+
+
+        user.authOrCreate()
+            .then(() => {
+                document.getElementById('user-status').innerHTML = user.username
+            })
+            .then(setupDatabase)
+            .then(() => {
+                document.getElementById('database-status').innerHTML = 'Verified'
+            })
+            .then(createDemoPackage)
+            .then(saved => {
+                if (saved) {
+                    document.getElementById('package-status').innerHTML = 'Saved'
+                }
+                else {
+                    document.getElementById('package-status').innerHTML = 'Exists'
+                }
+            })
+            .then(createDemoContext)
+            .then(saved => {
+                if (saved) {
+                    document.getElementById('context-status').innerHTML = 'Saved'
+                }
+                else {
+                    document.getElementById('context-status').innerHTML = 'Exists'
+                }
+            })
+
+
+    </script>
+</body>
+</html>
