@@ -332,24 +332,24 @@ body .app {
     background: #FFF;
 }
 
-.menu-app-frame ul.menu .icon {
-    float: right;
-    margin-top: -0.75em;   
-    margin-right: 0px;
-}
 
 .menu-app-frame ul.menu i {
 	margin-right: 0px;
 	padding-right: 0px;
 }
 
-.menu-app-frame ul.menu span {
+.menu-app-frame ul.menu span.text {
   text-overflow: ellipsis;
   overflow:hidden;
   white-space: nowrap;
   display: block;
 }
 
+.menu-app-frame ul.menu .icon {
+    float: right;
+    margin-top: -0.75em;   
+    margin-right: 0px;
+}
 
 .menu-app-frame .inline-btn,  
 	.menu-app-frame .button.is-secondary {
