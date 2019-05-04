@@ -137,12 +137,10 @@ module.exports = class Context extends EventEmitter {
                     bestPackages[v.id] = [v, k]
                     this.removeOnePackage(existingPackage[1])
                 } else {
-                    console.log('REMOVING PACKAGE', v)
+                    console.log(`${this.logPrefix} remove package: `,v )
                     this.removeOnePackage(k)
                 }
             }
-
-            console.log(' best packages', bestPackages)
         })
     }
 
@@ -154,6 +152,7 @@ module.exports = class Context extends EventEmitter {
         return new Promise((resolve, reject) => {
             // info that may be useful to the browser or environment
             let info = {
+                peer: null,
                 apps: [],
                 online: null,
                 cloud: null
@@ -167,6 +166,7 @@ module.exports = class Context extends EventEmitter {
             })
                 .then((result) => {
                     if (result.status === 200) {
+                        this.peer =  result.headers.get('X-Lantern-Peer')
                         this.online = result.headers.get('X-Lantern-Online') === '1'
                         this.cloud = result.headers.get('X-Lantern-Cloud') === '1'
                         return result.json()

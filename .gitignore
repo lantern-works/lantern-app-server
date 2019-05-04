@@ -11,3 +11,4 @@ web/public/scripts/apps.*
 web/public/scripts/data.*
 web/public/styles/vendor.css
 web/public/test.html
+env/config.yml

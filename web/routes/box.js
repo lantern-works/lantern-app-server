@@ -3,13 +3,16 @@
 *
 * API to manage messages to be processed and turned into database updates
 **/
+const conf = require('../config')
 const util = require('../util')
 const log = util.Logger
 const bodyParser = require('body-parser')
 
+// @todo add LZMA compression as optional
+
 module.exports = (serv) => {
-    const queryRegex = /([A-Za-z]+)\@([0-9\.]+)\:\:([0-9]+)\:\:([0-9]+)\:\:([0-9]+)?(.*)/
-    const updateRegex = /([a-zA-Z0-9]+)\^([a-z]*)\=([\w\.]+)/
+    const queryRegex = /([A-Za-z\-]+)\>\>([A-Za-z]+)\@([0-9\.]+)\:\:([0-9]+)\:\:([0-9]+)\:\:([0-9]+)?(.*)/
+    const updateRegex = /([A-Za-z\-]+)\>\>([a-zA-Z0-9]+)\^([a-z]*)\=([\w\.]+)/
 
     /**
     * Convert regular expression match to key/value pairs
@@ -19,12 +22,13 @@ module.exports = (serv) => {
         }
         let keys = {
             0: 'message',
-            1: 'package',
-            2: 'version',
-            3: 'seq',
-            4: 'itemCount',
-            5: 'timestamp',
-            6: 'changes'
+            1: 'peer',
+            2: 'package',
+            3: 'version',
+            4: 'seq',
+            5: 'itemCount',
+            6: 'timestamp',
+            7: 'changes'
         }
         for (var idx in matches) {
             if (keys[idx]) {
@@ -84,7 +88,7 @@ module.exports = (serv) => {
     const update = (cmd, change, db) => {
         return new Promise((resolve, reject) => {
             let match = change.match(updateRegex)
-            if (match.length === 4) {
+            if (match && match.length === 4) {
                 log.debug(`${util.logPrefix('inbox')} attempt change:`, match)
                 let itemID = match[1]
                 let key = match[2]
@@ -168,7 +172,10 @@ module.exports = (serv) => {
     */
     // @todo support multi-message inbox inputs
     serv.put('/api/inbox', bodyParser.json(), (req, res) => {
-        let msg = req.body.message
+
+        let msg = req.body.message || ""
+        log.debug(`${util.logPrefix('inbox')} message: `, req.body.message)
+
         if (queryRegex.test(msg)) {
             let cmd = getCommand(msg.match(queryRegex))
 
@@ -207,12 +214,14 @@ module.exports = (serv) => {
         let previousMessage = box[box.length - 1]
 
         let msg = req.body.message
-
         if (!msg) {
             log.debug(`${util.logPrefix('outbox')} ignore empty message`)
             return res.status(403).json({ 'ok': false })
         }
 
+
+        // attach device identifier to message
+        msg = conf.peer + '>>' + msg
         if (previousMessage && previousMessage == msg) {
             log.debug(`${util.logPrefix('outbox')} ignore duplicate message: ${msg}`)
             return res.status(200).json({ 'ok': true })

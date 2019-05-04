@@ -27,6 +27,7 @@ module.exports = (req, res, next) => {
     } else {
         res.header('X-Lantern-Cloud', res.app.locals.cloud)
         res.header('X-Lantern-Online', res.app.locals.online)
+        res.header('X-Lantern-Peer', res.app.locals.peer)
         next()
     }
 }

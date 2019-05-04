@@ -19,13 +19,14 @@ const https = require('https')
 const util = require('./util')
 const app = require('./server')
 const watch = require('./watcher')
+const conf = require('./config')
 const log = util.Logger
 const setupDatabase = require('./db')
 
 log.setLevel(process.env.LOG_LEVEL || 'debug')
 log.info('##############################################')
 log.info('#    ')
-log.info('#    Lantern App Server')
+log.info('#    Lantern App Server ' + conf.peer)
 log.info('#    ')
 log.info('##############################################')
 
@@ -66,17 +67,23 @@ const startServer = () => {
                     log.warn(`${util.logPrefix('web')} falling back to http for local development...`)
                 }
 
-                // track inbox messags
-                app.locals.inbox = []
-                // track outbox messages
-                app.locals.outbox = []
-                checkOnlineStatus()
+                setAppLocals()
+             
                 resolve(secureServer || stdServer)
                 // re-check for internet access every five seconds
                 setInterval(checkOnlineStatus, 5000)
             })
         })
     })
+}
+
+const setAppLocals = () => {
+    app.locals.peer = conf.peer
+    // track inbox messags
+    app.locals.inbox = []
+    // track outbox messages
+    app.locals.outbox = []
+    checkOnlineStatus()
 }
 
 const checkOnlineStatus = () => {

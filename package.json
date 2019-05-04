@@ -1,6 +1,6 @@
 {
     "name": "lantern-serve",
-    "version": "0.8.0",
+    "version": "0.8.1",
     "dependencies": {
         "@fortawesome/fontawesome-free": "^5.8.1",
         "@node-minify/core": "*",
@@ -13,13 +13,14 @@
         "express": "^4.16.4",
         "fs-extra": "7.x",
         "geohash-distance": "*",
-        "gun": "^0.9.9999991",
+        "gun": "^0.2019.*",
         "gun-tag": "*",
         "helmet": "^3.16.0",
         "latlon-geohash": "*",
         "leaflet": "^1.4.0",
         "leaflet.locatecontrol": "^0.66.2",
         "node-fetch": "*",
+        "node-yaml": "*",
         "request": "*",
         "shortid": "*",
         "simple-node-logger": "^18.12.22",

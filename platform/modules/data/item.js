@@ -365,8 +365,8 @@ module.exports = class Item extends EventEmitter {
 
                     // database assigns unique identifier
                     this.package.seqUp()
-                    this.emit('save')
-                    resolve()
+                    this.emit('save', v)
+                    resolve(v)
                 })
         })
     }

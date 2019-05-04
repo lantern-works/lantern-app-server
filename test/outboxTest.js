@@ -5,6 +5,7 @@ const fetch = require('node-fetch')
 const conf = require('./testConf')
 
 describe('outbox', () => {
+
     const putMessage = (data) => {
         return fetch(conf.URI + '/api/outbox', {
             method: 'PUT',
@@ -34,7 +35,8 @@ describe('outbox', () => {
     })
 
     it('should queue a well-formed update message', (done) => {
-        putMessage({ 'message': `demo@0.0.1::3::13::1551694707084|jsu5eoqr4NPZaLoqApNb^s=${Math.random()}` })
+        let s = Math.random().toFixed(2)
+        putMessage({ 'message': `demo@0.0.1::3::13::1551694707084|jsu5eoqr4NPZaLoqApNb^s=${s}` })
             .then(response => response.json())
             .then((json) => {
                 json.ok.should.equal(true)
@@ -43,7 +45,7 @@ describe('outbox', () => {
     })
 
     it('should queue a well-formed drop message', (done) => {
-        putMessage({ 'message': 'demo@0.0.1::3::13::1551694707084|test-' })
+        putMessage({ 'message': `demo@0.0.1::3::13::1551694707084|test-` })
             .then(response => response.json())
             .then((json) => {
                 json.ok.should.equal(true)
