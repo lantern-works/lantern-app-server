@@ -20,13 +20,17 @@ module.exports = (server, app) => {
     log.setLevel('debug')
     log.info(`${util.logPrefix('db')} path = ${dbPath}`)
 
-    let hashType = 'sha1'
-    let hash = crypto.createHash(hashType)
-    hash.update(String(rules))
-    hash.end()
-    app.locals.rules = hash.digest('hex') // already called???
-
-    log.info(`${util.logPrefix('db')} rules = ${hashType} ${app.locals.rules}\n\n`)
+    try {
+        let hashType = 'sha1'
+        let hash = crypto.createHash(hashType)
+        hash.update(String(rules))
+        app.locals.rules = hash.digest('hex') // already called???
+        log.info(`${util.logPrefix('db')} rules = ${hashType} ${app.locals.rules}\n\n`)
+    }
+    catch(e) {
+        log.error(`${util.logPrefix('db')} missing rules hash`, e)
+        app.local.rules = ""
+    }
 
     let db = Gun({
         file: dbPath,

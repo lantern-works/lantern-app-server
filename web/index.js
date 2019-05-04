@@ -66,12 +66,10 @@ const startServer = () => {
                 } else {
                     log.warn(`${util.logPrefix('web')} falling back to http for local development...`)
                 }
-
                 setAppLocals()
-             
-                resolve(secureServer || stdServer)
                 // re-check for internet access every five seconds
                 setInterval(checkOnlineStatus, 5000)
+                resolve(secureServer || stdServer)
             })
         })
     })
