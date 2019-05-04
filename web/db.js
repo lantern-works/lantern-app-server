@@ -4,7 +4,7 @@ const Gun = require('gun')
 require('bullet-catcher')
 const backup = require('./backup')
 const util = require('./util')
-const log = util.DBLogger
+const log = util.Logger
 const rules = require('./rules')
 
 // choose database location
@@ -17,19 +17,18 @@ if (process.env.DB) {
 * Create or use existing database
 */
 module.exports = (server, app) => {
-    log.setLevel('debug')
     log.info(`${util.logPrefix('db')} path = ${dbPath}`)
 
     try {
         let hashType = 'sha1'
         let hash = crypto.createHash(hashType)
         hash.update(String(rules))
-        app.locals.rules = hash.digest('hex') // already called???
+        app.locals.rules = hash.digest('hex')
         log.info(`${util.logPrefix('db')} rules = ${hashType} ${app.locals.rules}\n\n`)
     }
     catch(e) {
         log.error(`${util.logPrefix('db')} missing rules hash`, e)
-        app.local.rules = ""
+        app.locals.rules = ""
     }
 
     let db = Gun({
