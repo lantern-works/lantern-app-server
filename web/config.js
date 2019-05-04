@@ -13,13 +13,13 @@ let conf = {}
 try {
     conf = yaml.readSync(confPath)
     if (!conf.hasOwnProperty('peer')) {
-        conf = generateDeviceIdentifier()
+        conf = generateDeviceIdentifier(conf)
     }
 }
 catch(e) {
     if (e.code == 'ENOENT') {
         // generate new device identifier and save
-        conf = generateDeviceIdentifier()
+        conf = generateDeviceIdentifier(conf)
     }
 }
 
