@@ -8,7 +8,6 @@ const fetch = window.fetch
 require('../../helpers/array')
 
 module.exports = class Context extends EventEmitter {
-
     constructor (db, user, map) {
         // @todo separate view and model elements into separate classes
         super()
@@ -18,7 +17,7 @@ module.exports = class Context extends EventEmitter {
         this.name = null
         this.feed = new Feed(this)
         this.apps = {}
-        this.view = new View()        
+        this.view = new View()
         this.cloud = false
         this.online = false
         this.node = null
@@ -27,26 +26,25 @@ module.exports = class Context extends EventEmitter {
     }
 
     get logPrefix () {
-        let tag = this._id ? 'c:'+this._id : 'context'
+        let tag = this._id ? 'c:' + this._id : 'context'
         return `[${tag}]`.padEnd(20, ' ')
     }
 
-    get id() {
+    get id () {
         return this._id
     }
 
-    set id(val) {
+    set id (val) {
         if (!val) {
             this.feed.reset()
             this._id = null
             return
-        }
-        else if (val == this._id) {
+        } else if (val == this._id) {
             return
         }
         this._id = val
         this.node = this.db.get('ctx').get(this._id)
-        this.node.once((v,k) => {       
+        this.node.once((v, k) => {
             if (!v) {
                 return
             }
@@ -55,14 +53,13 @@ module.exports = class Context extends EventEmitter {
     }
 
     // ------------------------------------------------------------------------
-    load(v) {
-
+    load (v) {
         if (v.name) {
             this.name = v.name
-        }       
+        }
         // start fresh
         this.packages = []
-        this.feed.reset() 
+        this.feed.reset()
 
         console.log(`${this.logPrefix} context loaded`)
         // watch for any packages
@@ -76,42 +73,77 @@ module.exports = class Context extends EventEmitter {
         })
     }
 
-    save() {
+    save () {
         let data = {
-            id: this.id, 
+            id: this.id,
             name: this.name,
             priority: this.priority
         }
-        console.log(`${this.logPrefix} saving data: `, data)
         return db.getOrPut(this.node, data)
     }
 
-    addOnePackage(pkg) {
-
+    addOnePackage (pkg) {
         return new Promise((resolve, reject) => {
-
             if (!pkg.node) {
                 console.warn(`${this.logPrefix} skip package missing node`, pkg)
                 reject('missing_package_node')
                 return
             }
-
-            console.log(`${this.logPrefix} adding package`, pkg)
+            console.log(`${this.logPrefix} adding package to context:`, pkg.id)
             let pkgNode = this.node.get('packages')
             this.db.getOrPut(pkgNode, {})
                 .then((saved) => {
                     return pkgNode.set(pkg.node, (ack) => {
                         if (ack.err) {
                             reject(ack.err)
-                        }
-                        else {
+                        } else {
                             resolve()
                         }
                     })
                 })
-
         })
+    }
 
+    removeOnePackage (packageNodeId) {
+        return new Promise((resolve, reject) => {
+            let nodeToRemove = this.node.get('packages').get(packageNodeId)
+            console.log(`${this.logPrefix} removing package from context:`, packageNodeId, nodeToRemove)
+            this.node.get('packages').unset(nodeToRemove, (ack) => {
+                console.log('removed package', ack)
+                resolve()
+            })
+        })
+    }
+
+    removeDuplicatePackages () {
+        console.log(`${this.logPrefix} checking for duplicates`)
+
+        let pkgListNode = this.node.get('packages')
+        let bestPackages = {}
+
+        pkgListNode.once().map((v, k) => {
+            console.log(v, k)
+            if (!v) {
+                return
+            }
+
+            let existingPackage = bestPackages[v.id] || null
+
+            // when we have two packages with same identifier, always go with the one with higher sequence
+            if (!existingPackage) {
+                bestPackages[v.id] = [v, k]
+            } else {
+                if (existingPackage[0].seq < v.seq) {
+                    bestPackages[v.id] = [v, k]
+                    this.removeOnePackage(existingPackage[1])
+                } else {
+                    console.log('REMOVING PACKAGE', v)
+                    this.removeOnePackage(k)
+                }
+            }
+
+            console.log(' best packages', bestPackages)
+        })
     }
 
     // ------------------------------------------------------------------------
@@ -166,7 +198,7 @@ module.exports = class Context extends EventEmitter {
             let isolatedData = JSON.parse(JSON.stringify(data))
             let obj = this.apps[item.name] = new App(item, isolatedData, this)
             obj.on('load', (page) => {
-                //console.log(`${this.logPrefix} load app component: ${page.componentID}`);
+                // console.log(`${this.logPrefix} load app component: ${page.componentID}`);
             })
 
             obj.on('open', (componentID) => {
@@ -175,12 +207,11 @@ module.exports = class Context extends EventEmitter {
             })
 
             obj.on('close', (componentID) => {
-                //console.log(`${this.logPrefix} close app component: ${componentID}`);
+                // console.log(`${this.logPrefix} close app component: ${componentID}`);
                 this.view.data.app_components.remove(componentID)
             })
         }
     }
-
 
     // ------------------------------------------------------------------------
     closeOneApp (appID) {

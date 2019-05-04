@@ -3,9 +3,8 @@ const Item = require('../data/item')
 const Location = require('./location')
 
 module.exports = class MarkerItem extends Item {
-
     constructor (pkg) {
-         // now set defaults for key compression
+        // now set defaults for key compression
         super(pkg, {
             'label': ['l'],
             'geohash': ['g'],
@@ -56,12 +55,11 @@ module.exports = class MarkerItem extends Item {
         return Geohash.decode(this._data.geohash)
     }
 
-    set latlng(val) {
+    set latlng (val) {
         if (val) {
             this.geohash = Location.toGeohash(val)
         }
     }
-
 
     // -------------------------------------------------------------------------
 
@@ -70,13 +68,11 @@ module.exports = class MarkerItem extends Item {
     }
 
     set label (val) {
-        if (val && typeof(val) == 'string' && val != this._data.label) {
+        if (val && typeof (val) === 'string' && val != this._data.label) {
             this._data.label = val
             this._new.label = true
         }
     }
-
-
 
     // -------------------------------------------------------------------------
     get score () {
@@ -146,8 +142,6 @@ module.exports = class MarkerItem extends Item {
         return 'Unknown Category'
     }
 
-
-    
     // -------------------------------------------------------------------------
     getDivIcon () {
         let cls = 'fa'

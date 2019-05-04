@@ -87,19 +87,17 @@ const checkOnlineStatus = () => {
     })
 }
 
-
 // ----------------------------------------------------------------------------
-
 
 // restores an existing database or backs up existing one
 startServer()
     .then((server) => {
-        return setupDatabase(server,app)
+        return setupDatabase(server, app)
     })
     .then(() => {
         return new Promise((resolve, reject) => {
             // starts watching for changes
-            //watch(app)
+            // watch(app)
             setTimeout(resolve, 1000)
         })
     })

@@ -17,12 +17,12 @@ const server = express()
 
 // ----------------------------------------------------------------------------
 server.disable('x-powered-by')
-    server.use(compression())
+server.use(compression())
 
 const staticPath = path.resolve(__dirname, './public/')
 server.use(express.static(staticPath))
 
-// ------------------------------------------------------------------------- Fills 
+// ------------------------------------------------------------------------- Fills
 const dir = path.resolve(__dirname, '../node_modules')
 const modulesPath = path.resolve(dir + '/@fortawesome/fontawesome-free/webfonts')
 server.use('/webfonts/', express.static(modulesPath))
@@ -33,7 +33,6 @@ server.get('/styles/L.Control.Locate.min.css.map', (req, res) => {
 server.get('/styles/files/:filename', (req, res) => {
     res.sendFile(dir + '/typeface-montserrat/files/' + req.params.filename)
 })
-
 
 // ------------------------------------------------------------------------- Static
 server.use(helmet.noCache())
@@ -57,6 +56,5 @@ server.use('/-/', express.static(appsPath))
 
 // ------------------------------------------------------------------------- Database
 server.use(GraphDB.serve)
-
 
 module.exports = server

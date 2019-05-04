@@ -1,7 +1,7 @@
 /**
 * Lantern Database Watcher
-* 
-* Use this to update hardware or connect to other services each time changes are made locally. Batches changes 
+*
+* Use this to update hardware or connect to other services each time changes are made locally. Batches changes
 * per-package and issues a signal every few seconds and will run any specificed change hook binary
 */
 const util = require('./util')
@@ -21,7 +21,6 @@ module.exports = (app) => {
     * Watch for and announce changes to given package
     */
     const watchPackage = (v, k) => {
-
         if (!v) {
             // package deleted, ignore...
             return
@@ -32,12 +31,10 @@ module.exports = (app) => {
             return
         }
 
-
         let packageID = [k, v.version].join('@')
 
-
         if (packages.hasOwnProperty(packageID)) {
-            //log.debug(`${util.logPrefix(packageID)} skip duplicate...`)
+            // log.debug(`${util.logPrefix(packageID)} skip duplicate...`)
             return
         }
 
@@ -92,23 +89,22 @@ module.exports = (app) => {
     }
 
     const init = () => {
-        //log.debug(`${util.logPrefix('watcher')} waiting for changes...`)
+        // log.debug(`${util.logPrefix('watcher')} waiting for changes...`)
         loaded = true
 
         // check to see if we have a change hook from environment
         if (process.env.hasOwnProperty('HOOK_CHANGE')) {
             hook = path.resolve(process.env['HOOK_CHANGE'])
             let timing = (process.env.CHANGE_INTERVAL ? Number(process.env.CHANGE_INTERVAL) : 5000)
-            //log.debug(`${util.logPrefix('watcher')} change hook = ${hook} (${timing}ms)`)
+            // log.debug(`${util.logPrefix('watcher')} change hook = ${hook} (${timing}ms)`)
             setInterval(
-                runHook, 
+                runHook,
                 timing
             )
         }
     }
 
     const runHook = (key) => {
-
         let changes = {}
         Object.keys(packages).forEach((packageID) => {
             if (Object.keys(packages[packageID]).length) {
@@ -118,7 +114,7 @@ module.exports = (app) => {
         })
 
         if (!Object.keys(changes).length) {
-            //log.debug(`skip hook since no data change`)
+            // log.debug(`skip hook since no data change`)
             return
         }
 
@@ -128,7 +124,7 @@ module.exports = (app) => {
             let ps = execFile(hook, [changeString])
             ps.stdout.on('data', (data) => {
                 // if we got confirmation back, we can clear our queue
-                 log.debug(`${util.logPrefix('change')} ${data}`)
+                log.debug(`${util.logPrefix('change')} ${data}`)
             })
             ps.stderr.on('data', (err) => {
                 log.warn(`hook could not run: ${err}`)

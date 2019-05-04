@@ -19,7 +19,7 @@ module.exports = class Database extends EventEmitter {
         this.namespace = '__LX__'
         this.token = null
 
-        // attach validation                
+        // attach validation
         Gun.on('opt', function (opt) {
             if (opt.once) {
                 return
@@ -28,13 +28,13 @@ module.exports = class Database extends EventEmitter {
                 let to = this.to
                 // Adds headers for put
                 msg.headers = {
-                  token: self.token
+                    token: self.token
                 }
                 to.next(msg) // pass to next middleware
             })
 
-            opt.on('in', function(msg) {
-                if(msg.put) {
+            opt.on('in', function (msg) {
+                if (msg.put) {
                     self.emit('sync', msg)
                 }
                 this.to.next(msg)
@@ -72,6 +72,7 @@ module.exports = class Database extends EventEmitter {
         return new Promise((resolve, reject) => {
             targetNode.once((v, k) => {
                 if (v) {
+                    // console.log(`${this.logPrefix} skip put for existing node`, targetNode)
                     if (typeof (v) === 'string' && v.length) {
                         return resolve(false)
                     } else if (typeof (v) === 'number') {
@@ -80,28 +81,25 @@ module.exports = class Database extends EventEmitter {
                         return resolve(false)
                     }
                 }
-
-                if (typeof(val) == "object") {
+                if (typeof (val) === 'object') {
                     // creates a node we can save to
                     targetNode.put({})
                     targetNode.put(val).once((v, k) => {
                         // won't ack an empty {} but will prepare database
                         // for a future write to this sub-node
+                        console.log(`${this.logPrefix} node put callback`, v)
                         resolve(true)
                     })
-                }
-                else {
+                } else {
                     // otherwise do create the node
                     targetNode.put(val)
                         .once((v, k) => {
                             resolve(true)
                         })
                 }
-
             })
         })
     }
-
 
     // -------------------------------------------------------------------------
     /**

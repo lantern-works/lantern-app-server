@@ -11,16 +11,14 @@ const headers = require('../middleware/headers')
 const log = util.Logger
 
 // ----------------------------------------------------------------------
-/** 
-* Converts numeric degrees to radians 
+/**
+* Converts numeric degrees to radians
 */
-if (typeof(Number.prototype.toRad) === "undefined") {
-  Number.prototype.toRad = function() {
-    return this * Math.PI / 180;
-  }
+if (typeof (Number.prototype.toRad) === 'undefined') {
+    Number.prototype.toRad = function () {
+        return this * Math.PI / 180
+    }
 }
-
-
 
 // ----------------------------------------------------------------------
 module.exports = (serv) => {
@@ -57,20 +55,19 @@ module.exports = (serv) => {
     * Convert lat/long/zoom into xyz coordinates for map tiles
     */
     const getXYZ = (lat, lng, zoom) => {
-        var xtile = parseInt(Math.floor( (lng + 180) / 360 * (1<<zoom) ));
-        var ytile = parseInt(Math.floor( (1 - Math.log(Math.tan(lat.toRad()) + 1 / Math.cos(lat.toRad())) / Math.PI) / 2 * (1<<zoom) ));
-        return {x: xtile, y: ytile, z: zoom};
+        var xtile = parseInt(Math.floor((lng + 180) / 360 * (1 << zoom)))
+        var ytile = parseInt(Math.floor((1 - Math.log(Math.tan(lat.toRad()) + 1 / Math.cos(lat.toRad())) / Math.PI) / 2 * (1 << zoom)))
+        return { x: xtile, y: ytile, z: zoom }
     }
 
-    const cacheManyTiles = (params, key,  i) => {
+    const cacheManyTiles = (params, key, i) => {
         let lat = Number(params.lat)
         let lng = Number(params.lng)
-        let delay = i*(750+Math.random(2000))
+        let delay = i * (750 + Math.random(2000))
 
-        //log.debug("[tiles] caching tiles", params,  i)
+        // log.debug("[tiles] caching tiles", params,  i)
         setTimeout(() => {
-
-            let xyz =  getXYZ(lat, lng, i)
+            let xyz = getXYZ(lat, lng, i)
             cacheTile(xyz, params, key)
 
             // up
@@ -79,7 +76,7 @@ module.exports = (serv) => {
                 up.y += 1
                 cacheTile(up, params, key)
             }, 250)
-      
+
             setTimeout(() => {
                 let up = JSON.parse(JSON.stringify(xyz))
                 up.x += 1
@@ -97,21 +94,19 @@ module.exports = (serv) => {
                 let down = JSON.parse(JSON.stringify(xyz))
                 down.y -= 1
                 cacheTile(down, params, key)
-            }, 1000)        
-        
-          setTimeout(() => {
+            }, 1000)
+
+            setTimeout(() => {
                 let down = JSON.parse(JSON.stringify(xyz))
                 down.x -= 1
                 cacheTile(down, params, key)
-            }, 1250)        
-
+            }, 1250)
 
             setTimeout(() => {
                 let down = JSON.parse(JSON.stringify(xyz))
                 down.y -= 2
                 cacheTile(down, params, key)
             }, 1500)
-
         }, delay)
     }
 
@@ -135,15 +130,12 @@ module.exports = (serv) => {
         getTileFromCloud(url, params)
     }
 
-
     /**
     * Use MapTiler service to proxy and save tiles to local storage
     */
     const getTileFromCloud = (url, params, res) => {
-
-        
         let streamUrl = 'http://maps.tilehosting.com' + url
-        
+
         let preq = request(streamUrl, {
             timeout: 1200
         })
@@ -153,7 +145,7 @@ module.exports = (serv) => {
         // return result as quickly as possible to browser
         let result = preq
             .on('response', (pres) => {
-                //log.debug("[tiles] stream tile from cloud: " + url);
+                // log.debug("[tiles] stream tile from cloud: " + url);
                 let contentType = pres.headers['content-type']
 
                 if (contentType != 'image/png') {
@@ -167,15 +159,14 @@ module.exports = (serv) => {
                     .on('error', (err) => {
                         if (err.errno === 'ENOTFOUND') {
                             log.warn('[tiles] could not find online: ' + url)
-                        }
-                        else {
+                        } else {
                             log.warn('[tiles] no save for tile: ' + url)
                             log.warn(err)
                         }
                     })
             })
             .on('error', (err) => {
-                if (err.code == "ESOCKETTIMEDOUT") {
+                if (err.code == 'ESOCKETTIMEDOUT') {
                     log.warn('[tiles] timeout trying tile: ' + url)
                 } else {
                     log.warn('[tiles] no stream for tile: ' + streamUrl)
@@ -187,8 +178,7 @@ module.exports = (serv) => {
         if (res) {
             if (useEmptyTile) {
                 sendEmptyFile(res)
-            }
-            else {
+            } else {
                 result.pipe(res)
             }
         }
@@ -204,11 +194,9 @@ module.exports = (serv) => {
         res.type('png')
 
         if (cachedTiles[req.url]) {
-           //log.debug('[tiles] using ram cache for ' + req.url)
+            // log.debug('[tiles] using ram cache for ' + req.url)
             return res.send(cachedTiles[req.url])
-        }
-        else {            
-
+        } else {
             let chunks = []
 
             tileStream = fs.createReadStream(tileFile)
@@ -220,31 +208,30 @@ module.exports = (serv) => {
 
             tileStream.on('end', () => {
                 let result = Buffer.concat(chunks)
-                //log.debug('[tiles] cache ' + req.url + result.length)
+                // log.debug('[tiles] cache ' + req.url + result.length)
                 cachedTiles[req.url] = result
                 return res.end()
             })
 
             tileStream.on('error', (err) => {
-                    if (!assumeInternet) {
-                        // log.debug(`skip offline attempt for: ${req.url}`);
-                        return sendEmptyTile(res)
-                    } else {
-                        getTileFromCloud(req.url, req.params, res)
-                    }
-                })
+                if (!assumeInternet) {
+                    // log.debug(`skip offline attempt for: ${req.url}`);
+                    return sendEmptyTile(res)
+                } else {
+                    getTileFromCloud(req.url, req.params, res)
+                }
+            })
         }
-
     })
 
-     /**
+    /**
     * Tile Cache
     */
     serv.get('/api/tiles/:map/:lat/:lng.json', headers, (req, res) => {
         assumeInternet = res.app.locals.online == '1'
-        for (var i= minZoom; i <= maxZoom;  i++) {
-            cacheManyTiles(req.params, req.query.key, i)  
+        for (var i = minZoom; i <= maxZoom; i++) {
+            cacheManyTiles(req.params, req.query.key, i)
         }
-        return res.status(200).json({"ok": true})
+        return res.status(200).json({ 'ok': true })
     })
 }

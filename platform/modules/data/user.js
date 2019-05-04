@@ -21,9 +21,7 @@ module.exports = class User extends EventEmitter {
     get logPrefix () {
         if (this.username) {
             return `[u:${this.username}]`.padEnd(20, ' ')
-        }
-        else {
-
+        } else {
             return `[u:anonymous]`.padEnd(20, ' ')
         }
     }
@@ -31,30 +29,27 @@ module.exports = class User extends EventEmitter {
     /**
     * Generates a unique color to match the username
     */
-    get color() {
-          var hash = 0;
-          for (var i = 0; i < this.username.length; i++) {
-            hash = this.username.charCodeAt(i) + ((hash << 5) - hash);
-          }
-          var color = '#';
-          for (var i = 0; i < 3; i++) {
-            var value = (hash >> (i * 8)) & 0xFF;
-            color += ('00' + value.toString(16)).substr(-2);
-          }
-          return color;
+    get color () {
+        var hash = 0
+        for (var i = 0; i < this.username.length; i++) {
+            hash = this.username.charCodeAt(i) + ((hash << 5) - hash)
+        }
+        var color = '#'
+        for (var i = 0; i < 3; i++) {
+            var value = (hash >> (i * 8)) & 0xFF
+            color += ('00' + value.toString(16)).substr(-2)
+        }
+        return color
     }
 
     // -------------------------------------------------------------------------
     onReady (fn) {
         if (this.username) {
             fn()
-        }
-        else {
+        } else {
             this.once('auth', fn)
         }
     }
-
-
 
     // -------------------------------------------------------------------------
     /**
@@ -62,7 +57,6 @@ module.exports = class User extends EventEmitter {
     */
     authenticate (username, password) {
         return new Promise((resolve, reject) => {
-
             if (!username || !password) {
                 let err = new Error()
                 err.name = 'user_auth_skipped'
@@ -79,7 +73,7 @@ module.exports = class User extends EventEmitter {
                     reject(err)
                 } else {
                     // @todo secure token to make sure server can trust we are signed in
-                    db.token = this.username = username 
+                    db.token = this.username = username
                     console.log(`${this.logPrefix} sign-in complete`)
                     this.emit('auth')
                     resolve()
@@ -88,21 +82,19 @@ module.exports = class User extends EventEmitter {
         })
     }
 
-    leave() {
+    leave () {
         return new Promise((resolve, reject) => {
             if (this.node) {
                 this.node.leave()
                 if (this.node._.hasOwnProperty('sea')) {
                     reject('user_failed_leave')
-                }
-                else {
+                } else {
                     console.log(`${this.logPrefix} sign-out complete`)
                     db.token = this.username = null
                     this.emit('leave')
-                    resolve()                    
+                    resolve()
                 }
-            }
-            else {
+            } else {
                 console.log(`${this.logPrefix} already signed out`)
                 resolve()
             }
@@ -164,8 +156,6 @@ module.exports = class User extends EventEmitter {
         console.warn(`${this.logPrefix}  waiting for valid sign in or creation...`)
     }
 
-
-
     // -------------------------------------------------------------------------
     encrypt (data) {
         return new Promise((resolve, reject) => {
@@ -177,5 +167,4 @@ module.exports = class User extends EventEmitter {
             })
         })
     }
-
 }

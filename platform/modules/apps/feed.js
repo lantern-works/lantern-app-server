@@ -16,10 +16,8 @@ module.exports = class Feed extends EventEmitter {
         return `[${id}]`.padEnd(20, ' ')
     }
 
-
-
     // ------------------------------------------------------------------------
-    get activeItems() {
+    get activeItems () {
         let obj = {}
         Object.keys(this.items).forEach(key => {
             if (this.items[key] !== false) {
@@ -29,7 +27,7 @@ module.exports = class Feed extends EventEmitter {
         return obj
     }
 
-    get inactiveItems() {
+    get inactiveItems () {
         let obj = {}
         Object.keys(this.items).forEach(key => {
             if (this.items[key] === false) {
@@ -39,13 +37,11 @@ module.exports = class Feed extends EventEmitter {
         return obj
     }
 
-
     // ------------------------------------------------------------------------
     /**
     * Watch a single item for any updates
     */
     watchItem (itemID, pkg) {
-
         // never watch the same item twice
         if (this.items.hasOwnProperty(itemID)) {
             return
@@ -59,8 +55,6 @@ module.exports = class Feed extends EventEmitter {
         let itemNode = pkg.getOneItem(itemID)
 
         itemNode.on((v, k) => {
-
-
             if (!this.packages[pkg.id]) {
                 return
             }
@@ -74,7 +68,6 @@ module.exports = class Feed extends EventEmitter {
                 this.itemsList.remove(itemID)
                 this.emit('item-unwatch', event)
             } else {
-                
                 if (this.items[itemID]) return
 
                 // markers
@@ -82,8 +75,7 @@ module.exports = class Feed extends EventEmitter {
                 if (v.g && v.t) {
                     // geohash and tags will be enough to display on map
                     item = new LM.MarkerItem(pkg)
-                }
-                else {
+                } else {
                     item = new LD.Item(pkg)
                 }
                 item.id = itemID
@@ -96,7 +88,7 @@ module.exports = class Feed extends EventEmitter {
 
                 event.data = v
                 event.item = item
-                //console.log(`${this.logPrefix} watch item: ${itemID}`, this.packages)
+                // console.log(`${this.logPrefix} watch item: ${itemID}`, this.packages)
                 this.emit('item-watch', event)
             }
         })
@@ -121,7 +113,6 @@ module.exports = class Feed extends EventEmitter {
         item.refresh(obj)
     }
 
-
     // -------------------------------------------------------------------------
     addManyPackages (packages) {
         packages.forEach(this.addOnePackage.bind(this))
@@ -133,15 +124,13 @@ module.exports = class Feed extends EventEmitter {
     addOnePackage (id) {
         var pkg, parts, name, version
 
-
         if (id.constructor.name == 'Package') {
             pkg = id
-        }
-        else {
+        } else {
             try {
                 parts = id.split('@')
                 name = parts[0]
-                version = parts[1]    
+                version = parts[1]
             } catch (e) {
                 console.error(`${this.logPrefix} invalid identifier provided to add package: ${id}`)
                 return
@@ -149,16 +138,14 @@ module.exports = class Feed extends EventEmitter {
             pkg = new Package(id, this.context.db)
         }
 
-
         if (this.packages[pkg.id]) {
-           console.log(`${this.logPrefix} already watching: ${pkg.id}`)
+            console.log(`${this.logPrefix} already watching: ${pkg.id}`)
             return
         }
 
-
         this.packages[pkg.id] = true
-        
-        this.emit("watch", pkg.id)
+
+        this.emit('watch', pkg.id)
 
         pkg.node.get('items')
             .map((v, k) => {
@@ -190,15 +177,14 @@ module.exports = class Feed extends EventEmitter {
         }
     }
 
-    reset() {
+    reset () {
         this.removeAllPackages()
         this.itemsList.forEach(itemID => {
-            //console.log(`${this.logPrefix} unwatch item: ${itemID}`)
-            this.emit('item-unwatch', {id: itemID, item: this.items[itemID]})
+            // console.log(`${this.logPrefix} unwatch item: ${itemID}`)
+            this.emit('item-unwatch', { id: itemID, item: this.items[itemID] })
         })
         this.itemsList.length = 0
         this.items = {}
         this.emit('reset')
     }
-
 }

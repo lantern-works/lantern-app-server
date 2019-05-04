@@ -8,7 +8,6 @@ const log = util.Logger
 const bodyParser = require('body-parser')
 
 module.exports = (serv) => {
-
     const queryRegex = /([A-Za-z]+)\@([0-9\.]+)\:\:([0-9]+)\:\:([0-9]+)\:\:([0-9]+)?(.*)/
     const updateRegex = /([a-zA-Z0-9]+)\^([a-z]*)\=([\w\.]+)/
 
@@ -68,15 +67,12 @@ module.exports = (serv) => {
             .get(itemID)
     }
 
-
-
     const applyChanges = (cmd, outbox, db) => {
         cmd.changes.forEach(change => {
-            if (change[change.length-1] == '-') {
+            if (change[change.length - 1] == '-') {
                 let itemID = change.substr(0, change.length)
                 drop(cmd, itemID, db)
-            }
-            else {
+            } else {
                 update(cmd, change, db)
             }
         })
@@ -87,10 +83,9 @@ module.exports = (serv) => {
     */
     const update = (cmd, change, db) => {
         return new Promise((resolve, reject) => {
-
             let match = change.match(updateRegex)
             if (match.length === 4) {
-                log.debug(`${util.logPrefix('inbox')} attempt change:`, match )
+                log.debug(`${util.logPrefix('inbox')} attempt change:`, match)
                 let itemID = match[1]
                 let key = match[2]
                 let val = match[3]
@@ -103,9 +98,7 @@ module.exports = (serv) => {
                     log.debug(`${util.logPrefix('inbox')} completed update: ${itemID}.${key} = ${val}`)
                     resolve(true)
                 })
-
-            }
-            else {
+            } else {
                 log.warn(`${util.logPrefix('inbox')} skip update for invalid: ${change}`)
             }
         })
@@ -117,11 +110,10 @@ module.exports = (serv) => {
     const drop = (cmd, itemID, db) => {
         return new Promise((resolve, reject) => {
             let node = getItemNode(cmd, itemID, db)
-            node.once((v,k) => {
+            node.once((v, k) => {
                 if (!v) {
                     log.warn(`${util.logPrefix('inbox')} skip drop for missing: ${itemID}`)
-                }
-                else {
+                } else {
                     node.put(null, (ack) => {
                         if (ack.err) {
                             return reject(new Error('inbox_drop_failed'))
@@ -137,20 +129,19 @@ module.exports = (serv) => {
     const runQuery = (cmd, outbox, db, msg) => {
         let node = getPackageNode(cmd, db)
         let reply = msg
-        node.once().map((v,k) => {
-            if (k != "#" && k != '>') {
-                reply += '|'+k
-                if (v === null ) {
+        node.once().map((v, k) => {
+            if (k != '#' && k != '>') {
+                reply += '|' + k
+                if (v === null) {
                     reply += '-'
-                }
-                else {
-                    Object.keys(v).forEach( ( key ) => {
+                } else {
+                    Object.keys(v).forEach((key) => {
                         if (key != '#' && key != '>') {
                             let val = v[key]
                             // only transmit intended data types
-                            if (typeof(val) == 'string' || typeof(val) == 'Number') {
-                                reply+= `^${key}=${val}`
-                            }                      
+                            if (typeof (val) === 'string' || typeof (val) === 'Number') {
+                                reply += `^${key}=${val}`
+                            }
                         }
                     })
                 }
@@ -160,7 +151,6 @@ module.exports = (serv) => {
         log.debug(`${util.logPrefix('outbox')} query reply: ${reply} (${reply.length})`)
         outbox.push(reply)
     }
-
 
     // ----------------------------------------------------------------------
 
@@ -188,20 +178,16 @@ module.exports = (serv) => {
                 log.debug(`${util.logPrefix('inbox')} accept change request: ${msg}`)
                 applyChanges(cmd, res.app.locals.outbox, req.app.locals.db)
                 return res.status(201).json({ 'ok': true })
-            }
-            else {
+            } else {
                 log.debug(`${util.logPrefix('inbox')} accept query: ${msg}`)
-                runQuery(cmd,  res.app.locals.outbox, req.app.locals.db, msg)
+                runQuery(cmd, res.app.locals.outbox, req.app.locals.db, msg)
                 return res.status(200).json({ 'ok': true })
             }
-        }
-        else {
+        } else {
             log.warn(`${util.logPrefix('inbox')} reject message: ${msg}`)
-            return res.status(403).json({ 'ok': false})
+            return res.status(403).json({ 'ok': false })
         }
     })
-
-
 
     // ----------------------------------------------------------------------
     /**
@@ -218,34 +204,29 @@ module.exports = (serv) => {
     */
     serv.put('/api/outbox', bodyParser.json(), (req, res) => {
         let box = res.app.locals.outbox
-        let previousMessage = box[box.length-1]
-
+        let previousMessage = box[box.length - 1]
 
         let msg = req.body.message
-        
+
         if (!msg) {
             log.debug(`${util.logPrefix('outbox')} ignore empty message`)
-            return res.status(403).json({'ok': false})
+            return res.status(403).json({ 'ok': false })
         }
 
         if (previousMessage && previousMessage == msg) {
             log.debug(`${util.logPrefix('outbox')} ignore duplicate message: ${msg}`)
             return res.status(200).json({ 'ok': true })
-        } 
-
-
+        }
 
         if (queryRegex.test(msg)) {
             let cmd = getCommand(msg.match(queryRegex))
             log.debug(`${util.logPrefix('outbox')} queue message: ${msg}`)
             box.push(msg)
             return res.status(201).json({ 'ok': true })
-        }
-        else {
+        } else {
             log.debug(`${util.logPrefix('outbox')} ignore invalid message ${msg}`)
-            return res.status(403).json({'ok': false})
+            return res.status(403).json({ 'ok': false })
         }
-
     })
 
     /**

@@ -31,7 +31,7 @@ Location.toGeohash = function (input, precision) {
     }
 }
 
-Location.fromGeohash = function(geohash) {
+Location.fromGeohash = function (geohash) {
     return Geohash.decode(geohash)
 }
 

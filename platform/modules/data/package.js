@@ -30,9 +30,9 @@ module.exports = class Package extends EventEmitter {
         this.node = this.db.get('pkg').get(this.id)
 
         // keep sequence number up-to-date for package
-        this.node.get('seq').on((v,k) => {
+        this.node.get('seq').on((v, k) => {
             this.seq = v
-            //console.log(`${this.logPrefix} sequence update: ${this.seq}`)
+            // console.log(`${this.logPrefix} sequence update: ${this.seq}`)
         })
     }
 
@@ -45,8 +45,7 @@ module.exports = class Package extends EventEmitter {
         return this.name + '@' + this.version
     }
 
-
-    set id(val) {
+    set id (val) {
         if (val) {
             let parts = val.split('@')
             this.name = val[0]
@@ -61,15 +60,15 @@ module.exports = class Package extends EventEmitter {
             this.data.seq = val
         }
     }
-    
-    get seq() {
+
+    get seq () {
         return this.data.seq
     }
-    
-    seqUp() {
+
+    seqUp () {
         this.node.get('seq').once(v => {
-            this.seq = v+1
-        }).put(this.seq) 
+            this.seq = v + 1
+        }).put(this.seq)
     }
 
     // -------------------------------------------------------------------------
@@ -83,15 +82,27 @@ module.exports = class Package extends EventEmitter {
             .then(saved => {
                 if (saved) {
                     this.emit('save')
-                    console.log(`${this.logPrefix} saved version: ${this.id}`)
+                    console.log(`${this.logPrefix} saved new packaged: ${this.id}`)
                 } else {
-                    console.log(`${this.logPrefix} already saved version: ${this.id}`)
+                    console.log(`${this.logPrefix} package already exists: ${this.id}`)
                 }
                 return saved
             })
             .catch((e) => {
-                console.error(`${this.logPrefix} failed to save version: ${this.id}`)
+                console.error(`${this.logPrefix} failed to save package: ${this.id}`)
             })
+    }
+
+    /**
+    * Use another node to replace this one
+    */
+    replace (node) {
+        return new Promise((resolve, reject) => {
+            this.node.put(node, (ack) => {
+                console.log(`${this.logPrefix} package replacement result`, ack)
+                resolve()
+            })
+        })
     }
 
     /*
@@ -100,16 +111,16 @@ module.exports = class Package extends EventEmitter {
     drop () {
         return new Promise((resolve, reject) => {
             this.node.put(null, (v, k) => {
-                    this.emit('drop')
-                    return resolve()
-                })
+                this.emit('drop')
+                return resolve()
+            })
         })
     }
 
     /*
     * Gets a specific item in the current version of this package
     */
-    getOneItem(id) {
+    getOneItem (id) {
         return this.node.get('items').get(id)
     }
 
@@ -117,7 +128,7 @@ module.exports = class Package extends EventEmitter {
     * Gets a list of all items in the current version of this package
     */
     getAllItems () {
-        console.log("get all items")
+        console.log('get all items')
         return new Promise((resolve, reject) => {
             this.node.get('items').once((v, k) => {
                 let itemList = []

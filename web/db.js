@@ -13,21 +13,19 @@ if (process.env.DB) {
     dbPath = path.resolve(__dirname, '../' + process.env.DB)
 }
 
-
-
 /**
 * Create or use existing database
 */
-module.exports = (server,app) => {
-
-    log.setLevel('debug');
+module.exports = (server, app) => {
+    log.setLevel('debug')
     log.info(`${util.logPrefix('db')} path = ${dbPath}`)
 
     let hashType = 'sha1'
     let hash = crypto.createHash(hashType)
     hash.update(String(rules))
     hash.end()
-    app.locals.rules = hash.digest('hex')
+    app.locals.rules = hash.digest('hex') // already called???
+
     log.info(`${util.logPrefix('db')} rules = ${hashType} ${app.locals.rules}\n\n`)
 
     let db = Gun({
@@ -36,7 +34,6 @@ module.exports = (server,app) => {
         localStorage: false,
         isValid: rules
     })
-
 
     // attach database instance as a local app variable for express routes
     app.locals.db = db

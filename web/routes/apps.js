@@ -38,8 +38,7 @@ module.exports = (serv) => {
         let readBodyFor = ['.js', '.css', '.html']
 
         result.forEach((resource) => {
-
-            if (resource.type == "directory" && resource.name[0] !== '.') {
+            if (resource.type == 'directory' && resource.name[0] !== '.') {
                 // app directory
                 resource.children.forEach((item) => {
                     if (readBodyFor.indexOf(item.extension) > -1) {
@@ -47,16 +46,14 @@ module.exports = (serv) => {
                     }
                 })
                 finalResult.apps.push(resource)
-            }
-            else if (resource.type == "file" && resource.extension == ".json") {
+            } else if (resource.type == 'file' && resource.extension == '.json') {
                 // json data
                 try {
                     let data = JSON.parse(String(fs.readFileSync(appsDir + '/' + resource.name)))
                     Object.keys(data).forEach(key => {
                         finalResult.data[key] = data[key]
                     })
-                }
-                catch(e) {
+                } catch (e) {
                     log.error('unable to parse data.json for apps', e)
                 }
             }

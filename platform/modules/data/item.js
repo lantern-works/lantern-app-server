@@ -3,7 +3,6 @@ const shortid = require('shortid')
 
 module.exports = class Item extends EventEmitter {
     constructor (pkg, defaults) {
-    
         if (!pkg || pkg.constructor.name !== 'Package') {
             throw new Error('Requires package to be defined')
         }
@@ -65,7 +64,7 @@ module.exports = class Item extends EventEmitter {
                 if (this._defaults[key][1] === []) {
                     // expects to be an array
                     if (val.constructor !== Array) {
-                        console.log(`${this.logPrefix} skip set of unexpected value for ${key} = `, val);
+                        console.log(`${this.logPrefix} skip set of unexpected value for ${key} = `, val)
                         return
                     }
                 }
@@ -127,21 +126,20 @@ module.exports = class Item extends EventEmitter {
         this._data.editors.push(val)
         this._new.editors = true
         this.emit('editor', val)
-    } 
+    }
 
     // ------------------------------------------------------------------- SIGNATURES
     get signatures () {
         return this._data.signatures
     }
 
-  set signatures (val) {
+    set signatures (val) {
         if (!val || val.constructor !== Array) return
         if (val.toString() != this._data.signatures.toString()) {
             this._data.signatures = val
             this._new.signatures = true
         }
-    } 
-
+    }
 
     // -------------------------------------------------------------------- TAGS
     /**
@@ -236,8 +234,7 @@ module.exports = class Item extends EventEmitter {
                 if (v && v.constructor === Array) {
                     if (v.length) {
                         newObj[k] = '%' + v.join(',')
-                    }
-                    else if (this._new[idx]) {
+                    } else if (this._new[idx]) {
                         // empty array, all items have been removed
                         newObj[k] = '%'
                     }
@@ -271,20 +268,19 @@ module.exports = class Item extends EventEmitter {
                     if (v[0] === '%') {
                         // this is an array. expand it...
                         v = v.replace('%', '').split(',')
-                        if (v == "") {
+                        if (v == '') {
                             // empty array
                             v = []
                         }
                     }
                 }
 
-
                 // basic check for expected type
                 if (this._defaults[k][1]) {
                     // expects to be an array
                     if (v.constructor !== Array) {
-                        // default value 
-                        console.log(`${this.logPrefix} use default rather than unexpected value for ${k} = `, v);
+                        // default value
+                        console.log(`${this.logPrefix} use default rather than unexpected value for ${k} = `, v)
                         v = this._defaults[k][1]
                         return
                     }
@@ -292,7 +288,7 @@ module.exports = class Item extends EventEmitter {
 
                 newObj[k] = v
             }
-         })
+        })
 
         // console.log(`${this.logPrefix} Unpacked:`, obj, newObj);
         return newObj
@@ -330,13 +326,11 @@ module.exports = class Item extends EventEmitter {
 
     // @todo look at parent packages and then increase sequence count
 
-
     /**
     * Stores the composed item into a decentralized database
     */
     save (fields) {
         return new Promise((resolve, reject) => {
-            
             // if we have fields to work with, update existing object
             if (fields) {
                 return this.update(fields).then(resolve).catch(reject)
@@ -347,7 +341,6 @@ module.exports = class Item extends EventEmitter {
 
             console.log(`${this.logPrefix} about to save new item`)
 
-
             this.package.node.get('items')
                 .set(obj, ack => {
                     // @todo remove work-around once ack properly returns
@@ -355,8 +348,7 @@ module.exports = class Item extends EventEmitter {
                     if (ack.err) {
                         console.warn(`${this.logPrefix} no ack for save`)
                         // return reject(new Error('save_failed'))
-                    }
-                    else {
+                    } else {
                         console.log(`${this.logPrefix} saved to remote storage`, obj)
                     }
                 })
@@ -376,7 +368,6 @@ module.exports = class Item extends EventEmitter {
                     this.emit('save')
                     resolve()
                 })
-
         })
     }
 
@@ -431,7 +422,6 @@ module.exports = class Item extends EventEmitter {
                 this.package.seqUp()
                 this.emit('update', fields)
                 return resolve()
-                
             })
         })
     }
@@ -465,7 +455,6 @@ module.exports = class Item extends EventEmitter {
         })
     }
 
-
     // -------------------------------------------------------------------------
     /**
     * Add your trust to this item
@@ -475,7 +464,7 @@ module.exports = class Item extends EventEmitter {
             this._data.signatures.push(sig)
             this._new.signatures = true
         }
-        return this.update(['signatures'])            
+        return this.update(['signatures'])
     }
 
     /**
@@ -492,5 +481,4 @@ module.exports = class Item extends EventEmitter {
     hasSignature (sig) {
         return this._data.signatures && this._data.signatures.indexOf(sig) !== -1
     }
-
 }

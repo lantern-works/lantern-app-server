@@ -4,15 +4,13 @@ const log = util.Logger
 
 // ----------------------------------------------------------------------
 module.exports = (req, res, next) => {
-   
     // only work with captive portal requests on the local device
     if (process.env.CLOUD === 'true') {
         return next()
-    }
-    else if (req.url.indexOf('.html') == -1) {
+    } else if (req.url.indexOf('.html') == -1) {
         return next()
     }
-    
+
     let ip = util.getClientIP(req)
 
     const isClientConnected = () => {

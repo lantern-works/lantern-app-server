@@ -7,7 +7,7 @@ module.exports = (req, res, next) => {
         if (req.headers.origin) {
             let origin = req.headers.origin.split('://')[1]
             let protocol = (req.secure ? 'https://' : 'http://')
-            res.setHeader('Access-Control-Allow-Origin','*')
+            res.setHeader('Access-Control-Allow-Origin', '*')
         }
     } catch (e) {
         log.error(e)

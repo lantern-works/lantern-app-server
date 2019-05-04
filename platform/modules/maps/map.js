@@ -33,12 +33,11 @@ module.exports = class Map extends EventEmitter {
         this.tileUri = [this.tileHost + '/styles/',
             MaptileConfig.map, '/{z}/{x}/{y}.png?key=', MaptileConfig.key
         ].join('')
-
     }
 
     render (useCloud) {
         this.setTileHost(useCloud)
-        
+
         // layer in hosted map tiles
         window.L.tileLayer(this.tileUri, LeafletTilesConfig).addTo(this.view)
         // stop map from going off-world
@@ -50,7 +49,7 @@ module.exports = class Map extends EventEmitter {
         this.view.on('drag', function () {
             this.view.panInsideBounds(bounds, { animate: false })
         }.bind(this))
-        
+
         this.view.on('moveend', (e) => {
             this.calculateZoomClass()
         })
@@ -61,20 +60,17 @@ module.exports = class Map extends EventEmitter {
                 this.setDefaultView()
             }
         }, 500)
-
     }
-
 
     // ------------------------------------------------------------------- VIEW
     /**
     * By default center over North America
     */
-    setDefaultView() {        
+    setDefaultView () {
         // console.log(`${this.logPrefix} set default view`)
         this.view.setView([38.42, -12.79], 3)
     }
 
-        
     /**
     * Get center of map in geohash format
     */
@@ -95,7 +91,6 @@ module.exports = class Map extends EventEmitter {
     getCenterAsString () {
         return [this.view.getCenter().lat, this.view.getCenter().lng, this.view.getZoom()].join('/')
     }
-
 
     /**
     * Check to see if given marker is within view
@@ -122,7 +117,7 @@ module.exports = class Map extends EventEmitter {
         })
     }
 
-    /** 
+    /**
     * Check if we are using max zoom level
     */
     hasMaxZoom () {
@@ -132,9 +127,9 @@ module.exports = class Map extends EventEmitter {
     /**
     * Adjusts map to a minimum desired zoom level
     */
-    zoomMinimum(level) {
+    zoomMinimum (level) {
         if (this.view.getZoom() < level) {
-            let increase = level-this.view.getZoom()
+            let increase = level - this.view.getZoom()
             console.log(`${this.logPrefix} zooming in extra = ${increase}`)
             this.view.zoomIn(increase)
         }
@@ -194,24 +189,24 @@ module.exports = class Map extends EventEmitter {
         Object.keys(markers).forEach((key) => {
             let marker = markers[key]
             // markers can include null objects from past deleted markers, so ignore those...
-            if (marker !== null && marker.layer ) {
+            if (marker !== null && marker.layer) {
                 let layer = marker.layer
                 allLayers.push(layer)
             }
         })
+        console.log(`${this.logPrefix} fitting map to ${allLayers.length} markers`)
         if (allLayers.length) {
             let group = new window.L.featureGroup(allLayers)
-            // console.log(`${this.logPrefix} fitting map to all markers`, markers)
             this.view.fitBounds(group.getBounds())
         }
     }
 
     // ------------------------------------------------------------------ CACHE
-    
-    cacheTiles(lat, lon) {
+
+    cacheTiles (lat, lon) {
         let uri = `${this.tileHost.replace('{s}.tile.', '')}/api/tiles/${MaptileConfig.map}/${lat}/${lon}.json?key=${MaptileConfig.key}`
         return fetch(uri, {
-            method: "GET",
+            method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
             }
@@ -221,36 +216,33 @@ module.exports = class Map extends EventEmitter {
     /**
     * Cache tiles based on center of map
     */
-    cacheTilesFromCenter() {
-        //console.log(`${this.logPrefix} caching extra tiles from center of map`);
+    cacheTilesFromCenter () {
+        // console.log(`${this.logPrefix} caching extra tiles from center of map`);
         this.cacheTiles(this.getCenterAsLatLng().lat, this.getCenterAsLatLng().lng)
     }
-    
-     /**
+
+    /**
     * Cache tiles based on marker
     */
-    cacheTilesFromMarker(marker) {
+    cacheTilesFromMarker (marker) {
         if (!marker || !marker.id || !marker.latlng) {
             return
         }
-        //console.log(`${this.logPrefix} cache tiles nearby marker ${marker.id} (${marker.geohash})`);
-        this.cacheTiles( marker.latlng.lat,  marker.latlng.lon)
+        // console.log(`${this.logPrefix} cache tiles nearby marker ${marker.id} (${marker.geohash})`);
+        this.cacheTiles(marker.latlng.lat, marker.latlng.lon)
     }
-
 
     // ----------------------------------------------------------------- MARKERS
     /**
     * Add marker to map
     */
     addToMap (marker) {
-
         if (!marker) {
             console.log(`${this.logPrefix} cannot add missing marker to map`)
             return
-        }
-        else if (marker.constructor.name !== 'MarkerItem') {
-            console.log(`${this.logPrefix} cannot add non-marker to map with type = ${marker.constructor.name}`)     
-            return       
+        } else if (marker.constructor.name !== 'MarkerItem') {
+            console.log(`${this.logPrefix} cannot add non-marker to map with type = ${marker.constructor.name}`)
+            return
         }
         // console.log(`${this.logPrefix} add ${marker.id}`)
 
@@ -261,14 +253,12 @@ module.exports = class Map extends EventEmitter {
             riseOnHover: true
         })
 
-
         marker.layer.on('dragend', function (e) {
             let latlng = e.target._latlng
             marker.geohash = Location.toGeohash(latlng)
         })
 
         marker.layer.addTo(this.view)
-
 
         if (marker.mode == 'draft') {
             // special behaviors for permanent markers, only...
@@ -303,5 +293,4 @@ module.exports = class Map extends EventEmitter {
             }
         })
     }
-
 }

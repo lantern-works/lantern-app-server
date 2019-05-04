@@ -89,7 +89,6 @@ self.isRemoteClient = (req) => {
     return ip && (ip.indexOf('127.0.0.1') === -1)
 }
 
-
 // ----------------------------------------------------------------------
 /**
 * Display memory usage over time

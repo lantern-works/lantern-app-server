@@ -12,7 +12,7 @@ module.exports = class Query extends EventEmitter {
         this.params = []
     }
 
-    addParam(fieldID, criteria) {
+    addParam (fieldID, criteria) {
         this.params.push([fieldID, criteria])
     }
 
@@ -21,7 +21,7 @@ module.exports = class Query extends EventEmitter {
     * sends out a request like pkg@0.0.1::1:1:1551694707084 (packageID::version::seq::count::datetime)
     */
     // ultimate return seq::id^field=val.    e.g. 4::jrv0er5nHLK7iwOSHlr2^g=drt2rzsg
-    compose() {
+    compose () {
         return new Promise((resolve, reject) => {
             let query = this.package.id + '::'
             let highest = 0
@@ -30,21 +30,20 @@ module.exports = class Query extends EventEmitter {
 
                 this.package.node.get('items').once(data => {
                     if (!data) return
-                    
-                    query += `${Object.keys(data).length-1}::`
+
+                    query += `${Object.keys(data).length - 1}::`
 
                     // now append datetime if available
                     if (data.hasOwnProperty('_') && data['_'].hasOwnProperty('>')) {
-                        let items = data['_']['>'] 
+                        let items = data['_']['>']
                         Object.keys(items).forEach(itemID => {
                             let datetime = items[itemID]
                             if (datetime > highest) {
                                 highest = datetime
                             }
                         })
-                       query += highest
-                    }
-                    else {
+                        query += highest
+                    } else {
                         query += 0
                     }
                     this.params.forEach(param => {
@@ -56,5 +55,4 @@ module.exports = class Query extends EventEmitter {
             })
         })
     }
-
 }
