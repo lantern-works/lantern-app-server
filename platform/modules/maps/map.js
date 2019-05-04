@@ -104,7 +104,7 @@ module.exports = class Map extends EventEmitter {
     * Fly in while zooming
     */
     zoomToPoint (latlng, level) {
-        console.log(`${this.logPrefix} zooming to point = ${latlng}`)
+        console.log(`${this.logPrefix} zooming to point`, latlng)
         level = level || this.view.getZoom() + 2
         this.view.flyTo(latlng, Math.limit(level, 1, LeafletMapConfig.maxZoom), {
             pan: {
