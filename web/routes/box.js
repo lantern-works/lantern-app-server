@@ -11,8 +11,8 @@ const bodyParser = require('body-parser')
 // @todo add LZMA compression as optional
 
 module.exports = (serv) => {
-    const queryRegex = /([A-Za-z\-]+)\>\>([A-Za-z]+)\@([0-9\.]+)\:\:([0-9]+)\:\:([0-9]+)\:\:([0-9]+)?(.*)/
-    const updateRegex = /([A-Za-z\-]+)\>\>([a-zA-Z0-9]+)\^([a-z]*)\=([\w\.]+)/
+    const queryRegex = /([A-Za-z0-9\-\_]+)\>\>([A-Za-z]+)\@([0-9\.]+)\:\:([0-9]+)\:\:([0-9]+)\:\:([0-9]+)?(.*)/
+    const updateRegex = /([A-Za-z0-9\-\_]+)\>\>([a-zA-Z0-9]+)\^([a-z]*)\=([\w\.]+)/
 
     /**
     * Convert regular expression match to key/value pairs

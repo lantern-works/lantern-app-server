@@ -5,7 +5,7 @@ const fetch = require('node-fetch')
 const conf = require('./testConf')
 
 describe('inbox', () => {
-    const fakeDeviceID = 'test-device'
+    const fakeDeviceID = 'test-device_13A'
 
     const putMessage = (data) => {
         return fetch(conf.URI + '/api/inbox', {
