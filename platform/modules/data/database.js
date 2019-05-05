@@ -77,8 +77,11 @@ module.exports = class Database extends EventEmitter {
                         return resolve(false)
                     } else if (typeof (v) === 'number') {
                         return resolve(false)
-                    } else if (typeof (v) === 'object' && Object.keys(v).length) {
-                        return resolve(false)
+                    } else if (typeof (v) === 'object') {
+                        let keys = Object.keys(v).filter(key => (key !== '_' && key !== '#'))
+                        if (keys.length) {
+                            return resolve(false)
+                        }
                     }
                 }
                 if (typeof (val) === 'object') {
