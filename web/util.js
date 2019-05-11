@@ -39,14 +39,24 @@ self.logPrefix = (val) => {
 * Get HTTP Non-Secure Port
 */
 self.getHttpPort = () => {
-    return (process.env.TERM_PROGRAM ? 9080 : 80)
+    if (process.env.hasOwnProperty('HTTP_PORT')) {
+        return process.env.HTTP_PORT
+    }
+    else {
+        return (process.env.TERM_PROGRAM ? 9080 : 80)
+    }
 }
 
 /**
 * Get HTTPS Secure Port
 */
 self.getHttpsPort = () => {
-    return (process.env.TERM_PROGRAM ? 9443 : 443)
+    if (process.env.hasOwnProperty('HTTPS_PORT')) {
+        return process.env.HTTPS_PORT
+    }
+    else {
+        return (process.env.TERM_PROGRAM ? 9443 : 443)
+    }
 }
 
 /**
