@@ -34,7 +34,7 @@ module.exports = class Database extends EventEmitter {
             })
 
             opt.on('in', function (msg) {
-                if (msg.put) {
+                if (msg.hasOwnProperty('put') && msg.hasOwnProperty('><')) {
                     self.emit('sync', msg)
                 }
                 this.to.next(msg)

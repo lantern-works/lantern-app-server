@@ -365,7 +365,7 @@ body .app {
 }
 
 /* icon */
-.menu-app-frame li div {
+.menu-app-frame li div.tag-icon {
 	margin-right: 1em;
 	padding-top: 3px;
 	margin-top: -2px;
