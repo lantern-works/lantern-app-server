@@ -194,7 +194,7 @@ module.exports = class Map extends EventEmitter {
                 allLayers.push(layer)
             }
         })
-        console.log(`${this.logPrefix} fitting map to ${allLayers.length} markers`)
+        // console.log(`${this.logPrefix} fitting map to ${allLayers.length} markers`)
         if (allLayers.length) {
             let group = new window.L.featureGroup(allLayers)
             this.view.fitBounds(group.getBounds())
@@ -244,7 +244,12 @@ module.exports = class Map extends EventEmitter {
             console.log(`${this.logPrefix} cannot add non-marker to map with type = ${marker.constructor.name}`)
             return
         }
-        // console.log(`${this.logPrefix} add ${marker.id}`)
+        else if (marker.layer) {
+            console.log(`${this.logPrefix} has layer. cannot add marker to map twice`)
+            return
+        }
+        
+        // console.log(`${this.logPrefix} add ${marker.id}`, marker.latlng)
 
         marker.layer = window.L.marker(marker.latlng, {
             icon: marker.getDivIcon(),
@@ -252,6 +257,7 @@ module.exports = class Map extends EventEmitter {
             autoPan: true,
             riseOnHover: true
         })
+
 
         marker.layer.on('dragend', function (e) {
             let latlng = e.target._latlng
