@@ -74,7 +74,7 @@
             return new Promise((resolve, reject) => {
                 // demonstrates write ability and creates database files if non-existing
                 // database cannot be setup with simply {} structures
-                let topLevels = ['org', 'pkg', 'ctx', 'net']
+                let topLevels = ['org', 'pkg', 'ctx', 'net', 'usr']
                 let count = 0
                 const check = () => {
                     count++
@@ -85,7 +85,7 @@
                 topLevels.forEach((key) => {
                     db.getOrPut(db.get(key), {}).then(check)
                 })
-            })  
+            })
         }
 
         const createDemoPackage = () => {
@@ -105,9 +105,6 @@
 
 
         user.authOrCreate()
-            .then(() => {
-                document.getElementById('user-status').innerHTML = user.username
-            })
             .then(setupDatabase)
             .then(() => {
                 document.getElementById('database-status').innerHTML = 'Verified'
@@ -120,6 +117,9 @@
                 else {
                     document.getElementById('package-status').innerHTML = 'Exists'
                 }
+            })
+            .then(() => {
+                document.getElementById('user-status').innerHTML = user.username
             })
             .then(createDemoContext)
             .then(saved => {
