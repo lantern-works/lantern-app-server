@@ -341,33 +341,42 @@ module.exports = class Item extends EventEmitter {
 
             console.log(`${this.logPrefix} about to save new item`)
 
-            this.package.node.get('items')
-                .set(obj, ack => {
-                    // @todo remove work-around once ack properly returns
-                    // data is saved properly but fails to properly ack
-                    if (ack.err) {
-                        console.warn(`${this.logPrefix} no ack for save`)
-                        // return reject(new Error('save_failed'))
-                    } else {
-                        console.log(`${this.logPrefix} saved to remote storage`, obj)
-                    }
-                })
-                .once((v, k) => {
-                    // @todo switch to ack once bug is fixed where ack returns a false error
-                    this.id = k
-                    // saves locally but we want confirmation from ack
-                    console.log(`${this.logPrefix} saved to local storage`, obj)
 
-                    // clear new state once saved
-                    Object.keys(this._new).forEach((item) => {
-                        this._new[item] = false
-                    })
+            // @todo remove work-around once ack properly returns
+            // data is saved properly but fails to properly ack
+            const onLocalSave = ack => {
+                if (ack.err) {
+                    console.warn(`${this.logPrefix} no ack for save`)
+                    // return reject(new Error('save_failed'))
+                } else {
+                    console.log(`${this.logPrefix} saved to remote storage in package ${this.package.id}`, obj)
+                }
+            }
 
-                    // database assigns unique identifier
-                    this.package.seqUp()
-                    this.emit('save', v)
-                    resolve(v)
+            const onRemoteSave = (v, k) => {
+                // @todo switch to ack once bug is fixed where ack returns a false error
+                this.id = k
+                // saves locally but we want confirmation from ack
+                console.log(`${this.logPrefix} saved to local storage in package ${this.package.id}`, obj)
+
+                // clear new state once saved
+                Object.keys(this._new).forEach((item) => {
+                    this._new[item] = false
                 })
+
+                // database assigns unique identifier
+                this.package.seqUp()
+                this.emit('save', v)
+                resolve(v)
+            }
+
+            if (this.id) {
+                // use existing identifier if available
+                this.package.node.get('items').get(this.id).put(obj, onLocalSave).once(onRemoteSave)
+            }
+            else {
+                this.package.node.get('items').set(obj, onLocalSave).once(onRemoteSave)
+            }
         })
     }
 
@@ -381,7 +390,7 @@ module.exports = class Item extends EventEmitter {
                 console.log(`${this.logPrefix} Update requires fields in array format: ${fields}`)
                 let err = new Error()
                 err.name = 'update_failed_invalid_fields'
-                err.message = fields.join(', ')
+                err.message = JSON.stringify(fields)
                 return reject(err)
             }
 
