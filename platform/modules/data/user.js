@@ -57,6 +57,12 @@ module.exports = class User extends EventEmitter {
     */
     authenticate (username, password) {
         return new Promise((resolve, reject) => {
+            if (this.username) {
+                    console.log(`${this.logPrefix} already signed-in user ${this.username}`)
+                    resolve()
+                    return
+            }
+
             if (!username || !password) {
                 let err = new Error()
                 err.name = 'user_auth_skipped'
