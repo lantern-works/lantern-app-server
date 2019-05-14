@@ -38,7 +38,7 @@
          <!-- demo package status -->
          <div class="level-item has-text-centered">
             <div>
-                <p class="heading">Demo Package</p>
+                <p class="heading">Main Package</p>
                 <p class="title" id="package-status">&hellip;</p>
             </div>
          </div>
@@ -65,7 +65,7 @@
         let user = new LD.User(db, window.localStorage)
         
         // demo package
-        let pkg = new LD.Package('demo@0.0.1', db)
+        let pkg = new LD.Package('default@0.0.1', db)
 
         // demo context
         let ctx = new LA.Context(db, user)
@@ -95,8 +95,8 @@
 
         const createDemoContext = () => {
             // user needs to be signed-in to create first context
-            ctx.id = 'demo'
-            ctx.name = 'Demo Map'
+            ctx.id = 'main'
+            ctx.name = 'Main Map'
             ctx.priority = 1
             return ctx.save().then(() => {
                 return ctx.addOnePackage(pkg)
