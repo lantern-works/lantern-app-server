@@ -18,6 +18,7 @@ module.exports = class Item extends EventEmitter {
         let globalDefaults = {
             'owner': ['o'],
             'editors': ['e', []],
+            'form': ['f', []],
             'tags': ['t', []],
             'signatures': ['@', []]
         }
@@ -422,7 +423,7 @@ module.exports = class Item extends EventEmitter {
                 // @todo switch to ack once bug is fixed where ack returns a false error
                 Object.keys(obj).forEach((key) => {
                     let val = obj[key]
-                    console.log(`${this.logPrefix} updated at remote storage`, key, val)
+                    console.log(`${this.logPrefix} updated at remote storage in package ${this.package.id}`, key, val)
                 })
 
                 fields.forEach((field) => {
@@ -464,6 +465,17 @@ module.exports = class Item extends EventEmitter {
         })
     }
 
+    /**
+    * Takes the item stored in a package and links it into another part of the graph
+    */ 
+    link (node) {
+        node.once((v,k) => {
+            if (!v) {
+                let nodeInPackage = this.package.node.get('items').get(this.id)
+                node.put(nodeInPackage)
+            }
+        })
+    }
     // -------------------------------------------------------------------------
     /**
     * Add your trust to this item
