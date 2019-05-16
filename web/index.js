@@ -102,7 +102,7 @@ startServer()
     .then(() => {
         return new Promise((resolve, reject) => {
             // starts watching for changes
-            // watch(app)
+            watch(app)
             setTimeout(resolve, 1000)
         })
     })

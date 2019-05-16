@@ -12,7 +12,7 @@ const execFile = require('child_process').execFile
 module.exports = (app) => {
     let loaded = false
     let hook = null
-    let node = app.locals.db.get('__LX__').get('pkg')
+    let packagesNode = app.locals.db.get('__LX__').get('pkg')
     let packages = {}
     let items = {}
 
@@ -26,32 +26,33 @@ module.exports = (app) => {
             return
         }
 
-        if (!v.name || !v.version) {
-            log.warn(`${util.logPrefix('watcher')} missing name or version for package ${k}: `, v)
+        if (!v.name || !v.id) {
+            log.warn(`${util.logPrefix('watcher')} missing name or id for package ${k}: `, v)
             return
         }
 
-        let packageID = [k, v.version].join('@')
+        let packageID = v.id
 
         if (packages.hasOwnProperty(packageID)) {
-            // log.debug(`${util.logPrefix(packageID)} skip duplicate...`)
+            //log.debug(`${util.logPrefix(packageID)} skip duplicate...`)
             return
         }
 
         log.debug(`${util.logPrefix(packageID)} begin watching...`)
         packages[packageID] = {}
 
-        let subnode = node.get(k).get('data').get(v.version)
-        subnode.map()
+        let itemsNode = packagesNode.get(packageID).get('items')
+        itemsNode.map()
             .on((v, k) => {
-                markItemAsChanged(subnode, packageID, v, k)
+                markItemAsChanged(itemsNode, packageID, v, k)
             })
     }
 
     /**
     * Watch for and announce changes to given item
     */
-    const markItemAsChanged = (subnode, packageID, itemData, itemID) => {
+    const markItemAsChanged = (itemsNode, packageID, itemData, itemID) => {
+
         // detected drop
         if (itemData === null) {
             // this can be triggered when an item is first created due to the way we use put(null)
@@ -66,8 +67,9 @@ module.exports = (app) => {
         if (items[itemID]) return
         items[itemID] = true
 
+
         // watch for field changes
-        subnode.get(itemID)
+        itemsNode.get(itemID)
             .map().on((fieldData, fieldID) => {
                 // @todo identify issue where inbox can trigger this code
                 // to run twice for the same database update
@@ -78,25 +80,27 @@ module.exports = (app) => {
     }
 
     const markItemAsDropped = (packageID, itemID) => {
+        log.debug(`${util.logPrefix(packageID)} item dropped ${itemID}`)
         packages[packageID] = packages[packageID] || {}
         packages[packageID][itemID] = null
     }
 
     const markItemAsUpdated = (packageID, itemID, fieldID, fieldData) => {
+        log.debug(`${util.logPrefix(packageID)} item updated ${itemID} ${fieldID} = ${fieldData}`)
+
         packages[packageID] = packages[packageID] || {}
         packages[packageID][itemID] = packages[packageID][itemID] || {}
         packages[packageID][itemID][fieldID] = fieldData
     }
 
     const init = () => {
-        // log.debug(`${util.logPrefix('watcher')} waiting for changes...`)
+        log.debug(`${util.logPrefix('watcher')} waiting for changes...`)
         loaded = true
-
         // check to see if we have a change hook from environment
         if (process.env.hasOwnProperty('HOOK_CHANGE')) {
             hook = path.resolve(process.env['HOOK_CHANGE'])
             let timing = (process.env.CHANGE_INTERVAL ? Number(process.env.CHANGE_INTERVAL) : 5000)
-            // log.debug(`${util.logPrefix('watcher')} change hook = ${hook} (${timing}ms)`)
+            log.debug(`${util.logPrefix('watcher')} change hook = ${hook} (${timing}ms)`)
             setInterval(
                 runHook,
                 timing
@@ -114,7 +118,7 @@ module.exports = (app) => {
         })
 
         if (!Object.keys(changes).length) {
-            // log.debug(`skip hook since no data change`)
+            //log.debug(`skip hook since no data change`)
             return
         }
 
@@ -138,9 +142,9 @@ module.exports = (app) => {
 
     // ----------------------------------------------------------------------
     // identify and prepare to watch all valid packages in the database
-    node.map().on(watchPackage)
-    node.once((v, k) => {
+    packagesNode.map().on(watchPackage)
+    packagesNode.once((v, k) => {
         // don't output initial data load
-        setTimeout(init, 300)
+        setTimeout(init, 500)
     })
 }
