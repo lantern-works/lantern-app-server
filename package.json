@@ -1,6 +1,6 @@
 {
     "name": "lantern-serve",
-    "version": "0.8.2",
+    "version": "0.8.3",
     "dependencies": {
         "@fortawesome/fontawesome-free": "^5.8.1",
         "@node-minify/core": "*",
