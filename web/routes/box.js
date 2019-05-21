@@ -12,7 +12,7 @@ const bodyParser = require('body-parser')
 
 module.exports = (serv) => {
     const queryRegex = /([A-Za-z0-9\-\_]+)\>\>([A-Za-z]+)\@([0-9\.]+)\:\:([0-9]+)\:\:([0-9]+)\:\:([0-9]+)?(.*)/
-    const updateRegex = /([A-Za-z0-9\-\_]+)\>\>([a-zA-Z0-9]+)\^([a-z]*)\=([\w\.]+)/
+    const updateRegex = /([a-zA-Z0-9]+)\^([a-z]*)\=([\w\.]+)/
 
     /**
     * Convert regular expression match to key/value pairs
@@ -54,9 +54,8 @@ module.exports = (serv) => {
     const getPackageNode = (cmd, db) => {
         return db.get('__LX__')
             .get('pkg')
-            .get(cmd.package)
-            .get('data')
-            .get(cmd.version)
+            .get(`${cmd.package}@${cmd.version}`)
+            .get('items')
     }
 
     /**
@@ -65,9 +64,8 @@ module.exports = (serv) => {
     const getItemNode = (cmd, itemID, db) => {
         return db.get('__LX__')
             .get('pkg')
-            .get(cmd.package)
-            .get('data')
-            .get(cmd.version)
+            .get(`${cmd.package}@${cmd.version}`)
+            .get('items')
             .get(itemID)
     }
 
@@ -94,7 +92,6 @@ module.exports = (serv) => {
                 let key = match[2]
                 let val = match[3]
                 let node = getItemNode(cmd, itemID, db)
-
                 node.get(key).put(val, (ack) => {
                     if (ack.err) {
                         return reject(new Error('inbox_update_failed'))
@@ -132,7 +129,7 @@ module.exports = (serv) => {
 
     const runQuery = (cmd, outbox, db, msg) => {
         let node = getPackageNode(cmd, db)
-        let reply = msg
+        let reply = `${conf.peer}>>${cmd.package}@${cmd.version}` 
         node.once().map((v, k) => {
             if (k != '#' && k != '>') {
                 reply += '|' + k
