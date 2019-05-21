@@ -19,6 +19,7 @@ module.exports = class Item extends EventEmitter {
             'owner': ['o'],
             'editors': ['e', []],
             'form': ['f', []],
+            'notes': ['n', []],
             'tags': ['t', []],
             'signatures': ['@', []]
         }
@@ -96,6 +97,57 @@ module.exports = class Item extends EventEmitter {
             this._new.owner = true
         }
     }
+
+  // ----------------------------------------------------------------- NOTES
+    /**
+    * Gets a list of all notes
+    */
+    get notes () {
+        return this._data.notes
+    }
+
+    /**
+    * Sets the entire list of editors for this item
+    */
+    set notes (val) {
+        if (val === null || val === undefined) return
+
+        if (typeof (val) === 'object') {
+            if (val.length == 0 ) {
+                console.log(`${this.logPrefix} notes = []`)
+                this._data.notes.length = 0
+                this._new.notes = true
+            }
+            else {
+                val.forEach(this.note.bind(this))
+            }
+        }
+    }
+
+    /**
+    * Adds a new note to the item
+    */
+    note (val) {
+        if (!val) return
+        if (this._data.notes.indexOf(val) > -1) {
+            return
+        }
+        this._data.notes.push(val)
+        this._new.notes = true
+        this.emit('note', val)
+    }
+
+    /**
+    * Remove note
+    */
+    removeNote (txt) {
+        if (!txt) return
+        this._data.notes.remove(txt)
+        this.emit('note-removed', txt)
+        this._new.notes = true
+        return this.notes
+    }
+
 
     // ----------------------------------------------------------------- EDITORS
     /**
@@ -387,7 +439,10 @@ module.exports = class Item extends EventEmitter {
     update (fields) {
         return new Promise((resolve, reject) => {
             // require an array of fields
-            if (fields.constructor !== Array) {
+            if (fields.constructor === String) {
+                fields = [fields]
+            }
+            else if (fields.constructor !== Array) {
                 console.log(`${this.logPrefix} Update requires fields in array format: ${fields}`)
                 let err = new Error()
                 err.name = 'update_failed_invalid_fields'
