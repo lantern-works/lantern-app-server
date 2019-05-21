@@ -112,15 +112,17 @@ module.exports = class Item extends EventEmitter {
     set notes (val) {
         if (val === null || val === undefined) return
 
+        // always clear out notes when assigning new ones
+        this._data.notes.forEach(txt => {
+            this.removeNote(txt)
+        })
+        this._new.notes = true
+
         if (typeof (val) === 'object') {
-            if (val.length == 0 ) {
-                console.log(`${this.logPrefix} notes = []`)
-                this._data.notes.length = 0
-                this._new.notes = true
-            }
-            else {
-                val.forEach(this.note.bind(this))
-            }
+            val.forEach(this.note.bind(this))
+        }
+        else if (typeof (val) === 'string' && val) {
+            this._data.notes.push(val)
         }
     }
 
@@ -357,12 +359,11 @@ module.exports = class Item extends EventEmitter {
         for (var idx in newData) {
             let pointer = this[idx] || this._data[idx] // try to use a getter if available
             if (JSON.stringify(pointer) !== JSON.stringify(newData[idx])) {
+
                 if (typeof (pointer) === 'object') {
                     console.log(`${this.logPrefix} changing ${idx} object to ${newData[idx]}`)
-                    this.emit('change', idx)
                 } else {
                     console.log(`${this.logPrefix} changing ${idx} from ${this[idx]} to ${newData[idx]}`)
-                    this.emit('change', idx)
                 }
 
                 // default to use setter if available
@@ -371,6 +372,10 @@ module.exports = class Item extends EventEmitter {
                 } else {
                     this._data[idx] = newData[idx]
                 }
+
+
+                this.emit('change', idx)
+
             }
         }
     }
