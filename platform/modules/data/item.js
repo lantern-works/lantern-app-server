@@ -18,6 +18,7 @@ module.exports = class Item extends EventEmitter {
         let globalDefaults = {
             'owner': ['o'],
             'editors': ['e', []],
+            'viewers': ['v', []],
             'form': ['f', []],
             'notes': ['n', []],
             'tags': ['t', []],
@@ -149,8 +150,48 @@ module.exports = class Item extends EventEmitter {
         this._new.notes = true
         return this.notes
     }
+ // ----------------------------------------------------------------- VIEWERS
+    /**
+    * Gets a list of all item viewers
+    */
+    get viewers () {
+        return this._data.viewers
+    }
 
+    /**
+    * Sets the entire list of viewers for this item
+    */
+    set viewers (val) {
+        if (!val || val.length === 0) return
 
+        if (typeof (val) === 'object') {
+            val.forEach(this.viewer.bind(this))
+        }
+    }
+
+    /**
+    * Adds a new editor to the item
+    */
+    viewer (val) {
+        if (!val) return
+        if (this._data.viewers.indexOf(val) > -1) {
+            return
+        }
+        this._data.viewers.push(val)
+        this._new.viewers = true
+        this.emit('viewer', val)
+    }
+
+    /**
+    * Remove note
+    */
+    removeViewer (username) {
+        if (!username) return
+        this._data.viewers.remove(username)
+        this.emit('viewer-removed', username)
+        this._new.viwers = true
+        return this.viewers
+    }
     // ----------------------------------------------------------------- EDITORS
     /**
     * Gets a list of all item editors
