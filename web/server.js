@@ -18,6 +18,21 @@ const server = express()
 // ----------------------------------------------------------------------------
 server.disable('x-powered-by')
 server.use(compression())
+server.use((req,res,next) => {
+    const notRoute = (route) => {
+        return req.url.indexOf(route) === -1
+    }
+    if (notRoute('/styles') 
+        && notRoute('/webfonts') 
+        && notRoute('/api/tiles')
+        && notRoute('/scripts') 
+        && notRoute('/favicon.ico')
+    ) {
+        log.info(`[request] ${req.url}`)
+    }
+    next()
+})
+
 
 const staticPath = path.resolve(__dirname, './public/')
 server.use(express.static(staticPath))
