@@ -443,16 +443,17 @@ module.exports = class Item extends EventEmitter {
 
             // @todo remove work-around once ack properly returns
             // data is saved properly but fails to properly ack
-            const onLocalSave = ack => {
+            const onRemoteSave = ack => {
                 if (ack.err) {
                     console.warn(`${this.logPrefix} no ack for save`)
                     // return reject(new Error('save_failed'))
                 } else {
+                    this.emit('save-remote', obj)
                     console.log(`${this.logPrefix} saved to remote storage in package ${this.package.id}`, obj)
                 }
             }
 
-            const onRemoteSave = (v, k) => {
+            const onLocalSave = (v, k) => {
                 // @todo switch to ack once bug is fixed where ack returns a false error
                 this.id = k
                 // saves locally but we want confirmation from ack
@@ -465,16 +466,16 @@ module.exports = class Item extends EventEmitter {
 
                 // database assigns unique identifier
                 this.package.seqUp()
-                this.emit('save', v)
+                this.emit('save', obj)
                 resolve(v)
             }
 
             if (this.id) {
                 // use existing identifier if available
-                this.package.node.get('items').get(this.id).put(obj, onLocalSave).once(onRemoteSave)
+                this.package.node.get('items').get(this.id).put(obj, onRemoteSave).once(onLocalSave)
             }
             else {
-                this.package.node.get('items').set(obj, onLocalSave).once(onRemoteSave)
+                this.package.node.get('items').set(obj, onRemoteSave).once(onLocalSave)
             }
         })
     }
@@ -511,29 +512,36 @@ module.exports = class Item extends EventEmitter {
 
             let itemsNode = this.package.node.get('items')
             let obj = this.pack(data)
-            let item = itemsNode.get(this.id)
-            item.put(obj, ack => {
+
+
+            // @todo remove work-around once ack properly returns
+            // data is saved properly but fails to properly ack
+            const onRemoteUpdate = ack => {
+                // @todo switch to ack once bug is fixed where ack returns a false error
                 if (ack.err) {
                     console.log(`${this.logPrefix} no ack for update`)
                     let err = new Error()
                     err.name = 'update_failed'
                     err.message = fields.join(', ')
-                    return reject(err)
+                    // return reject(err)
+                } else {
+                    this.emit('update-remote', fields)
+                    console.log(`${this.logPrefix} updated at remote storage in package ${this.package.id}`, obj)
                 }
+            }
 
-                // @todo switch to ack once bug is fixed where ack returns a false error
-                Object.keys(obj).forEach((key) => {
-                    let val = obj[key]
-                    console.log(`${this.logPrefix} updated at remote storage in package ${this.package.id}`, key, val)
-                })
-
+            const onLocalUpdate = (v,k) => {
+                console.log(`${this.logPrefix} updated at local storage in package ${this.package.id}`, obj)
                 fields.forEach((field) => {
                     this._new[field] = false
                 })
                 this.package.seqUp()
                 this.emit('update', fields)
                 return resolve()
-            })
+            }
+
+            let item = itemsNode.get(this.id)
+            item.put(obj, onRemoteUpdate).once(onLocalUpdate)
         })
     }
 
