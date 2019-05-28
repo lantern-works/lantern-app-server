@@ -70,21 +70,25 @@ module.exports = class User extends EventEmitter {
                 return reject(err)
             }
 
-            this.node.auth(username, password, (ack) => {
-                if (ack.err) {
-                    console.warn(`${this.logPrefix} invalid auth`, ack.err)
-                    let err = new Error()
-                    err.name = 'user_auth_failed'
-                    err.message = username
-                    reject(err)
-                } else {
-                    // @todo secure token to make sure server can trust we are signed in
-                    db.token = this.username = username
-                    console.log(`${this.logPrefix} sign-in complete`)
-                    this.emit('auth')
-                    resolve()
-                }
-            })
+            setTimeout(() => {
+
+                this.node.auth(username, password, (ack) => {
+                    if (ack.err) {
+                        console.warn(`${this.logPrefix} invalid auth`, ack.err)
+                        let err = new Error()
+                        err.name = 'user_auth_failed'
+                        err.message = username + '/' + password
+                        reject(err)
+                    } else {
+                        // @todo secure token to make sure server can trust we are signed in
+                        db.token = this.username = username
+                        console.log(`${this.logPrefix} sign-in complete`)
+                        this.emit('auth')
+                        resolve()
+                    }
+                })
+                
+            }, 100)
         })
     }
 
@@ -124,7 +128,7 @@ module.exports = class User extends EventEmitter {
                 let creds = this.clientStorage.setItem('lx-auth', [username, password].join(':'))
                 this.emit('created')
                 this.authenticate(username, password)
-                resolve()
+                    .then(resolve)
             })
         })
     }
