@@ -216,7 +216,9 @@ module.exports = class Context extends EventEmitter {
     // ------------------------------------------------------------------------
     closeOneApp (appID) {
         if (this.apps.hasOwnProperty(appID)) {
-            this.apps[appID].unload()
+            this.apps[appID].pages.forEach((page) => {
+                this.apps[appID].close(`lx-app-${appID}-${page.id}`)
+            })
         }
     }
 

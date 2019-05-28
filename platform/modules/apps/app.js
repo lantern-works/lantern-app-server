@@ -131,7 +131,7 @@ module.exports = class App extends EventEmitter {
             return
         }
         this._component_opened[componentID] = true
-        // console.log(`${this.logPrefix} open`);
+        console.log(`${this.logPrefix} open ${componentID}`);
         this.emit('open', componentID)
     }
 
@@ -140,7 +140,7 @@ module.exports = class App extends EventEmitter {
     */
     close (componentID) {
         this._component_opened[componentID] = false
-        // console.log(`${this.logPrefix} close`);
+        console.log(`${this.logPrefix} close ${componentID}`);
         this.emit('close', componentID)
     }
 
