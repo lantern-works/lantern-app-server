@@ -123,12 +123,14 @@ module.exports = (app) => {
         }
 
         let changeString = JSON.stringify(changes)
+        
+        log.debug(`${util.logPrefix('change')} ${changeString}`)
 
         try {
             let ps = execFile(hook, [changeString])
             ps.stdout.on('data', (data) => {
                 // if we got confirmation back, we can clear our queue
-                log.debug(`${util.logPrefix('change')} ${data}`)
+               //  log.debug(`${util.logPrefix('change')} hook run ${hook}`)
             })
             ps.stderr.on('data', (err) => {
                 log.warn(`hook could not run: ${err}`)
