@@ -40,7 +40,7 @@ run:
 
 stage:
 	docker-compose -f env/dc-stage.yml build
-	docker-compose -f dc-stage.yml up -d
+	docker-compose -f env/dc-stage.yml up -d
 
 deploy:
 	triton profile set-current lantern
@@ -54,4 +54,4 @@ clean:
 	rm web/public/styles/vendor.css
 
 $(CERTS):
-	cd $(CERTDIR) && mkcert $(DEVHOST)
+	cd $(CERTDIR)/dev && mkcert $(DEVHOST)

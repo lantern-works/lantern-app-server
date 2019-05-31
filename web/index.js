@@ -39,14 +39,22 @@ const startServer = () => {
         let secureServer = null
         try {
             // read in ssl certificate data
-            let privateKeyPath = process.env.SSL_PRIVATE_KEY || path.resolve(__dirname, './certs/dev.lantern.link-key.pem')
-            let certificatePath = process.env.SSL_CERTIFICATE || path.resolve(__dirname, './certs/dev.lantern.link.pem')
+            let privateKeyPath = process.env.SSL_PRIVATE_KEY || path.resolve(__dirname, './certs/dev/dev.lantern.link-key.pem')
+            let certificatePath = process.env.SSL_CERTIFICATE || path.resolve(__dirname, './certs/dev/dev.lantern.link.pem')
+
             let credentials = {
                 key: fs.readFileSync(privateKeyPath, 'utf8'),
                 cert: fs.readFileSync(certificatePath, 'utf8'),
                 requestCert: false,
                 rejectUnauthorized: false
             }
+
+            // allow support for multiple certificate authority files
+            // https://stackoverflow.com/questions/19104215/node-js-express-js-chain-certificate-not-working
+            if (process.env.hasOwnProperty('SSL_CA')) {
+               credentials.ca = process.env.SSL_CA.split(',').map(x => fs.readFileSync(x, 'utf8'))
+            }
+
             secureServer = https.createServer(credentials, app)
         } catch (e) {
             if (e.code === 'ENOENT') {
