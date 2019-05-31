@@ -1,6 +1,8 @@
 {
     "name": "lantern-serve",
-    "version": "0.8.5",
+    "version": "0.8.6",
+    "repository": "http://github.com/lantern-works/lantern-serve",
+    "license": "AGPL-3.0-only",
     "dependencies": {
         "@fortawesome/fontawesome-free": "^5.8.2",
         "@node-minify/core": "*",
