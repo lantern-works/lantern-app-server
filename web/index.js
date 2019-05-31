@@ -26,7 +26,7 @@ const setupDatabase = require('./db')
 log.setLevel(process.env.LOG_LEVEL || 'debug')
 log.info('##############################################')
 log.info('#    ')
-log.info('#    Lantern App Server ' + conf.peer)
+log.info('#    Lantern App Server ' + conf.peer + ' [ prime = ' + conf.prime + ' ]')
 log.info('#    ')
 log.info('##############################################')
 
@@ -85,6 +85,7 @@ const startServer = () => {
 
 const setAppLocals = () => {
     app.locals.peer = conf.peer
+    app.locals.prime = conf.prime
     // track inbox messags
     app.locals.inbox = []
     // track outbox messages

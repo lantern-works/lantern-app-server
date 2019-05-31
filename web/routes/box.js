@@ -127,7 +127,7 @@ module.exports = (serv) => {
         })
     }
 
-    const runQuery = (cmd, outbox, db, msg) => {
+    const runQuery = (cmd, outbox, db, msg, replyDelay) => {
         let node = getPackageNode(cmd, db)
         let reply = `${conf.peer}>>${cmd.package}@${cmd.version}` 
         node.once().map((v, k) => {
@@ -150,7 +150,12 @@ module.exports = (serv) => {
             // compose a message
         })
         log.debug(`${util.logPrefix('outbox')} query reply: ${reply} (${reply.length})`)
-        outbox.push(reply)
+
+        // use prime number to delay outbox message and thereby avoid some issues with over-the-air timing collision
+        setTimeout(() => {
+            outbox.push(reply)
+        }, replyDelay)
+
     }
 
     // ----------------------------------------------------------------------
@@ -184,7 +189,7 @@ module.exports = (serv) => {
                 return res.status(201).json({ 'ok': true })
             } else {
                 log.debug(`${util.logPrefix('inbox')} accept query: ${msg}`)
-                runQuery(cmd, res.app.locals.outbox, req.app.locals.db, msg)
+                runQuery(cmd, res.app.locals.outbox, req.app.locals.db, msg, req.app.locals.prime * 1000)
                 return res.status(200).json({ 'ok': true })
             }
         } else {
