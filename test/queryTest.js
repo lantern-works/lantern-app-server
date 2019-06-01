@@ -17,7 +17,7 @@ describe('query', () => {
     }
 
     it('should send', (done) => {
-        putMessage({ 'message': `${conf.DEVICE}>>default@0.0.1::0::0::1551694707084`})
+        putMessage({ 'message': `${conf.DEVICE}>>default@0.0.1::0::0`})
             .then(response => response.json())
             .then((json) => {
                 json.ok.should.equal(true)

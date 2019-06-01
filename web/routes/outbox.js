@@ -10,8 +10,8 @@ const bodyParser = require('body-parser')
 
 // @todo add LZMA compression as optional
 module.exports = (serv) => {
-    const updateRegex = /([A-Za-z0-9\-\_]+)\>\>([A-Za-z]+)\@([0-9\.]+)\:\:([0-9]+)\:\:([0-9]+)\:\:([0-9]+)\|(.*)/
-    const queryRegex = /([A-Za-z0-9\-\_]+)\>\>([A-Za-z]+)\@([0-9\.]+)\:\:([0-9]+)\:\:([0-9]+)\:\:([0-9]+)/
+    const updateRegex = /([A-Za-z0-9\-\_]+)\>\>([A-Za-z]+)\@([0-9\.]+)\:\:([0-9]+)\:\:([0-9]+)\|(.*)/
+    const queryRegex = /([A-Za-z0-9\-\_]+)\>\>([A-Za-z]+)\@([0-9\.]+)\:\:([0-9]+)\:\:([0-9]+)/
 
     
     // ----------------------------------------------------------------------

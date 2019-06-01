@@ -36,7 +36,7 @@ describe('outbox', () => {
 
     it('should queue a well-formed update message', (done) => {
         let s = Math.random().toFixed(2)
-        putMessage({ 'message': `demo@0.0.1::3::13::1551694707084|jsu5eoqr4NPZaLoqApNb^s=${s}` })
+        putMessage({ 'message': `demo@0.0.1::3::13|jsu5eoqr4NPZaLoqApNb^s=${s}` })
             .then(response => response.json())
             .then((json) => {
                 json.ok.should.equal(true)
@@ -45,7 +45,7 @@ describe('outbox', () => {
     })
     it('should queue a message with lots of spaces', (done) => {
         let s = Math.random().toFixed(2)
-        putMessage({ 'message': `demo@0.0.1::3::13::1551694707084|jsu5eoqr4NPZaLoqApNb^s=${s}&l=Nullam quis risus eget urna mollis ornare vel eu leo. Vivamus sagittis lacus vel augue laoreet rutrum faucibus dolor auctor. Integer posuere erat a ante venenatis dapibus posuere velit aliquet. Cras mattis consectetur purus sit amet fermentum. Vestibulum id ligula porta felis euismod semper. Integer posuere erat a ante venenatis dapibus posuere velit aliquet. Duis mollis, est non commodo luctus, nisi erat porttitor ligula, eget lacinia odio sem nec elit. Donec id elit non mi porta gravida at eget metus. Cras mattis consectetur purus sit amet fermentum. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Nulla vitae elit libero, a pharetra augue. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Etiam porta sem malesuada magna mollis euismod.
+        putMessage({ 'message': `demo@0.0.1::3::13|jsu5eoqr4NPZaLoqApNb^s=${s}&l=Nullam quis risus eget urna mollis ornare vel eu leo. Vivamus sagittis lacus vel augue laoreet rutrum faucibus dolor auctor. Integer posuere erat a ante venenatis dapibus posuere velit aliquet. Cras mattis consectetur purus sit amet fermentum. Vestibulum id ligula porta felis euismod semper. Integer posuere erat a ante venenatis dapibus posuere velit aliquet. Duis mollis, est non commodo luctus, nisi erat porttitor ligula, eget lacinia odio sem nec elit. Donec id elit non mi porta gravida at eget metus. Cras mattis consectetur purus sit amet fermentum. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Nulla vitae elit libero, a pharetra augue. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Etiam porta sem malesuada magna mollis euismod.
 
 Donec id elit non mi porta gravida at eget metus. Maecenas sed diam eget risus varius blandit sit amet non magna. Duis mollis, est non commodo luctus, nisi erat porttitor ligula, eget lacinia odio sem nec elit. Vestibulum id ligula porta felis euismod semper. Nullam quis risus eget urna mollis ornare vel eu leo. Sed posuere consectetur est at lobortis. Vivamus sagittis lacus vel augue laoreet rutrum faucibus dolor auctor.
 
@@ -61,7 +61,7 @@ Morbi leo risus, porta ac consectetur ac, vestibulum at eros. Maecenas sed diam 
 
 
     it('should queue a well-formed drop message', (done) => {
-        putMessage({ 'message': `demo@0.0.1::3::13::1551694707084|test-` })
+        putMessage({ 'message': `demo@0.0.1::3::13|test-` })
             .then(response => response.json())
             .then((json) => {
                 json.ok.should.equal(true)

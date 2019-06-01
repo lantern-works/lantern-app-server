@@ -35,7 +35,7 @@ describe('inbox', () => {
     })
 
     it('should require a device identifier', (done) => {
-        putMessage({ 'message': 'demo@0.0.1::3::13::1551694707084' })
+        putMessage({ 'message': 'demo@0.0.1::3::13' })
             .then(response => response.json())
             .then((json) => {
                 json.ok.should.equal(false)
@@ -48,7 +48,7 @@ describe('inbox', () => {
 
     it('should accept updates', (done) => {
         let s = Math.random().toFixed(2)
-        putMessage({ 'message': `${conf.DEVICE}>>demo@0.0.1::3::13::1551694707084|jsu5eoqr4NPZaLoqApNb^s=${s}` })
+        putMessage({ 'message': `${conf.DEVICE}>>demo@0.0.1::3::13|jsu5eoqr4NPZaLoqApNb^s=${s}` })
             .then(response => response.json())
             .then((json) => {
                 json.ok.should.equal(true)
@@ -58,7 +58,7 @@ describe('inbox', () => {
 
     after((done) => {
         // clean up the existing node we created
-        putMessage({ 'message': `${conf.DEVICE}>>demo@0.0.1::3::13::1551694707084|test-|another-` })
+        putMessage({ 'message': `${conf.DEVICE}>>demo@0.0.1::3::13|test-|another-` })
             .then(response => response.json())
             .then((json) => {
                 json.ok.should.equal(true)

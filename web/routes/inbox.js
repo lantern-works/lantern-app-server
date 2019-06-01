@@ -10,8 +10,8 @@ const bodyParser = require('body-parser')
 
 // @todo add LZMA compression as optional
 module.exports = (serv) => {
-    const updateRegex = /([A-Za-z0-9\-\_]+)\>\>([A-Za-z]+)\@([0-9\.]+)\:\:([0-9]+)\:\:([0-9]+)\:\:([0-9]+)\|(.*)/
-    const queryRegex = /([A-Za-z0-9\-\_]+)\>\>([A-Za-z]+)\@([0-9\.]+)\:\:([0-9]+)\:\:([0-9]+)\:\:([0-9]+)/
+    const updateRegex = /([A-Za-z0-9\-\_]+)\>\>([A-Za-z]+)\@([0-9\.]+)\:\:([0-9]+)\:\:([0-9]+)\|(.*)/
+    const queryRegex = /([A-Za-z0-9\-\_]+)\>\>([A-Za-z]+)\@([0-9\.]+)\:\:([0-9]+)\:\:([0-9]+)/
     const restrictedKeys = ["#", "<", "_"]
     
     /**
@@ -27,8 +27,7 @@ module.exports = (serv) => {
             3: 'version',
             4: 'seq',
             5: 'itemCount',
-            6: 'timestamp',
-            7: 'changes'
+            6: 'changes'
         }
         for (var idx in matches) {
             if (keys[idx]) {
@@ -37,7 +36,6 @@ module.exports = (serv) => {
         }
         cmd.seq = Number(cmd.seq)
         cmd.itemCount = Number(cmd.itemCount)
-        cmd.timestamp = Number(cmd.timestamp)
 
         if (cmd.changes) {
             cmd.changes = cmd.changes.split('|')
@@ -167,40 +165,72 @@ module.exports = (serv) => {
             let itemsProcessed = 0
 
 
+
+
             // process items within package
             itemsNode.once((v,k) => {
                 let items = filterOutMetadata(v)
                 itemCount = Object.keys(items).length
-                log.debug(`${util.logPrefix('inbox')} ${pkgID} -- query within ${itemCount} items`)
-            }).map((v,k) => {
-                let replyData = `${k}`
-                if (v === null) {
-                    replyData += '-'
-                    //log.debug(`${k} send removal message`)  
-                }
-                else {
-                    let item = filterOutMetadata(v)
-                    //log.debug(`${k} send update message = ${JSON.stringify(item)}`)
-                    Object.keys(item).forEach((key) => {
-                        let val = item[key]
-                        // only transmit intended data types
-                        if (typeof (val) === 'string' || typeof (val) === 'Number') {
-                            replyData += `^${key}=${val}`
-                        }
-                    })
-                }  
-                itemsProcessed++
 
-                let msg = `${conf.peer}>>${pkgID}::${seq}::${itemCount}::${new Date().getTime()}|${replyData}`
-                log.debug(`${util.logPrefix('inbox')} (${msg.length}) ${msg}`)
-                // use prime number to delay outbox message and thereby avoid some issues with over-the-air timing collision
-                setTimeout(() => {
-                    outbox.push(msg)
-                }, replyDelay)
-                if (itemsProcessed >= itemCount) {
-                    markQueryComplete()
+
+                // do we have data that is more up-to-date than the device making the request?
+                // hard to be 100% sure due to offline / eventual consistency / clock
+                // we can use some heuristics to be somewhat sure
+
+                let score = 100
+                // does requestor have fewer items in this package than we do?
+                if (cmd.itemCount > itemCount) {
+                    score--
                 }
+                // do we have a sequence number higher than requester?
+                if (cmd.seq > seq) {
+                    score--
+                }
+        
+                log.debug(`${util.logPrefix('inbox')} ${pkgID} -- query within ${itemCount} items, score is ${score}`)
+
+                itemsNode.once().map((v,k) => {
+
+                    if (score <= 98) {
+                        // we probably have an older verrsion
+                        itemsProcessed++
+                        log.debug(`${util.logPrefix('inbox')} skip update due to score ${score}`)
+                        return
+                    }
+
+                    let replyData = `${k}`
+                    if (v === null) {
+                        replyData += '-'
+                        //log.debug(`${k} send removal message`)  
+                    }
+                    else {
+                        let item = filterOutMetadata(v)
+                        //log.debug(`${k} send update message = ${JSON.stringify(item)}`)
+                        Object.keys(item).forEach((key) => {
+                            let val = item[key]
+                            // only transmit intended data types
+                            if (typeof (val) === 'string' || typeof (val) === 'Number') {
+                                replyData += `^${key}=${val}`
+                            }
+                        })
+                    }  
+
+                    let msg = `${conf.peer}>>${pkgID}::${seq}::${itemCount}|${replyData}`
+                    log.debug(`${util.logPrefix('inbox')} (${msg.length}) ${msg}`)
+                    // use prime number to delay outbox message and thereby avoid some issues with over-the-air timing collision
+                    setTimeout(() => {
+                        outbox.push(msg)
+                    }, replyDelay)
+
+
+                    itemsProcessed++
+                    if (itemsProcessed >= itemCount) {
+                        markQueryComplete()
+                    }
+                })
             })
+
+
         })
     }
 
@@ -246,6 +276,7 @@ module.exports = (serv) => {
             }
         }
         catch(e) {
+            log.error(e)
             log.warn(`${util.logPrefix('inbox')} reject message: ${msg}`) 
             return res.status(403).json({ 'ok': false })
         }
