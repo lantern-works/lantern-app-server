@@ -9,12 +9,24 @@ module.exports = class Query extends EventEmitter {
         }
         this.db = db
         this.package = pkg
+        this._restrictedKeys = ["#", "<", "_"]
         this.params = []
     }
 
     addParam (fieldID, criteria) {
         this.params.push([fieldID, criteria])
     }
+
+    filterOutMetadata (raw) {
+        const filtered = Object.keys(raw)
+            .filter(key => !this._restrictedKeys.includes(key))
+            .reduce((obj, key) => {
+                obj[key] = raw[key]
+                return obj
+            }, {})
+        return filtered
+    }
+
 
     /**
     * Looks at latest data and composes a query string for us
@@ -31,10 +43,12 @@ module.exports = class Query extends EventEmitter {
                 this.package.node.get('items').once(data => {
                     if (!data) return
 
-                    query += `${Object.keys(data).length - 1}::`
+                    let items = this.filterOutMetadata(data)
+                    query += `${Object.keys(items).length}`
 
                     // now append datetime if available
-                    if (data.hasOwnProperty('_') && data['_'].hasOwnProperty('>')) {
+                    // @todo consider using datetime if we can achieve reliable cross-device offline support
+                    /*if (data.hasOwnProperty('_') && data['_'].hasOwnProperty('>')) {
                         let items = data['_']['>']
                         Object.keys(items).forEach(itemID => {
                             let datetime = items[itemID]
@@ -43,9 +57,8 @@ module.exports = class Query extends EventEmitter {
                             }
                         })
                         query += highest
-                    } else {
-                        query += 0
-                    }
+                    }*/
+
                     this.params.forEach(param => {
                         query += '|' + param[0] + '=' + param[1]
                     })
