@@ -5,7 +5,6 @@ const fetch = require('node-fetch')
 const conf = require('./testConf')
 
 describe('inbox', () => {
-    const fakeDeviceID = 'test-device_13A'
 
     const putMessage = (data) => {
         return fetch(conf.URI + '/api/inbox', {
@@ -46,18 +45,10 @@ describe('inbox', () => {
 
 
 
-    it('should accept a query', (done) => {
-        putMessage({ 'message': `${fakeDeviceID}>>demo@0.0.1::3::13::1551694707084`})
-            .then(response => response.json())
-            .then((json) => {
-                json.ok.should.equal(true)
-                done()
-            })
-    })
 
     it('should accept updates', (done) => {
         let s = Math.random().toFixed(2)
-        putMessage({ 'message': `${fakeDeviceID}>>demo@0.0.1::3::13::1551694707084|jsu5eoqr4NPZaLoqApNb^s=${s}` })
+        putMessage({ 'message': `${conf.DEVICE}>>demo@0.0.1::3::13::1551694707084|jsu5eoqr4NPZaLoqApNb^s=${s}` })
             .then(response => response.json())
             .then((json) => {
                 json.ok.should.equal(true)
@@ -67,7 +58,7 @@ describe('inbox', () => {
 
     after((done) => {
         // clean up the existing node we created
-        putMessage({ 'message': `${fakeDeviceID}>>demo@0.0.1::3::13::1551694707084|test-|another-` })
+        putMessage({ 'message': `${conf.DEVICE}>>demo@0.0.1::3::13::1551694707084|test-|another-` })
             .then(response => response.json())
             .then((json) => {
                 json.ok.should.equal(true)
@@ -80,7 +71,7 @@ describe('inbox', () => {
                 })
                     .then(response => response.json())
                     .then((json) => {
-                        json.messages.length.should.be.aboveOrEqual(3)
+                        json.messages.length.should.be.aboveOrEqual(2)
                         console.log(json.messages)
                         done()
                     })
