@@ -1,6 +1,6 @@
 {
     "name": "lantern-serve",
-    "version": "0.8.6",
+    "version": "0.9.0",
     "repository": "http://github.com/lantern-works/lantern-serve",
     "license": "AGPL-3.0-only",
     "dependencies": {
