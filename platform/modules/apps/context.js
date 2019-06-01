@@ -21,6 +21,7 @@ module.exports = class Context extends EventEmitter {
         this.cloud = false
         this.online = false
         this.node = null
+        this.priority = 1
         this._id = null
         this.packages = []
     }
@@ -61,7 +62,7 @@ module.exports = class Context extends EventEmitter {
         this.packages = []
         this.feed.reset()
 
-        console.log(`${this.logPrefix} context loaded`)
+        console.log(`${this.logPrefix} context loaded = ${v.name}`)
         // watch for any packages
         this.node.get('packages').map().once(data => {
             if (data && data.id) {

@@ -143,9 +143,10 @@ module.exports = class Feed extends EventEmitter {
             return
         }
 
+        console.log(`${this.logPrefix} watch package: ${pkg.id}`)
         this.packages[pkg.id] = true
 
-        this.emit('watch', pkg.id)
+        this.emit('watch', {id: pkg.id, package: pkg})
 
         pkg.node.get('items')
             .map((v, k) => {
@@ -172,8 +173,8 @@ module.exports = class Feed extends EventEmitter {
 
         if (this.packages[id] === true) {
             console.log(`${this.logPrefix} unwatch package: ${id}`)
+            this.emit('unwatch', { id: id, package: this.packages[id]})
             this.packages[id] = false
-            this.emit('unwatch', id)
         }
     }
 
