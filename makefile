@@ -3,7 +3,7 @@ SHELL := /bin/bash
 TAG?=latest
 CERTDIR := ./web/certs/
 DEVHOST := dev.lantern.link
-CERTS := $(CERTDIR)$(DEVHOST).pem
+CERTS := $(CERTDIR)/dev/$(DEVHOST).pem
 VENDOR_CSS := web/public/styles/vendor.css
 
 .PHONY: build certs clean install start run stage deploy

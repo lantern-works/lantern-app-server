@@ -45,7 +45,6 @@ const startServer = () => {
             let credentials = {
                 key: fs.readFileSync(privateKeyPath, 'utf8'),
                 cert: fs.readFileSync(certificatePath, 'utf8'),
-                requestCert: false,
                 rejectUnauthorized: false
             }
 
@@ -109,11 +108,7 @@ startServer()
         return setupDatabase(server, app)
     })
     .then(() => {
-        return new Promise((resolve, reject) => {
-            // starts watching for changes
-            watch(app)
-            setTimeout(resolve, 1000)
-        })
+        watch(app)
     })
     .catch((e) => {
         log.error('Failed to start server:')
