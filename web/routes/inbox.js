@@ -1,5 +1,5 @@
 /**
-* Inbox & Outbox Routes
+* Inbox Routes
 *
 * API to manage messages to be processed and turned into database updates
 **/
@@ -9,7 +9,6 @@ const log = util.Logger
 const bodyParser = require('body-parser')
 
 // @todo add LZMA compression as optional
-
 module.exports = (serv) => {
     const updateRegex = /([A-Za-z0-9\-\_]+)\>\>([A-Za-z]+)\@([0-9\.]+)\:\:([0-9]+)\:\:([0-9]+)\:\:([0-9]+)\|(.*)/
     const queryRegex = /([A-Za-z0-9\-\_]+)\>\>([A-Za-z]+)\@([0-9\.]+)\:\:([0-9]+)\:\:([0-9]+)\:\:([0-9]+)/
@@ -68,7 +67,6 @@ module.exports = (serv) => {
     }
 
     const applyChanges = (cmd, outbox, db) => {
-        console.log("ready to apply changes", cmd.changes)
         cmd.changes.forEach(change => {
             if (change[change.length - 1] == '-') {
                 let itemID = change.substr(0, change.length - 1)
@@ -146,14 +144,14 @@ module.exports = (serv) => {
     }
 
     const markQueryComplete = () => {
-        log.info ('[box] /query ------------------------------------------------------------------\n')
+        log.info (`${util.logPrefix('inbox')} /query ------------------------------------------------------------------\n`)
     }
 
 
     const runQuery = (cmd, outbox, db, msg, replyDelay) => {
         let node = getPackageNode(cmd, db)
 
-        log.info ('[box] query ------------------------------------------------------------------')
+        log.info (`${util.logPrefix('inbox')} query ------------------------------------------------------------------`)
         //log.info(cmd)
         node.once((v,k) => {
             const pkgID = `${cmd.package}@${cmd.version}`
@@ -161,7 +159,7 @@ module.exports = (serv) => {
 
             // sanitize package node
             let pkg = filterOutMetadata(v)
-            log.debug(`[box]  ${pkgID} -- query for package with ${Object.keys(pkg).length} keys`)
+            log.debug(`${util.logPrefix('inbox')} ${pkgID} -- query for package with ${Object.keys(pkg).length} keys`)
 
             // @todo improve this primitive way to manage async map
             let itemsNode = node.get('items')
@@ -173,7 +171,7 @@ module.exports = (serv) => {
             itemsNode.once((v,k) => {
                 let items = filterOutMetadata(v)
                 itemCount = Object.keys(items).length
-                log.debug(`[box] ${pkgID} -- query within ${itemCount} items`)
+                log.debug(`${util.logPrefix('inbox')} ${pkgID} -- query within ${itemCount} items`)
             }).map((v,k) => {
                 let replyData = `${k}`
                 if (v === null) {
@@ -194,7 +192,7 @@ module.exports = (serv) => {
                 itemsProcessed++
 
                 let msg = `${conf.peer}>>${pkgID}::${seq}::${itemCount}::${new Date().getTime()}|${replyData}`
-                log.debug(`[box] ${msg}`)
+                log.debug(`${util.logPrefix('inbox')} (${msg.length}) ${msg}`)
                 // use prime number to delay outbox message and thereby avoid some issues with over-the-air timing collision
                 setTimeout(() => {
                     outbox.push(msg)
@@ -223,9 +221,8 @@ module.exports = (serv) => {
     // @todo support multi-message inbox inputs
     serv.put('/api/inbox', bodyParser.json(), (req, res) => {
         let msg = req.body.message || ""
-        log.debug(`${util.logPrefix('inbox')} message: `, req.body.message)
+        log.debug(`${util.logPrefix('inbox')} (${msg.length}) ${msg}`)
         try {
-
             if (updateRegex.test(msg)) {
                 let cmd = getCommand(msg.match(updateRegex))
 
@@ -233,14 +230,14 @@ module.exports = (serv) => {
                     throw new Error('Missing changes for update')
                 }
                 res.app.locals.inbox.push(cmd)
-                log.debug(`${util.logPrefix('inbox')} accept change request: ${msg}`)
+                log.info(`${util.logPrefix('inbox')} accept change request: ${msg}`)
                 applyChanges(cmd, res.app.locals.outbox, req.app.locals.db)
                 return res.status(201).json({ 'ok': true })
             } 
             else if (queryRegex.test(msg)) {
                 let cmd = getCommand(msg.match(queryRegex))
                 res.app.locals.inbox.push(cmd)
-                log.debug(`${util.logPrefix('inbox')} accept query: ${msg}`)
+                log.info(`${util.logPrefix('inbox')} accept query: ${msg}`)
                 runQuery(cmd, res.app.locals.outbox, req.app.locals.db, msg, req.app.locals.prime * 1000)
                 return res.status(200).json({ 'ok': true })
             } 
@@ -254,69 +251,4 @@ module.exports = (serv) => {
         }
     })
 
-    // ----------------------------------------------------------------------
-    /**
-    * List outbox messages queued for forward
-    */
-    serv.get('/api/outbox', (req, res) => {
-        return res.status(200).json({
-            'messages': res.app.locals.outbox
-        })
-    })
-
-    /**
-    * Queue messages to forward to nearby devices
-    */
-    serv.put('/api/outbox', bodyParser.json(), (req, res) => {
-        let box = res.app.locals.outbox
-        let previousMessage = box[box.length - 1]
-
-        let msg = req.body.message
-        if (!msg) {
-            log.debug(`${util.logPrefix('outbox')} ignore empty message`)
-            return res.status(403).json({ 'ok': false })
-        }
-
-        // attach device identifier to message
-        msg = conf.peer + '>>' + msg
-        if (previousMessage && previousMessage == msg) {
-            log.debug(`${util.logPrefix('outbox')} ignore duplicate message: ${msg}`)
-            return res.status(200).json({ 'ok': true })
-        }
-
-  
-        if (updateRegex.test(msg)) {
-            log.debug(`${util.logPrefix('outbox')} queue update in outbox: ${msg}`)
-            box.push(msg)
-            return res.status(201).json({ 'ok': true })
-        }
-        else if (queryRegex.test(msg)) {
-            log.debug(`${util.logPrefix('outbox')} queue query in outbox: ${msg}`)
-            box.push(msg)
-            return res.status(201).json({ 'ok': true })
-        } 
-        else {
-            log.debug(`${util.logPrefix('outbox')} ignore invalid message ${msg}`)
-            return res.status(403).json({ 'ok': false })
-        }
-    })
-
-    /**
-    * Pull one item off the outbox queue
-    */
-    serv.post('/api/outbox', (req, res) => {
-        let box = res.app.locals.outbox
-        let msg = box.shift() || null
-        let data = {
-            'message': msg,
-            'rows': box.length
-        }
-
-        if (msg) {
-            log.debug(`${util.logPrefix('outbox')} release from queue: ${msg}`)
-            return res.status(201).json(data)
-        } else {
-            return res.status(200).json(data)
-        }
-    })
 }
