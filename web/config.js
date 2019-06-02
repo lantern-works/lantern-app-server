@@ -22,11 +22,9 @@ const generateDeviceIdentifier = (conf) => {
 
 const generatePrimeNumber = (conf) => {
     conf.prime = Math.round(Math.random()*50)
-    console.log("PRIME", conf.prime)
     if (!isPrime(conf.prime)) {
         return generatePrimeNumber(conf)
     }
-
     yaml.writeSync(confPath, conf)
     return conf
 }
@@ -41,6 +39,7 @@ try {
     }
 
     if (!conf.hasOwnProperty('prime')) {
+        conf = generatePrimeNumber(conf)
         conf = generatePrimeNumber(conf)
     }
 
