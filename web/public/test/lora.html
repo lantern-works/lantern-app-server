@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link href="/styles/vendor.css" rel="stylesheet" />
+    <link href="/styles/global.css" rel="stylesheet"  />
+</head>
+<body>
+
+    <div id="app">
+
+        <table class="table is-striped is-hoverable" style="width: 100%;">
+            <thead>
+                <th>Message</th>
+                <th>Direction</th>
+                <th>Payload</th>
+                <th>Success</th>
+            </thead>
+            <tr v-for="msg in messages" v-cloak style="font-family: monospace; font-size: small;" :class="(msg.direction == 'out' ? 'is-selected' : '')">
+                <td>{{msg.message}}</td>
+                <td>{{msg.direction}}</td>
+                <td>{{msg.message.length}}</td>
+                <td>{{msg.success}}</td>
+            </tr>
+        </table>
+
+
+        <section class="button-box" style="position: absolute; bottom: 0; width: 100%; border-top: 2px solid #DDD">
+            <form v-on:submit.prevent="sendMessage">
+                <textarea class="textarea" placeholder="Message" v-model="message"></textarea>
+                <div class="button is-primary"  @click="sendMessage">
+                    Send
+                </div>
+            </form>
+        </section>
+    </div>
+
+    <script src="/scripts/data.min.js"></script>
+    <script src="/scripts/apps.min.js"></script>    
+    <script>
+
+        let messageHash = {
+
+        }
+
+        var app = new LA.Vue({
+          el: '#app',
+          data: {
+            message: '',
+            messages: []
+          },
+          methods: {
+            sendMessage: () => {
+                let data = {message: 'demo@0.0.1::0::0|test^t=' + app.message}
+                if (messageHash[data.message]) {
+                    return console.warn("must not be duplicate message")
+                }
+                else {
+                    messageHash[data.message] = true
+                }
+                console.log(data)
+                fetch('/api/outbox', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json())
+                .then(json => {
+                    app.message = null
+                    app.messages.push({
+                        direction: 'out',
+                        message: json.message,
+                        success: json.ok
+                    })
+                })
+            }
+          }
+        })
+
+        const checkInbox = () => {
+           fetch('/api/inbox', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+                .then(response => response.json())
+                .then((json) => {
+                    console.log(json.messages)
+                    json.messages.forEach(data => {
+                        if (messageHash[data.message]) {
+                            return console.warn('skipping duplicate from inbox: ' + data.message)
+                        }
+                        else {
+                            messageHash[data.message] = true
+                        }
+
+                        app.messages.push({
+                            direction: 'in', 
+                            message: data.message,
+                            success: true
+                        })
+                    })
+                })
+        }
+
+        setInterval(checkInbox, 5000)
+
+    </script>
+</body>
+</html>

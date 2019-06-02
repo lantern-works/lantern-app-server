@@ -41,23 +41,23 @@ module.exports = (serv) => {
         msg = conf.peer + '>>' + msg
         if (previousMessage && previousMessage == msg) {
             log.debug(`${util.logPrefix('outbox')} ignore duplicate message: ${msg}`)
-            return res.status(200).json({ 'ok': true })
+            return res.status(200).json({ 'ok': true, 'message': msg })
         }
 
   
         if (updateRegex.test(msg)) {
             log.debug(`${util.logPrefix('outbox')} queue update in outbox: ${msg}`)
             box.push(msg)
-            return res.status(201).json({ 'ok': true })
+            return res.status(201).json({ 'ok': true, 'message': msg })
         }
         else if (queryRegex.test(msg)) {
             log.debug(`${util.logPrefix('outbox')} queue query in outbox: ${msg}`)
             box.push(msg)
-            return res.status(201).json({ 'ok': true })
+            return res.status(201).json({ 'ok': true,  'message': msg  })
         } 
         else {
             log.debug(`${util.logPrefix('outbox')} ignore invalid message ${msg}`)
-            return res.status(403).json({ 'ok': false })
+            return res.status(403).json({ 'ok': false , 'message': msg })
         }
     })
 

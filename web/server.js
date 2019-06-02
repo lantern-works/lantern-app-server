@@ -13,6 +13,7 @@ const helmet = require('helmet')
 const compression = require('compression')
 const util = require('./util')
 const log = util.Logger
+log.setLevel('debug')
 const server = express()
 
 // ----------------------------------------------------------------------------
@@ -32,6 +33,15 @@ server.use((req,res,next) => {
     }
     next()
 })
+
+
+if (process.env.hasOwnProperty('LORA_TEST')) {
+    log.debug("[web] LoRa Test Activated")
+    server.get('/', (req,res) => {
+        return res.sendFile(staticPath + '/test/lora.html')
+    })
+}
+
 
 
 const staticPath = path.resolve(__dirname, './public/')
