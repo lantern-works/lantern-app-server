@@ -4,6 +4,8 @@ require('../../helpers/string')
 const rel_ = Gun.val.rel._ // '#'
 const node_ = Gun.node._ // '_'
 
+require('../../../node_modules/gun/nts')
+
 Gun.chain.unset = function (node) {
     this.put({ [node[node_].put[node_][rel_]]: null })
     return this

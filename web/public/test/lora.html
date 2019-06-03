@@ -26,10 +26,9 @@
             </tr>
         </table>
 
-
         <section class="button-box" style="position: absolute; bottom: 0; width: 100%; border-top: 2px solid #DDD">
             <form v-on:submit.prevent="sendMessage">
-                <textarea class="textarea" placeholder="Message" v-model="message"></textarea>
+                <input type="text" class="input" placeholder="Message" v-model="message"/>
                 <div class="button is-primary"  @click="sendMessage">
                     Send
                 </div>
@@ -42,7 +41,6 @@
     <script>
 
         let messageHash = {
-
         }
 
         var app = new LA.Vue({
@@ -53,6 +51,7 @@
           },
           methods: {
             sendMessage: () => {
+                if (!app.message) return
                 let data = {message: 'demo@0.0.1::0::0|test^t=' + app.message}
                 if (messageHash[data.message]) {
                     return console.warn("must not be duplicate message")
