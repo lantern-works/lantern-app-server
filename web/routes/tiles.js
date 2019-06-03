@@ -25,7 +25,7 @@ module.exports = (serv) => {
     const tileUri = '/styles/:map/:z/:x/:y.png'
     const minZoom = 3
     const maxZoom = 17
-    const tilesDir = path.resolve(__dirname, '../public/tiles')
+    const tilesDir = path.resolve(__dirname, '../tiles')
     const assetsDir = path.resolve(__dirname, '../public/assets/')
 
     let cachedTiles = {}

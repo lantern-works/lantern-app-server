@@ -18,7 +18,6 @@ install:
 start: $(CERTS)
 	HOOK_CHANGE="./hooks/change" \
 	CHANGE_INTERVAL=6000 \
-	LORA_TEST="true" \
 	HOOK_RESTORE="./hooks/restore" \
 	HOOK_BACKUP="./hooks/backup" \
 	HOOK_COMMAND="./hooks/command" \

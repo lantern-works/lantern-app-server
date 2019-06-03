@@ -10,7 +10,7 @@ const fs = require('fs-extra')
 const path = require('path')
 fs.ensureDirSync(path.resolve(__dirname, '../logs'))
 fs.ensureDirSync(path.resolve(__dirname, '../db'))
-fs.ensureDirSync(path.resolve(__dirname, './public/tiles'))
+fs.ensureDirSync(path.resolve(__dirname, './tiles'))
 
 // ----------------------------------------------------------------------
 

@@ -5,13 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="apple-mobile-web-app-capable" content="yes">
     <style>
-        #map, body, html {  
-            height: 100%;
-            width: 100%;
-            padding: 0em;
-            margin: 0em;
-            background: #88cdf8;
-        }
+        #map, body, html { height: 100%; width: 100%; padding: 0em; margin: 0em; background: #88cdf8; }
     </style>
     <link rel="stylesheet" href="/styles/vendor.css"/>
     <link rel="stylesheet" href="/styles/global.css"/>
@@ -29,6 +23,7 @@
     <script src="/scripts/data.min.js"></script>
     <script src="/scripts/apps.min.js"></script>
     <script src="/scripts/maps.min.js"></script>
+
     <script>
         // database
         let db = new LD.Database(window.location.origin + '/gun')
@@ -39,6 +34,16 @@
         // apps
         let ctx = window.LT = new LA.Context(db, user, map)
         ctx.loadAllApps()
+    </script>
+
+    <script>
+    // Check that service workers are registered
+    if ('serviceWorker' in navigator) {
+        // Use the window load event to keep the page load performant
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js');
+        });
+    }
     </script>
 </body>
 </html>
