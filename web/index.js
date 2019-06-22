@@ -42,6 +42,9 @@ const startServer = () => {
             let privateKeyPath = process.env.SSL_PRIVATE_KEY || path.resolve(__dirname, './certs/dev/dev.lantern.link-key.pem')
             let certificatePath = process.env.SSL_CERTIFICATE || path.resolve(__dirname, './certs/dev/dev.lantern.link.pem')
 
+            log.info(`${util.logPrefix('web')} private key = ${privateKeyPath}`)
+            log.info(`${util.logPrefix('web')} cert = ${certificatePath}`)
+
             let credentials = {
                 key: fs.readFileSync(privateKeyPath, 'utf8'),
                 cert: fs.readFileSync(certificatePath, 'utf8'),

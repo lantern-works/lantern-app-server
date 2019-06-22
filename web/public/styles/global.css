@@ -357,17 +357,21 @@ body .app {
 }
 
 .menu-app-frame .inline-btn,  
-	.menu-app-frame .button.is-secondary {
+	.menu-app-frame .button.is-secondary, section .button.is-secondary {
 	text-align: center;
     color: #3273dc;
     border: none;
 	font-weight: 600;
 	margin-top: none;
-	padding-right: 1.25em;
+	padding: 1.5em 1.25em;
+    width: 100%;
 	font-size: smaller;
 	text-transform: uppercase;
 	cursor: pointer;
 }
+
+
+
 
 /* icon */
 .menu-app-frame li div.tag-icon {
