@@ -21,7 +21,7 @@
         "latlon-geohash": "*",
         "leaflet": "^1.5.1",
         "leaflet.locatecontrol": "^0.66.2",
-        "node-fetch": "^2.6.0",
+        "node-fetch": "^2.6.1",
         "node-yaml": "*",
         "request": "*",
         "shortid": "*",
